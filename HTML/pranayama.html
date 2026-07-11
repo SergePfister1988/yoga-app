@@ -32,7 +32,16 @@ a { color: inherit; text-decoration: none; }
 .filter-bar { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
 .filter-field label { display: block; font-size: 12px; color: var(--color-text-muted); margin-bottom: 5px; }
 .filter-field input, .filter-field select { width: 100%; padding: 9px 10px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); background: var(--color-bg); }
-.asana-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.asana-list { display: flex; flex-direction: column; gap: 8px; }
+.simple-list-row { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.simple-list-row:hover { border-color: var(--color-pine); }
+.simple-list-link { font-family: var(--font-display); font-size: 17px; color: var(--color-pine-dark); text-decoration: none; }
+.simple-list-actions { display: flex; gap: 8px; }
+.btn-status { padding: 7px 12px; background: transparent; border: 1.5px solid; border-radius: 3px; font-size: 12px; font-family: var(--font-body); font-weight: 600; cursor: pointer; }
+.btn-status.status-done { border-color: #3A7D44; color: #3A7D44; }
+.btn-status.status-done:hover { background: rgba(58,125,68,0.08); }
+.btn-status.status-pending { border-color: var(--color-error, #A6483A); color: var(--color-error, #A6483A); }
+.btn-status.status-pending:hover { background: rgba(166,72,58,0.08); }
 .asana-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 18px; display: block; }
 .asana-card:hover { border-color: var(--color-pine); }
 .asana-card .sanskrit { font-size: 12px; color: var(--color-text-muted); }
@@ -49,7 +58,7 @@ a { color: inherit; text-decoration: none; }
   .app-main { padding: 20px 16px; }
   .filter-bar { grid-template-columns: 1fr; }
   .filter-field input, .filter-field select { font-size: 16px; }
-  .asana-list { grid-template-columns: 1fr; }
+  .simple-list-row { flex-direction: column; align-items: flex-start; }
   #admin-actions .btn-primary { width: 100%; padding: 13px; }
 }
 .brand-banner { background: linear-gradient(135deg, #C08F84 0%, #E3C4BC 55%, #EBD3CC 100%); display: flex; justify-content: center; align-items: center; padding: 10px 20px; }
@@ -278,24 +287,45 @@ a { color: inherit; text-decoration: none; }
       emptyEl.style.display = "none";
 
       filtered.forEach(a => {
-        const card = document.createElement("a");
-        card.href = "pranayama-detail.html?id=" + a.id;
-        card.className = "asana-card";
-        let html = "";
-        if (a.name_sanskrit) html += `<div class="sanskrit">${escapeHtml(a.name_sanskrit)}</div>`;
-        html += `<div class="name">${escapeHtml(a.name_deutsch)}</div>`;
-        html += `<div class="tag-row">`;
-        (a.pranayama_category_links || []).forEach(cl => {
-          if (cl.pranayama_categories) html += `<span class="tag category">${escapeHtml(cl.pranayama_categories.name)}</span>`;
-        });
-        if (a.difficulty) html += `<span class="tag">${escapeHtml(a.difficulty)}</span>`;
+        const row = document.createElement("div");
+        row.className = "simple-list-row";
+
+        let html = `<a href="pranayama-detail.html?id=${a.id}" class="simple-list-link">${escapeHtml(a.name_deutsch)}</a>`;
         if (isAdmin) {
-          html += a.reviewed ? `<span class="tag reviewed">✓ Erfasst</span>` : `<span class="tag unreviewed">Nicht erfasst</span>`;
-          html += a.verified ? `<span class="tag reviewed">✓ Geprüft</span>` : `<span class="tag unreviewed">Nicht geprüft</span>`;
+          html += `<div class="simple-list-actions">
+            <button type="button" class="btn-status ${a.reviewed ? "status-done" : "status-pending"}" data-action="toggle-reviewed">Erfasst ${a.reviewed ? "✓" : "✗"}</button>
+            <button type="button" class="btn-status ${a.verified ? "status-done" : "status-pending"}" data-action="toggle-verified">Geprüft ${a.verified ? "✓" : "✗"}</button>
+          </div>`;
         }
-        html += `</div>`;
-        card.innerHTML = html;
-        listEl.appendChild(card);
+        row.innerHTML = html;
+        listEl.appendChild(row);
+
+        if (isAdmin) {
+          row.querySelector('[data-action="toggle-reviewed"]').addEventListener("click", async (e) => {
+            e.preventDefault();
+            const btn = e.target;
+            btn.disabled = true;
+            const { data: sessionData } = await supabaseClient.auth.getSession();
+            const payload = a.reviewed
+              ? { reviewed: false, reviewed_by: null, reviewed_at: null }
+              : { reviewed: true, reviewed_by: sessionData.session.user.id, reviewed_at: new Date().toISOString() };
+            const { error } = await supabaseClient.from("pranayamas").update(payload).eq("id", a.id);
+            if (error) { alert("Fehler: " + error.message); btn.disabled = false; return; }
+            await loadItems();
+          });
+          row.querySelector('[data-action="toggle-verified"]').addEventListener("click", async (e) => {
+            e.preventDefault();
+            const btn = e.target;
+            btn.disabled = true;
+            const { data: sessionData } = await supabaseClient.auth.getSession();
+            const payload = a.verified
+              ? { verified: false, verified_by: null, verified_at: null }
+              : { verified: true, verified_by: sessionData.session.user.id, verified_at: new Date().toISOString() };
+            const { error } = await supabaseClient.from("pranayamas").update(payload).eq("id", a.id);
+            if (error) { alert("Fehler: " + error.message); btn.disabled = false; return; }
+            await loadItems();
+          });
+        }
       });
     }
 
