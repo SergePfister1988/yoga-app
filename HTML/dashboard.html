@@ -34,10 +34,11 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
 .header-left { display: flex; align-items: center; }
 .app-main { padding: 40px 32px; max-width: 720px; }
 .app-main h1 { font-family: var(--font-display); color: var(--color-pine-dark); }
-.card-link { display: block; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 20px 22px; margin-top: 20px; text-decoration: none; color: var(--color-text); }
+#dashboard-cards { display: flex; flex-direction: column; gap: 8px; }
+.card-link { display: flex; align-items: center; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 14px 18px; margin-top: 0; text-decoration: none; color: var(--color-text); }
 .card-link:hover { border-color: var(--color-pine); }
-.card-link .title { font-family: var(--font-display); font-size: 18px; color: var(--color-pine-dark); margin-bottom: 4px; }
-.card-link .desc { font-size: 14px; color: var(--color-text-muted); }
+.card-link .title { font-family: var(--font-display); font-size: 17px; color: var(--color-pine-dark); }
+.card-link .desc { display: none; }
 .pending-notice { background: rgba(192,143,132,0.15); border: 1px solid var(--color-sand); color: var(--color-pine-dark); padding: 16px 18px; border-radius: 4px; font-size: 14px; margin-top: 18px; line-height: 1.5; }
 .name-prompt { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 16px 18px; margin: 18px 0; }
 .name-prompt p { margin: 0 0 10px 0; font-size: 14px; color: var(--color-text-muted); }
