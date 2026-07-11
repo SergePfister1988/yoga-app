@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Benutzerverwaltung – Yoga-App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --color-bg: #FDFCFB;
+  --color-surface: #FFFFFF;
+  --color-pine: #572E2A;
+  --color-pine-dark: #3E211D;
+  --color-sand: #DBAEA4;
+  --color-sand-dark: #C08F84;
+  --color-text: #1E2622;
+  --color-text-muted: #5B6660;
+  --color-border: #DBDFD5;
+  --color-error: #A6483A;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-script: "Alex Brush", cursive;
+  --font-body: "Work Sans", "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-body); background-color: var(--color-bg); color: var(--color-text); min-height: 100vh; }
+a { color: inherit; }
+
+.app-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+.app-header .brand { font-family: var(--font-display); font-size: 20px; color: var(--color-pine-dark); text-decoration: none; }
+.nav-links { display: flex; gap: 20px; margin-left: 32px; }
+.nav-links a { font-size: 14px; color: var(--color-text-muted); font-weight: 600; text-decoration: none; }
+.nav-links a.active, .nav-links a:hover { color: var(--color-pine); }
+.header-left { display: flex; align-items: center; }
+.role-badge { display: inline-block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; background: var(--color-sand); color: #fff; margin-left: 10px; }
+
+.btn-secondary { padding: 8px 16px; background: transparent; color: var(--color-pine-dark); border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); cursor: pointer; text-decoration: none; display: inline-block; }
+.btn-secondary:hover { border-color: var(--color-pine); }
+
+.app-main { padding: 32px; max-width: 720px; margin: 0 auto; }
+.app-main h1 { font-family: var(--font-display); color: var(--color-pine-dark); margin-top: 8px; }
+.app-main > p.intro { color: var(--color-text-muted); font-size: 14px; margin-top: -8px; margin-bottom: 24px; }
+
+.user-list { display: flex; flex-direction: column; gap: 10px; }
+.filter-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+.filter-bar input { flex: 1; min-width: 200px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); background: var(--color-surface); }
+.filter-bar select { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); background: var(--color-surface); }
+.role-section { margin-bottom: 32px; }
+.role-section-title { font-family: var(--font-display); font-size: 20px; color: var(--color-pine-dark); margin: 0 0 12px 0; }
+.toggle-details-btn { background: none; border: none; color: var(--color-pine); font-size: 13px; font-family: var(--font-body); cursor: pointer; padding: 4px 0; text-decoration: underline; }
+.user-details { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--color-border); }
+.user-details.open { display: block; }
+.yogini-tree { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--color-border); }
+.yogini-tree-item { font-size: 13px; color: var(--color-text-muted); padding: 4px 0 4px 18px; position: relative; }
+.yogini-tree-item::before { content: "└"; position: absolute; left: 0; color: var(--color-sand-dark); }
+.yogini-tree-item .shared-tag { font-size: 11px; color: var(--color-sand-dark); font-style: italic; }
+.yogini-tree-empty { font-size: 13px; color: var(--color-text-muted); padding-left: 18px; font-style: italic; }
+.user-row { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 16px 18px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.user-info { flex: 1; min-width: 260px; }
+.user-top-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.access-meta-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+.assigned-schedule-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+.user-controls { display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: 220px; text-align: right; }
+.user-controls .user-controls-row { justify-content: flex-end; }
+.user-controls select, .user-controls .btn-toggle, .user-controls .schedule-row { width: 100%; }
+.user-controls .schedule-row { display: flex; flex-direction: column; gap: 6px; }
+.user-controls .schedule-row input, .user-controls .schedule-row button { width: 100%; }
+@media (max-width: 640px) {
+  .access-meta-row, .assigned-schedule-row { flex-direction: column; align-items: flex-start; }
+  .user-controls { align-items: stretch; width: 100%; text-align: left; }
+}
+.user-info .email { font-weight: 600; font-size: 15px; }
+.user-info .meta { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; }
+.user-controls-row { display: flex; align-items: center; gap: 10px; }
+.user-controls select { padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); background: var(--color-bg); }
+.role-text { font-size: 13px; color: var(--color-text-muted); padding: 8px 0; }
+.save-status { font-size: 12px; color: var(--color-pine); min-width: 70px; }
+.save-status.error { color: var(--color-error); }
+.form-message { font-size: 13px; }
+.form-message.error { color: var(--color-error); }
+.form-message.success { color: var(--color-pine); }
+.self-note { font-size: 12px; color: var(--color-text-muted); font-style: italic; }
+
+.status-badge { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 12px; }
+.status-badge.active { background: rgba(87,46,42,0.08); color: var(--color-pine); }
+.status-badge.inactive { background: rgba(192,143,132,0.18); color: var(--color-sand-dark); }
+
+.btn-toggle { padding: 7px 14px; border-radius: 3px; font-size: 13px; font-family: var(--font-body); font-weight: 600; cursor: pointer; border: 1px solid var(--color-border); background: transparent; color: var(--color-pine-dark); }
+.btn-toggle.activate { background: var(--color-sand); color: #fff; border-color: transparent; }
+.btn-toggle.activate:hover { background: var(--color-sand-dark); }
+.btn-toggle.deactivate:hover { border-color: var(--color-error); color: var(--color-error); }
+
+.schedule-row { display: flex; align-items: center; gap: 6px; }
+.schedule-row input[type="datetime-local"] { padding: 6px 8px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 12px; font-family: var(--font-body); background: var(--color-bg); }
+.schedule-row button { padding: 6px 10px; font-size: 12px; border-radius: 3px; border: 1px solid var(--color-border); background: transparent; cursor: pointer; color: var(--color-pine-dark); }
+.schedule-row .clear-btn { color: var(--color-error); border-color: transparent; padding: 6px 4px; }
+
+.name-edit-row { display: flex; align-items: center; gap: 6px; }
+.name-edit-row input[type="text"] { padding: 6px 8px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 13px; font-family: var(--font-body); background: var(--color-bg); width: 160px; }
+.name-edit-row button { padding: 6px 10px; font-size: 12px; border-radius: 3px; border: 1px solid var(--color-border); background: transparent; cursor: pointer; color: var(--color-pine-dark); }
+
+.assigned-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.assigned-row select { padding: 6px 8px; font-size: 13px; }
+
+.access-row { display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; align-items: center; }
+.access-row label { display: flex; align-items: center; gap: 5px; }
+
+.invite-box { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 16px 18px; margin-bottom: 20px; font-size: 14px; }
+.invite-box .link-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.invite-box input { flex: 1; min-width: 200px; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 13px; font-family: var(--font-body); background: var(--color-bg); }
+
+.empty-state { color: var(--color-text-muted); padding: 40px 0; text-align: center; }
+
+@media (max-width: 640px) {
+  .app-header { flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+  .header-left { flex-wrap: wrap; gap: 8px; }
+  .nav-links { margin-left: 0; gap: 14px; }
+  .app-main { padding: 20px 16px; }
+  .user-row { flex-direction: column; align-items: flex-start; }
+  .user-controls { width: 100%; align-items: flex-start; }
+  .user-controls select { flex: 1; font-size: 16px; }
+  .schedule-row { flex-wrap: wrap; }
+}
+
+.brand-banner { background: linear-gradient(135deg, #C08F84 0%, #E3C4BC 55%, #EBD3CC 100%); display: flex; justify-content: center; align-items: center; padding: 10px 20px; }
+.brand-lockup { display: inline-flex; flex-direction: column; align-items: flex-end; text-decoration: none; line-height: 1; }
+.brand-script { font-family: var(--font-script); font-weight: 400; font-size: 44px; color: var(--color-pine-dark); }
+.brand-serif { font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--color-pine-dark); margin-top: -6px; letter-spacing: 0.01em; }
+@media (max-width: 640px) {
+  .brand-banner { padding: 8px 16px; }
+    .brand-script { font-size: 32px; }
+  .brand-serif { font-size: 14px; }
+}
+  </style>
+</head>
+<body>
+  <div class="brand-banner"><a href="dashboard.html" class="brand-lockup"><span class="brand-script">Pandora</span><span class="brand-serif">Community Bern</span></a></div>
+  <header class="app-header">
+    <div class="header-left">
+      <nav class="nav-links">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="meine-angaben.html" id="nav-meine-angaben">Meine Angaben</a>
+        <a href="selbstdeklaration.html" id="nav-selbstdeklaration" style="display:none;">Selbstdeklaration</a>
+        <a href="mein-kontakt.html" id="nav-mein-kontakt" style="display:none;">Mein Kontakt</a>
+        <a href="meine-yoginis.html" id="nav-meine-yoginis" style="display:none;">Meine Yogi:nis</a>
+        <a href="meine-therapeuten.html" id="nav-meine-therapeuten" style="display:none;">Meine Therapeut:innen</a>
+        <a href="dokumentvorlagen.html" id="nav-dokumentvorlagen" style="display:none;">Vorlagen verwalten</a>
+        <a href="asanas.html" id="nav-asanas">Asanas</a>
+        <a href="sequences.html">Sequenzen</a>
+        <a href="flows.html" id="nav-flows">Flows</a>
+        <a href="pranayama.html" id="nav-pranayama">Pranayama</a>
+        <a href="mantras.html" id="nav-mantras">Mantras</a>
+        <a href="users.html" class="active">Benutzer</a>
+      </nav>
+      <span class="role-badge" id="role-badge" style="display:none;"></span>
+    </div>
+    <button class="btn-secondary" id="logout-btn">Ausloggen</button>
+  </header>
+
+  <main class="app-main">
+    <h1>Benutzerverwaltung</h1>
+    <p class="intro">Neue Personen werden direkt von Admin oder Therapeut:in erstellt und sind sofort aktiv – eine Selbstregistrierung gibt es nicht mehr. Nur Admins können Rollen vergeben.</p>
+
+    <div class="invite-box" id="create-user-box">
+      <strong>Neue Person erstellen</strong>
+      <div class="link-row" style="margin-top:10px;">
+        <input type="email" id="new-user-email" placeholder="E-Mail-Adresse" />
+        <select id="new-user-role" style="padding:8px 10px; border:1px solid var(--color-border); border-radius:3px; background:var(--color-bg);">
+          <option value="yogi">Yogi:ni</option>
+          <option value="therapeut">Therapeut:in</option>
+        </select>
+        <button class="btn-primary" id="create-user-btn" type="button">Erstellen</button>
+      </div>
+      <p class="form-message" id="create-user-message" style="margin-top:8px;"></p>
+    </div>
+
+    <div class="filter-bar">
+      <input type="text" id="f-search" placeholder="Suche nach Name oder E-Mail..." />
+      <select id="f-status">
+        <option value="all">Alle Status</option>
+        <option value="active">Nur Aktive</option>
+        <option value="inactive">Nur Inaktive</option>
+      </select>
+    </div>
+
+    <div class="role-section">
+      <h2 class="role-section-title">Admins</h2>
+      <div id="admin-list" class="user-list"></div>
+      <p class="empty-state" id="admin-empty" style="display:none;"></p>
+    </div>
+
+    <div class="role-section">
+      <h2 class="role-section-title">Therapeut:innen</h2>
+      <div id="therapeut-list" class="user-list"></div>
+      <p class="empty-state" id="therapeut-empty" style="display:none;"></p>
+    </div>
+
+    <div class="role-section">
+      <h2 class="role-section-title">Yogi:nis</h2>
+      <div id="yogi-list" class="user-list"></div>
+      <p class="empty-state" id="yogi-empty" style="display:none;"></p>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://yqklyumvybthkzlbsspj.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable__DLVShYfXjf0C27LLK1zbg_5vpFcxJy";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function roleLabel(role, gender) {
+      if (role === "admin") return "Admin";
+      if (role === "therapeut") {
+        if (gender === "frau") return "Therapeutin";
+        if (gender === "mann") return "Therapeut";
+        return "Therapeut:in";
+      }
+      if (role === "yogi") {
+        if (gender === "frau") return "Yogini";
+        if (gender === "mann") return "Yogi";
+        return "Yogi:ni";
+      }
+      return role;
+    }
+
+    let currentUserId = null;
+    let isAdminUser = false;
+    let isSuperAdminUser = false;
+    let currentUserRole = null;
+    let therapistList = [];
+
+    async function init() {
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      if (!sessionData.session) {
+        window.location.href = "index.html";
+        return;
+      }
+      currentUserId = sessionData.session.user.id;
+
+      const { data: profile } = await supabaseClient
+        .from("profiles")
+        .select("role, gender, is_super_admin")
+        .eq("id", currentUserId)
+        .single();
+
+      if (!profile || (profile.role !== "admin" && profile.role !== "therapeut")) {
+        alert("Nur Admins und Therapeut:innen können die Benutzerverwaltung öffnen.");
+        window.location.href = "dashboard.html";
+        return;
+      }
+      isAdminUser = profile.role === "admin";
+      isSuperAdminUser = !!profile.is_super_admin;
+      currentUserRole = profile.role;
+
+      const badge = document.getElementById("role-badge");
+      badge.textContent = roleLabel(profile.role, profile.gender);
+      badge.style.display = "inline-block";
+        if (profile.role === "admin") {
+          const mt = document.getElementById("nav-meine-therapeuten");
+          if (mt) mt.style.display = "inline";
+          const dv = document.getElementById("nav-dokumentvorlagen");
+          if (dv) dv.style.display = "inline";
+        }
+        if (profile.role === "therapeut") {
+          const sd = document.getElementById("nav-selbstdeklaration");
+          if (sd) sd.style.display = "inline";
+        }
+        if (profile.role === "yogi") {
+          const mk = document.getElementById("nav-mein-kontakt");
+          if (mk) mk.style.display = "inline";
+        }
+        if (profile.role !== "admin") {
+          const maLink = document.getElementById("nav-meine-angaben");
+          if (maLink) {
+            maLink.textContent = "Passwort";
+            maLink.parentElement.appendChild(maLink);
+          }
+        }
+      if (profile.role === "therapeut") {
+        document.getElementById("nav-meine-yoginis").style.display = "inline";
+      }
+      if (profile.role !== "admin") {
+        ["nav-asanas", "nav-flows", "nav-pranayama", "nav-mantras"].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.style.display = "none";
+        });
+      }
+
+      setupCreateUserBox();
+      await loadUsers();
+    }
+
+    function setupCreateUserBox() {
+      const roleSelect = document.getElementById("new-user-role");
+      if (currentUserRole === "therapeut") {
+        // Therapeut:in darf nur Yogi:nis erstellen (automatisch sich selbst zugewiesen)
+        roleSelect.value = "yogi";
+        roleSelect.style.display = "none";
+      }
+
+      document.getElementById("create-user-btn").addEventListener("click", createNewUser);
+    }
+
+    async function createNewUser() {
+      const emailInput = document.getElementById("new-user-email");
+      const msgEl = document.getElementById("create-user-message");
+      const btn = document.getElementById("create-user-btn");
+      const email = emailInput.value.trim();
+      const chosenRole = document.getElementById("new-user-role").value;
+
+      if (!email) {
+        msgEl.textContent = "Bitte eine E-Mail-Adresse eingeben.";
+        msgEl.className = "form-message error";
+        return;
+      }
+
+      btn.disabled = true;
+      msgEl.textContent = "Wird erstellt …";
+      msgEl.className = "form-message";
+
+      // Eigener, nicht-persistenter Client, damit die eigene Sitzung nicht überschrieben wird
+      const tempClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false, storageKey: "temp-signup-client" },
+      });
+      const randomPassword = crypto.randomUUID() + "Aa1!";
+
+      const signUpOptions = {};
+      if (currentUserRole === "therapeut") {
+        signUpOptions.data = { assigned_therapist_id: currentUserId };
+      }
+
+      const { data: signUpData, error: signUpError } = await tempClient.auth.signUp({
+        email,
+        password: randomPassword,
+        options: signUpOptions,
+      });
+
+      if (signUpError) {
+        msgEl.textContent = "Fehler: " + signUpError.message;
+        msgEl.className = "form-message error";
+        btn.disabled = false;
+        return;
+      }
+
+      const newUserId = signUpData.user ? signUpData.user.id : null;
+      if (!newUserId) {
+        msgEl.textContent = "Konto konnte nicht erstellt werden.";
+        msgEl.className = "form-message error";
+        btn.disabled = false;
+        return;
+      }
+
+      // Sofort aktiv setzen (Admin/Therapeut bürgt für das Konto) und ggf. Rolle setzen
+      const updatePayload = { active: true };
+      if (currentUserRole === "admin" && chosenRole !== "yogi") {
+        updatePayload.role = chosenRole;
+      }
+
+      const { error: updateError } = await supabaseClient.from("profiles").update(updatePayload).eq("id", newUserId);
+      if (updateError) {
+        msgEl.textContent = "Konto erstellt, aber Freischaltung fehlgeschlagen: " + updateError.message;
+        msgEl.className = "form-message error";
+        btn.disabled = false;
+        return;
+      }
+
+      // E-Mail mit direktem Link zum Passwort-Setzen verschicken (statt nur Bestätigung)
+      await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname.replace("users.html", "reset-password.html"),
+      });
+
+      msgEl.textContent = `Konto für ${email} erstellt und aktiviert. Die Person erhält eine E-Mail mit einem Link, um direkt ihr eigenes Passwort zu setzen.`;
+      msgEl.className = "form-message success";
+      emailInput.value = "";
+      btn.disabled = false;
+      await loadUsers();
+    }
+
+    let allUsersRaw = [];
+    let accessByYogi = {};
+    let sharesByTherapist = {};
+
+    async function loadUsers() {
+      const { data: users, error } = await supabaseClient
+        .from("profiles")
+        .select("id, email, role, gender, active, active_until, created_at, first_name, last_name, assigned_therapist_id")
+        .order("created_at");
+
+      if (error) {
+        const el = document.getElementById("admin-empty");
+        el.style.display = "block";
+        el.textContent = "Fehler beim Laden: " + error.message;
+        return;
+      }
+
+      allUsersRaw = users || [];
+      therapistList = allUsersRaw.filter(u => u.role === "therapeut");
+
+      const yogiIds = allUsersRaw.filter(u => u.role === "yogi").map(u => u.id);
+      accessByYogi = {};
+      if (yogiIds.length) {
+        const { data: accessRows } = await supabaseClient
+          .from("content_access")
+          .select("yogi_id, content_type, granted")
+          .in("yogi_id", yogiIds);
+        (accessRows || []).forEach(r => {
+          if (!accessByYogi[r.yogi_id]) accessByYogi[r.yogi_id] = {};
+          accessByYogi[r.yogi_id][r.content_type] = r.granted;
+        });
+      }
+
+      sharesByTherapist = {};
+      const therapistIds = therapistList.map(t => t.id);
+      if (therapistIds.length) {
+        const { data: shareRows } = await supabaseClient
+          .from("therapist_shares")
+          .select("yogi_id, therapist_id")
+          .in("therapist_id", therapistIds);
+        (shareRows || []).forEach(r => {
+          if (!sharesByTherapist[r.therapist_id]) sharesByTherapist[r.therapist_id] = [];
+          sharesByTherapist[r.therapist_id].push(r.yogi_id);
+        });
+      }
+
+      renderUsers();
+    }
+
+    function renderUsers() {
+      const search = document.getElementById("f-search").value.trim().toLowerCase();
+      const statusFilter = document.getElementById("f-status").value;
+
+      function isActiveNow(u) {
+        return u.active && (!u.active_until || new Date(u.active_until) > new Date());
+      }
+
+      function matchesFilter(u) {
+        const name = displayName(u).toLowerCase();
+        const email = (u.email || "").toLowerCase();
+        if (search && !name.includes(search) && !email.includes(search)) return false;
+        if (statusFilter === "active" && !isActiveNow(u)) return false;
+        if (statusFilter === "inactive" && isActiveNow(u)) return false;
+        return true;
+      }
+
+      const groups = [
+        { role: "admin", listId: "admin-list", emptyId: "admin-empty", emptyText: "Keine Admins gefunden." },
+        { role: "therapeut", listId: "therapeut-list", emptyId: "therapeut-empty", emptyText: "Keine Therapeut:innen gefunden." },
+        { role: "yogi", listId: "yogi-list", emptyId: "yogi-empty", emptyText: "Keine Yogi:nis gefunden." },
+      ];
+
+      groups.forEach(g => {
+        const listEl = document.getElementById(g.listId);
+        const emptyEl = document.getElementById(g.emptyId);
+        listEl.innerHTML = "";
+        const filtered = allUsersRaw.filter(u => u.role === g.role && matchesFilter(u));
+        if (!filtered.length) {
+          emptyEl.style.display = "block";
+          emptyEl.textContent = g.emptyText;
+          return;
+        }
+        emptyEl.style.display = "none";
+        filtered.forEach(u => {
+          const row = buildUserCard(u, isActiveNow(u));
+          listEl.appendChild(row);
+
+          if (g.role === "therapeut") {
+            const assigned = allUsersRaw.filter(y => y.role === "yogi" && y.assigned_therapist_id === u.id);
+            const sharedIds = sharesByTherapist[u.id] || [];
+            const shared = allUsersRaw.filter(y => y.role === "yogi" && sharedIds.includes(y.id));
+            const treeWrap = document.createElement("div");
+            treeWrap.className = "yogini-tree";
+            if (!assigned.length && !shared.length) {
+              treeWrap.innerHTML = `<div class="yogini-tree-empty">Keine Yogi:nis zugewiesen.</div>`;
+            } else {
+              let treeHtml = "";
+              assigned.forEach(y => { treeHtml += `<div class="yogini-tree-item">${escapeHtml(displayName(y))}</div>`; });
+              shared.forEach(y => { treeHtml += `<div class="yogini-tree-item">${escapeHtml(displayName(y))} <span class="shared-tag">(geteilt)</span></div>`; });
+              treeWrap.innerHTML = treeHtml;
+            }
+            row.appendChild(treeWrap);
+          }
+        });
+      });
+    }
+
+    function buildUserCard(u, isCurrentlyActive) {
+      const row = document.createElement("div");
+      row.className = "user-row";
+
+      const created = u.created_at ? new Date(u.created_at).toLocaleDateString("de-CH") : "";
+      const isSelf = u.id === currentUserId;
+      const isAdminRow = u.role === "admin";
+      const canManageOther = !isSelf && (isAdminRow
+        ? isSuperAdminUser
+        : (isAdminUser || (currentUserRole === "therapeut" && u.assigned_therapist_id === currentUserId)));
+      const canManage = isSelf || canManageOther;
+      const roleEditable = isAdminUser && !(isAdminRow && !isSuperAdminUser) && !isSelf;
+
+      const roleControl = roleEditable
+        ? `<select data-id="${u.id}">
+            <option value="yogi" ${u.role === "yogi" ? "selected" : ""}>Yogi:ni</option>
+            <option value="therapeut" ${u.role === "therapeut" ? "selected" : ""}>Therapeut:in</option>
+            ${isSuperAdminUser ? `<option value="admin" ${u.role === "admin" ? "selected" : ""}>Admin</option>` : ""}
+          </select>`
+        : `<span class="role-text">${roleLabel(u.role, u.gender)}${isAdminRow && !isSuperAdminUser ? " (nur Haupt-Admin kann das ändern)" : ""}</span>`;
+
+      const activeUntilText = (u.active_until)
+        ? `${new Date(u.active_until) > new Date() ? "aktiv bis" : "war aktiv bis"} ${new Date(u.active_until).toLocaleString("de-CH")}`
+        : "";
+
+      const assignedTherapist = therapistList.find(t => t.id === u.assigned_therapist_id);
+
+      let genderHtml = "";
+      if ((u.role === "yogi" || u.role === "therapeut") && canManageOther) {
+        genderHtml = `<div class="assigned-row">Geschlecht:
+          <select data-role="gender">
+            <option value="" ${!u.gender ? "selected" : ""}>– nicht angegeben –</option>
+            <option value="frau" ${u.gender === "frau" ? "selected" : ""}>Frau</option>
+            <option value="mann" ${u.gender === "mann" ? "selected" : ""}>Mann</option>
+            <option value="nicht-binär" ${u.gender === "nicht-binär" ? "selected" : ""}>Nicht-binär</option>
+          </select>
+        </div>`;
+      }
+
+      let assignedHtml = "";
+      if (u.role === "yogi") {
+        if (isAdminUser) {
+          assignedHtml = `<div class="assigned-row">Zugewiesen:
+            <select data-role="assigned-therapist">
+              <option value="">– keine –</option>
+              ${therapistList.map(t => `<option value="${t.id}" ${t.id === u.assigned_therapist_id ? "selected" : ""}>${escapeHtml(displayName(t))}</option>`).join("")}
+            </select>
+          </div>`;
+        } else {
+          assignedHtml = `<div class="assigned-row">Zugewiesen: ${assignedTherapist ? escapeHtml(displayName(assignedTherapist)) : "– keine –"}</div>`;
+        }
+      }
+
+      let accessHtml = "";
+      if (u.role === "yogi" && canManageOther) {
+        const access = accessByYogi[u.id] || {};
+        accessHtml = `<div class="access-row">Freigaben:
+          <label><input type="checkbox" data-access="asanas" ${access.asanas ? "checked" : ""} /> Asanas</label>
+          <label><input type="checkbox" data-access="pranayama" ${access.pranayama ? "checked" : ""} /> Pranayama</label>
+          <label><input type="checkbox" data-access="mantras" ${access.mantras ? "checked" : ""} /> Mantras</label>
+        </div>`;
+      }
+
+      let fileLinkHtml = "";
+      if (u.role === "yogi" && currentUserRole === "therapeut" && canManageOther) {
+        fileLinkHtml = `<div style="margin-top:8px;"><a href="client-file.html?id=${u.id}" class="btn-secondary" style="font-size:12px; padding:6px 12px;">Benutzerakte öffnen</a></div>`;
+      }
+
+      row.innerHTML = `
+        <div class="user-info">
+          <div class="user-top-row">
+            <div>
+              <div class="email">${escapeHtml(displayName(u))}</div>
+              <div class="meta">${escapeHtml(u.email)}</div>
+            </div>
+          </div>
+          <div class="meta" style="margin-top:6px;">
+            <span class="status-badge ${isCurrentlyActive ? "active" : "inactive"}">${isCurrentlyActive ? "Aktiv" : "Inaktiv"}</span>
+            ${activeUntilText ? `<span style="margin-left:6px;">${activeUntilText}</span>` : ""}
+          </div>
+
+          <button type="button" class="toggle-details-btn" data-action="toggle-details">Mehr anzeigen</button>
+
+          <div class="user-details">
+            ${canManage ? `
+              <div class="name-edit-row" style="margin-top:10px;">
+                <input type="text" data-role="first-name" placeholder="Vorname" value="${escapeHtml(u.first_name || "")}" style="width:110px;" />
+                <input type="text" data-role="last-name" placeholder="Nachname" value="${escapeHtml(u.last_name || "")}" style="width:110px;" />
+                <button type="button" data-action="save-name">Name speichern</button>
+              </div>
+            ` : ""}
+
+            <div class="assigned-row" style="margin-top:8px;">Rolle: ${roleControl} ${isSelf ? '<span class="self-note">Das bist du</span>' : '<span class="save-status"></span>'}</div>
+
+            ${genderHtml}
+            ${accessHtml}
+            ${assignedHtml}
+            ${fileLinkHtml}
+
+            <div class="meta" style="margin-top:8px;">Registriert am ${created}</div>
+
+            ${canManageOther ? `
+              <div class="schedule-row" style="margin-top:8px;">
+                <input type="datetime-local" data-role="active-until" value="${u.active_until ? toLocalInputValue(u.active_until) : ""}" />
+                <button type="button" data-action="set-until">Setzen</button>
+                ${u.active_until ? `<button type="button" class="clear-btn" data-action="clear-until">✕</button>` : ""}
+              </div>
+            ` : ""}
+
+            ${isAdminUser && canManageOther ? `
+              <button class="btn-toggle" data-action="delete-user" style="border-color: var(--color-error); color: var(--color-error); margin-top:10px;">Löschen</button>
+            ` : ""}
+          </div>
+        </div>
+        <div class="user-controls">
+          ${canManageOther ? `
+            <button class="btn-toggle ${isCurrentlyActive ? "deactivate" : "activate"}" data-action="toggle-active">
+              ${isCurrentlyActive ? "Deaktivieren" : "Aktivieren"}
+            </button>
+          ` : ""}
+        </div>
+      `;
+
+      const toggleDetailsBtn = row.querySelector('[data-action="toggle-details"]');
+      const detailsEl = row.querySelector(".user-details");
+      toggleDetailsBtn.addEventListener("click", () => {
+        const isOpen = detailsEl.classList.toggle("open");
+        toggleDetailsBtn.textContent = isOpen ? "Weniger anzeigen" : "Mehr anzeigen";
+      });
+
+      if (roleEditable) {
+        const select = row.querySelector("select[data-id]");
+        const status = row.querySelector(".save-status");
+        select.addEventListener("change", async () => {
+          status.textContent = "Speichert …";
+          status.className = "save-status";
+          const { error } = await supabaseClient
+            .from("profiles")
+            .update({ role: select.value })
+            .eq("id", u.id);
+          if (error) {
+            status.textContent = "Fehler";
+            status.className = "save-status error";
+          } else {
+            status.textContent = "Gespeichert ✓";
+            status.className = "save-status";
+            setTimeout(() => { status.textContent = ""; }, 2000);
+            await loadUsers();
+          }
+        });
+      }
+
+      const assignedSelect = row.querySelector('[data-role="assigned-therapist"]');
+      if (assignedSelect) {
+        assignedSelect.addEventListener("change", async () => {
+          const { error } = await supabaseClient
+            .from("profiles")
+            .update({ assigned_therapist_id: assignedSelect.value || null })
+            .eq("id", u.id);
+          if (error) {
+            alert("Fehler: " + error.message);
+            return;
+          }
+          await loadUsers();
+        });
+      }
+
+      const genderSelect = row.querySelector('[data-role="gender"]');
+      if (genderSelect) {
+        genderSelect.addEventListener("change", async () => {
+          const { error } = await supabaseClient
+            .from("profiles")
+            .update({ gender: genderSelect.value || null })
+            .eq("id", u.id);
+          if (error) {
+            alert("Fehler: " + error.message);
+            return;
+          }
+          await loadUsers();
+        });
+      }
+
+      row.querySelectorAll("[data-access]").forEach(cb => {
+        cb.addEventListener("change", async () => {
+          const { error } = await supabaseClient
+            .from("content_access")
+            .upsert({
+              yogi_id: u.id,
+              content_type: cb.dataset.access,
+              granted: cb.checked,
+              granted_by: currentUserId,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: "yogi_id,content_type" });
+          if (error) {
+            alert("Fehler: " + error.message);
+            cb.checked = !cb.checked;
+          }
+        });
+      });
+
+      const saveNameBtn = row.querySelector('[data-action="save-name"]');
+      if (saveNameBtn) {
+        saveNameBtn.addEventListener("click", async () => {
+          const firstInput = row.querySelector('[data-role="first-name"]');
+          const lastInput = row.querySelector('[data-role="last-name"]');
+          const { error } = await supabaseClient
+            .from("profiles")
+            .update({
+              first_name: firstInput.value.trim() || null,
+              last_name: lastInput.value.trim() || null,
+            })
+            .eq("id", u.id);
+          if (error) {
+            alert("Fehler: " + error.message);
+            return;
+          }
+          await loadUsers();
+        });
+      }
+
+      if (isAdminUser && canManageOther) {
+        const deleteBtn = row.querySelector('[data-action="delete-user"]');
+        if (deleteBtn) {
+          deleteBtn.addEventListener("click", async () => {
+            const sure = confirm(
+              `"${displayName(u)}" wirklich löschen?\n\n` +
+              `Das entfernt Name, Akte, Freigaben und Zuweisungen aus der App. ` +
+              `Das Login-Konto selbst bleibt in Supabase bestehen (muss bei Bedarf separat im Supabase-Dashboard gelöscht werden). ` +
+              `Falls diese Person bereits Sequenzen/Flows/Asanas erstellt hat, schlägt das Löschen fehl.`
+            );
+            if (!sure) return;
+            deleteBtn.disabled = true;
+            const { error } = await supabaseClient.from("profiles").delete().eq("id", u.id);
+            if (error) {
+              alert("Fehler beim Löschen: " + error.message);
+              deleteBtn.disabled = false;
+              return;
+            }
+            await loadUsers();
+          });
+        }
+      }
+
+      if (canManageOther) {
+        const toggleBtn = row.querySelector('[data-action="toggle-active"]');
+        toggleBtn.addEventListener("click", async () => {
+          toggleBtn.disabled = true;
+          const { error } = await supabaseClient
+            .from("profiles")
+            .update({ active: !isCurrentlyActive })
+            .eq("id", u.id);
+          if (error) {
+            alert("Fehler: " + error.message);
+            toggleBtn.disabled = false;
+            return;
+          }
+          await loadUsers();
+        });
+
+        const setUntilBtn = row.querySelector('[data-action="set-until"]');
+        setUntilBtn.addEventListener("click", async () => {
+          const input = row.querySelector('[data-role="active-until"]');
+          if (!input.value) {
+            alert("Bitte zuerst Datum und Uhrzeit auswählen.");
+            return;
+          }
+          const isoValue = new Date(input.value).toISOString();
+          const { error } = await supabaseClient
+            .from("profiles")
+            .update({ active_until: isoValue })
+            .eq("id", u.id);
+          if (error) {
+            alert("Fehler: " + error.message);
+            return;
+          }
+          await loadUsers();
+        });
+
+        const clearUntilBtn = row.querySelector('[data-action="clear-until"]');
+        if (clearUntilBtn) {
+          clearUntilBtn.addEventListener("click", async () => {
+            const { error } = await supabaseClient
+              .from("profiles")
+              .update({ active_until: null })
+              .eq("id", u.id);
+            if (error) {
+              alert("Fehler: " + error.message);
+              return;
+            }
+            await loadUsers();
+          });
+        }
+      }
+
+      return row;
+    }
+
+    document.getElementById("f-search").addEventListener("input", renderUsers);
+    document.getElementById("f-status").addEventListener("change", renderUsers);
+
+    function toLocalInputValue(isoString) {
+      const d = new Date(isoString);
+      const pad = n => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function displayName(u) {
+      const parts = [u.first_name, u.last_name].filter(Boolean);
+      return parts.length ? parts.join(" ") : (u.email || "(keine E-Mail)");
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str || "";
+      return div.innerHTML;
+    }
+
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+      window.location.href = "index.html";
+    });
+
+    init();
+  </script>
+</body>
+</html>

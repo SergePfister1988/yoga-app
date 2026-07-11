@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sequenzen – Yoga-App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --color-bg: #FDFCFB;
+  --color-surface: #FFFFFF;
+  --color-pine: #572E2A;
+  --color-pine-dark: #3E211D;
+  --color-sand: #DBAEA4;
+  --color-sand-dark: #C08F84;
+  --color-text: #1E2622;
+  --color-text-muted: #5B6660;
+  --color-border: #DBDFD5;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-script: "Alex Brush", cursive;
+  --font-body: "Work Sans", "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-body); background-color: var(--color-bg); color: var(--color-text); min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+
+.app-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+.nav-links { display: flex; gap: 20px; margin-left: 32px; }
+.nav-links a { font-size: 14px; color: var(--color-text-muted); font-weight: 600; }
+.nav-links a.active, .nav-links a:hover { color: var(--color-pine); }
+.header-left { display: flex; align-items: center; }
+.role-badge { display: inline-block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; background: var(--color-sand); color: #fff; margin-left: 10px; }
+
+.btn-primary { padding: 10px 18px; background: var(--color-sand); color: #fff; border: none; border-radius: 3px; font-size: 14px; font-family: var(--font-body); font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--color-sand-dark); }
+.btn-secondary { padding: 8px 16px; background: transparent; color: var(--color-pine-dark); border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); cursor: pointer; }
+.btn-secondary:hover { border-color: var(--color-pine); }
+
+.app-main { padding: 32px; max-width: 1000px; margin: 0 auto; }
+.app-main h1 { font-family: var(--font-display); color: var(--color-pine-dark); margin-top: 0; }
+.app-main > p.intro { color: var(--color-text-muted); font-size: 14px; margin-top: -10px; margin-bottom: 24px; }
+
+.filter-bar { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 16px 20px; margin-bottom: 20px; }
+.filter-bar input { width: 100%; padding: 9px 10px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); background: var(--color-bg); }
+
+.sequence-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.sequence-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 18px; display: block; }
+.sequence-card:hover { border-color: var(--color-pine); }
+.sequence-card .name { font-family: var(--font-display); font-size: 20px; color: var(--color-pine-dark); margin: 0 0 6px 0; }
+.sequence-card .desc { font-size: 13px; color: var(--color-text-muted); line-height: 1.4; margin-bottom: 10px; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-size: 11px; padding: 3px 8px; border-radius: 12px; background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-text-muted); }
+
+.empty-state { color: var(--color-text-muted); padding: 40px 0; text-align: center; }
+
+@media (max-width: 640px) {
+  .app-header { flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+  .header-left { flex-wrap: wrap; gap: 8px; }
+  .nav-links { margin-left: 0; gap: 14px; }
+  .app-main { padding: 20px 16px; }
+  .sequence-list { grid-template-columns: 1fr; }
+  #admin-actions .btn-primary { width: 100%; padding: 13px; }
+}
+
+.brand-banner { background: linear-gradient(135deg, #C08F84 0%, #E3C4BC 55%, #EBD3CC 100%); display: flex; justify-content: center; align-items: center; padding: 10px 20px; }
+.brand-lockup { display: inline-flex; flex-direction: column; align-items: flex-end; text-decoration: none; line-height: 1; }
+.brand-script { font-family: var(--font-script); font-weight: 400; font-size: 44px; color: var(--color-pine-dark); }
+.brand-serif { font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--color-pine-dark); margin-top: -6px; letter-spacing: 0.01em; }
+@media (max-width: 640px) {
+  .brand-banner { padding: 8px 16px; }
+  .brand-script { font-size: 32px; }
+  .brand-serif { font-size: 14px; }
+}
+  </style>
+</head>
+<body>
+  <div class="brand-banner"><a href="dashboard.html" class="brand-lockup"><span class="brand-script">Pandora</span><span class="brand-serif">Community Bern</span></a></div>
+  <header class="app-header">
+    <div class="header-left">
+      <nav class="nav-links">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="meine-angaben.html" id="nav-meine-angaben">Meine Angaben</a>
+        <a href="selbstdeklaration.html" id="nav-selbstdeklaration" style="display:none;">Selbstdeklaration</a>
+        <a href="mein-kontakt.html" id="nav-mein-kontakt" style="display:none;">Mein Kontakt</a>
+        <a href="meine-yoginis.html" id="nav-meine-yoginis" style="display:none;">Meine Yogi:nis</a>
+        <a href="meine-therapeuten.html" id="nav-meine-therapeuten" style="display:none;">Meine Therapeut:innen</a>
+        <a href="dokumentvorlagen.html" id="nav-dokumentvorlagen" style="display:none;">Vorlagen verwalten</a>
+        <a href="asanas.html" id="nav-asanas">Asanas</a>
+        <a href="sequences.html" class="active">Sequenzen</a>
+        <a href="flows.html" id="nav-flows">Flows</a>
+        <a href="pranayama.html" id="nav-pranayama">Pranayama</a>
+        <a href="mantras.html" id="nav-mantras">Mantras</a>
+        <a href="users.html" id="nav-users" style="display:none;">Benutzer</a>
+      </nav>
+      <span class="role-badge" id="role-badge" style="display:none;"></span>
+    </div>
+    <button class="btn-secondary" id="logout-btn">Ausloggen</button>
+  </header>
+
+  <main class="app-main">
+    <h1>Sequenzen</h1>
+    <p class="intro" id="page-intro">Abfolgen aus mehreren Asanas, die einer Yogi:ni zugewiesen werden können.</p>
+
+    <div class="filter-bar">
+      <input type="text" id="f-search" placeholder="Sequenz suchen..." />
+    </div>
+
+    <div id="admin-actions" style="display:none; margin-bottom: 16px;">
+      <a href="sequence-form.html"><button class="btn-primary">+ Neue Sequenz erstellen</button></a>
+    </div>
+
+    <div id="sequence-list" class="sequence-list"></div>
+    <p id="empty-state" class="empty-state" style="display:none;"></p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://yqklyumvybthkzlbsspj.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable__DLVShYfXjf0C27LLK1zbg_5vpFcxJy";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function roleLabel(role, gender) {
+      if (role === "admin") return "Admin";
+      if (role === "therapeut") {
+        if (gender === "frau") return "Therapeutin";
+        if (gender === "mann") return "Therapeut";
+        return "Therapeut:in";
+      }
+      if (role === "yogi") {
+        if (gender === "frau") return "Yogini";
+        if (gender === "mann") return "Yogi";
+        return "Yogi:ni";
+      }
+      return role;
+    }
+
+    let currentUserId = null;
+    let currentUserRole = null;
+    let allSequences = [];
+
+    async function init() {
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      if (!sessionData.session) {
+        window.location.href = "index.html";
+        return;
+      }
+      currentUserId = sessionData.session.user.id;
+
+      const { data: profile } = await supabaseClient
+        .from("profiles")
+        .select("role, gender")
+        .eq("id", currentUserId)
+        .single();
+
+      if (profile) {
+        currentUserRole = profile.role;
+        const badge = document.getElementById("role-badge");
+        badge.textContent = roleLabel(profile.role, profile.gender);
+        badge.style.display = "inline-block";
+        if (profile.role === "admin") {
+          const mt = document.getElementById("nav-meine-therapeuten");
+          if (mt) mt.style.display = "inline";
+          const dv = document.getElementById("nav-dokumentvorlagen");
+          if (dv) dv.style.display = "inline";
+        }
+        if (profile.role === "therapeut") {
+          const sd = document.getElementById("nav-selbstdeklaration");
+          if (sd) sd.style.display = "inline";
+        }
+        if (profile.role === "yogi") {
+          const mk = document.getElementById("nav-mein-kontakt");
+          if (mk) mk.style.display = "inline";
+        }
+        if (profile.role !== "admin") {
+          const maLink = document.getElementById("nav-meine-angaben");
+          if (maLink) {
+            maLink.textContent = "Passwort";
+            maLink.parentElement.appendChild(maLink);
+          }
+        }
+        if (profile.role !== "admin") {
+          ["nav-asanas", "nav-flows", "nav-pranayama", "nav-mantras"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = "none";
+          });
+        }
+
+        if (profile.role === "admin" || profile.role === "therapeut") {
+          document.getElementById("nav-users").style.display = "inline";
+          if (profile.role === "therapeut") {
+            document.getElementById("nav-meine-yoginis").style.display = "inline";
+          }
+          document.getElementById("admin-actions").style.display = "block";
+        }
+        if (profile.role === "yogi") {
+          document.getElementById("page-intro").textContent = "Sequenzen, die dir von deiner Therapeut:in zugewiesen wurden.";
+        }
+      }
+
+      await loadSequences();
+    }
+
+    async function loadSequences() {
+      const { data, error } = await supabaseClient
+        .from("asana_sequences")
+        .select(`
+          id, title, description, created_by, is_public,
+          asana_sequence_items ( id ),
+          sequence_assignments ( id )
+        `)
+        .order("created_at", { ascending: false });
+
+      const listEl = document.getElementById("sequence-list");
+      const emptyEl = document.getElementById("empty-state");
+
+      if (error) {
+        emptyEl.style.display = "block";
+        emptyEl.textContent = "Fehler beim Laden: " + error.message;
+        return;
+      }
+
+      allSequences = data || [];
+      renderList();
+    }
+
+    function renderList() {
+      const search = document.getElementById("f-search").value.trim().toLowerCase();
+      const listEl = document.getElementById("sequence-list");
+      const emptyEl = document.getElementById("empty-state");
+      listEl.innerHTML = "";
+
+      const filtered = allSequences.filter(s => {
+        if (!search) return true;
+        return (s.title + " " + (s.description || "")).toLowerCase().includes(search);
+      });
+
+      if (filtered.length === 0) {
+        emptyEl.style.display = "block";
+        emptyEl.textContent = currentUserRole === "yogi"
+          ? "Dir wurden noch keine Sequenzen zugewiesen."
+          : "Keine Sequenzen gefunden.";
+        return;
+      }
+      emptyEl.style.display = "none";
+
+      filtered.forEach(s => {
+        const card = document.createElement("a");
+        card.href = "sequence-detail.html?id=" + s.id;
+        card.className = "sequence-card";
+
+        const itemCount = (s.asana_sequence_items || []).length;
+        const assignedCount = (s.sequence_assignments || []).length;
+
+        let html = `<div class="name">${escapeHtml(s.title)}</div>`;
+        if (s.description) html += `<div class="desc">${escapeHtml(s.description)}</div>`;
+        html += `<div class="tag-row">
+          <span class="tag">${itemCount} Asana${itemCount === 1 ? "" : "s"}</span>
+          ${currentUserRole !== "yogi" ? `<span class="tag">${assignedCount} zugewiesen</span>` : ""}
+          ${s.is_public ? `<span class="tag category">Öffentlich</span>` : ""}
+        </div>`;
+
+        card.innerHTML = html;
+        listEl.appendChild(card);
+      });
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str || "";
+      return div.innerHTML;
+    }
+
+    document.getElementById("f-search").addEventListener("input", renderList);
+
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+      window.location.href = "index.html";
+    });
+
+    init();
+  </script>
+</body>
+</html>

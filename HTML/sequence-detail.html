@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sequenz-Detail – Yoga-App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --color-bg: #FDFCFB;
+  --color-surface: #FFFFFF;
+  --color-pine: #572E2A;
+  --color-pine-dark: #3E211D;
+  --color-sand: #DBAEA4;
+  --color-sand-dark: #C08F84;
+  --color-text: #1E2622;
+  --color-text-muted: #5B6660;
+  --color-border: #DBDFD5;
+  --color-error: #A6483A;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-script: "Alex Brush", cursive;
+  --font-body: "Work Sans", "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-body); background-color: var(--color-bg); color: var(--color-text); min-height: 100vh; }
+a { color: inherit; }
+
+.app-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+.nav-links { display: flex; gap: 20px; margin-left: 32px; }
+.nav-links a { font-size: 14px; color: var(--color-text-muted); font-weight: 600; text-decoration: none; }
+.nav-links a.active, .nav-links a:hover { color: var(--color-pine); }
+.header-left { display: flex; align-items: center; }
+.role-badge { display: inline-block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; background: var(--color-sand); color: #fff; margin-left: 10px; }
+
+.btn-primary { padding: 10px 18px; background: var(--color-sand); color: #fff; border: none; border-radius: 3px; font-size: 14px; font-family: var(--font-body); font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--color-sand-dark); }
+.btn-secondary { padding: 8px 16px; background: transparent; color: var(--color-pine-dark); border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); cursor: pointer; text-decoration: none; display: inline-block; }
+.btn-secondary:hover { border-color: var(--color-pine); }
+.btn-danger { padding: 8px 16px; background: transparent; color: var(--color-error); border: 1px solid var(--color-error); border-radius: 3px; font-size: 14px; font-family: var(--font-body); cursor: pointer; }
+
+.app-main { padding: 32px; max-width: 760px; margin: 0 auto; }
+.back-link { font-size: 13px; color: var(--color-text-muted); text-decoration: none; }
+.back-link:hover { color: var(--color-pine); }
+
+.title-row { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 12px; }
+h1 { font-family: var(--font-display); color: var(--color-pine-dark); margin: 4px 0 12px 0; }
+.admin-buttons { display: flex; gap: 8px; }
+.desc { color: var(--color-text-muted); margin-bottom: 24px; line-height: 1.5; }
+
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 22px 24px; margin-bottom: 18px; }
+.card h2 { font-family: var(--font-display); font-size: 17px; color: var(--color-pine-dark); margin: 0 0 14px 0; }
+.muted { color: var(--color-text-muted); font-size: 14px; }
+
+.step-list { display: flex; flex-direction: column; gap: 10px; }
+.step-item { display: flex; gap: 14px; align-items: flex-start; padding: 12px; border: 1px solid var(--color-border); border-radius: 4px; }
+.step-thumb { width: 56px; height: 56px; border-radius: 4px; object-fit: cover; flex-shrink: 0; }
+.step-thumb-placeholder { background: var(--color-bg); border: 1px dashed var(--color-border); }
+
+.flow-block { border: 1px solid var(--color-sand); border-radius: 4px; padding: 12px; background: rgba(219,174,164,0.06); }
+.flow-block-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-sand-dark); margin-bottom: 8px; }
+.flow-row { display: flex; align-items: flex-start; gap: 2px; overflow-x: auto; padding-bottom: 4px; }
+.flow-step { display: flex; flex-direction: column; align-items: center; min-width: 68px; position: relative; }
+.flow-step a { display: block; }
+.flow-thumb { width: 60px; height: 60px; border-radius: 4px; object-fit: cover; display: block; }
+.flow-thumb-placeholder { background: var(--color-surface); border: 1px dashed var(--color-border); }
+.flow-step-number { font-size: 10px; color: var(--color-text-muted); margin-top: 3px; }
+.flow-label { font-size: 11px; font-weight: 600; text-align: center; margin-top: 2px; color: var(--color-text); min-height: 14px; }
+.flow-sublabel { font-size: 10px; color: var(--color-text-muted); text-align: center; }
+.flow-arrow { color: var(--color-sand-dark); font-size: 18px; padding-top: 20px; flex-shrink: 0; }
+.flow-repeat-badge { background: var(--color-sand); color: #fff; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 12px; margin-top: 18px; white-space: nowrap; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-size: 11px; padding: 3px 9px; border-radius: 12px; background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-text-muted); }
+.field input[type="text"] { width: 100%; padding: 9px 10px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); background: var(--color-bg); }
+.step-number { font-family: var(--font-display); font-size: 20px; color: var(--color-sand-dark); min-width: 28px; }
+.step-content .name { font-weight: 600; }
+.step-content .meta { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; }
+.step-content .notes { font-size: 13px; margin-top: 4px; color: var(--color-text); }
+.step-content a { color: var(--color-pine); text-decoration: underline; }
+
+.assign-list { display: flex; flex-direction: column; gap: 8px; }
+.assign-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 3px; }
+.assign-row label { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.assigned-tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: rgba(87,46,42,0.08); color: var(--color-pine); }
+
+@media (max-width: 640px) {
+  .app-header { flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+  .header-left { flex-wrap: wrap; gap: 8px; }
+  .nav-links { margin-left: 0; gap: 14px; }
+  .app-main { padding: 20px 16px; }
+  .title-row { flex-direction: column; gap: 12px; }
+  .admin-buttons { width: 100%; }
+  .admin-buttons a, .admin-buttons button { flex: 1; text-align: center; }
+  .card { padding: 18px 16px; }
+}
+
+.brand-banner { background: linear-gradient(135deg, #C08F84 0%, #E3C4BC 55%, #EBD3CC 100%); display: flex; justify-content: center; align-items: center; padding: 10px 20px; }
+.brand-lockup { display: inline-flex; flex-direction: column; align-items: flex-end; text-decoration: none; line-height: 1; }
+.brand-script { font-family: var(--font-script); font-weight: 400; font-size: 44px; color: var(--color-pine-dark); }
+.brand-serif { font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--color-pine-dark); margin-top: -6px; letter-spacing: 0.01em; }
+@media (max-width: 640px) {
+  .brand-banner { padding: 8px 16px; }
+  .brand-script { font-size: 32px; }
+  .brand-serif { font-size: 14px; }
+}
+  </style>
+</head>
+<body>
+  <div class="brand-banner"><a href="dashboard.html" class="brand-lockup"><span class="brand-script">Pandora</span><span class="brand-serif">Community Bern</span></a></div>
+  <header class="app-header">
+    <div class="header-left">
+      <nav class="nav-links">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="meine-angaben.html" id="nav-meine-angaben">Meine Angaben</a>
+        <a href="selbstdeklaration.html" id="nav-selbstdeklaration" style="display:none;">Selbstdeklaration</a>
+        <a href="mein-kontakt.html" id="nav-mein-kontakt" style="display:none;">Mein Kontakt</a>
+        <a href="meine-yoginis.html" id="nav-meine-yoginis" style="display:none;">Meine Yogi:nis</a>
+        <a href="meine-therapeuten.html" id="nav-meine-therapeuten" style="display:none;">Meine Therapeut:innen</a>
+        <a href="dokumentvorlagen.html" id="nav-dokumentvorlagen" style="display:none;">Vorlagen verwalten</a>
+        <a href="asanas.html" id="nav-asanas">Asanas</a>
+        <a href="sequences.html" class="active">Sequenzen</a>
+        <a href="flows.html" id="nav-flows">Flows</a>
+        <a href="pranayama.html" id="nav-pranayama">Pranayama</a>
+        <a href="mantras.html" id="nav-mantras">Mantras</a>
+        <a href="users.html" id="nav-users" style="display:none;">Benutzer</a>
+      </nav>
+      <span class="role-badge" id="role-badge" style="display:none;"></span>
+    </div>
+    <button class="btn-secondary" id="logout-btn">Ausloggen</button>
+  </header>
+
+  <main class="app-main">
+    <a href="sequences.html" class="back-link">← Zurück zur Übersicht</a>
+    <div id="content"></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://yqklyumvybthkzlbsspj.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable__DLVShYfXjf0C27LLK1zbg_5vpFcxJy";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function roleLabel(role, gender) {
+      if (role === "admin") return "Admin";
+      if (role === "therapeut") {
+        if (gender === "frau") return "Therapeutin";
+        if (gender === "mann") return "Therapeut";
+        return "Therapeut:in";
+      }
+      if (role === "yogi") {
+        if (gender === "frau") return "Yogini";
+        if (gender === "mann") return "Yogi";
+        return "Yogi:ni";
+      }
+      return role;
+    }
+
+    const sequenceId = new URLSearchParams(window.location.search).get("id");
+    let currentSequenceTitle = "";
+
+    function backLinkParams() {
+      const backUrl = "sequence-detail.html?id=" + sequenceId;
+      const backLabel = `Zurück zur Sequenz "${currentSequenceTitle}"`;
+      return `&back=${encodeURIComponent(backUrl)}&backLabel=${encodeURIComponent(backLabel)}`;
+    }
+    let currentUserId = null;
+    let currentUserRole = null;
+    let isOwnerOrAdmin = false;
+    let canAssign = false;
+
+    async function init() {
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      if (!sessionData.session) {
+        window.location.href = "index.html";
+        return;
+      }
+      currentUserId = sessionData.session.user.id;
+
+      const { data: profile } = await supabaseClient
+        .from("profiles")
+        .select("role, gender")
+        .eq("id", currentUserId)
+        .single();
+
+      if (profile) {
+        currentUserRole = profile.role;
+        const badge = document.getElementById("role-badge");
+        badge.textContent = roleLabel(profile.role, profile.gender);
+        badge.style.display = "inline-block";
+        if (profile.role === "admin") {
+          const mt = document.getElementById("nav-meine-therapeuten");
+          if (mt) mt.style.display = "inline";
+          const dv = document.getElementById("nav-dokumentvorlagen");
+          if (dv) dv.style.display = "inline";
+        }
+        if (profile.role === "therapeut") {
+          const sd = document.getElementById("nav-selbstdeklaration");
+          if (sd) sd.style.display = "inline";
+        }
+        if (profile.role === "yogi") {
+          const mk = document.getElementById("nav-mein-kontakt");
+          if (mk) mk.style.display = "inline";
+        }
+        if (profile.role !== "admin") {
+          const maLink = document.getElementById("nav-meine-angaben");
+          if (maLink) {
+            maLink.textContent = "Passwort";
+            maLink.parentElement.appendChild(maLink);
+          }
+        }
+        if (profile.role !== "admin") {
+          ["nav-asanas", "nav-flows", "nav-pranayama", "nav-mantras"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = "none";
+          });
+        }
+        if (profile.role === "admin" || profile.role === "therapeut") {
+          document.getElementById("nav-users").style.display = "inline";
+          if (profile.role === "therapeut") {
+            document.getElementById("nav-meine-yoginis").style.display = "inline";
+          }
+        }
+      }
+
+      if (!sequenceId) {
+        document.getElementById("content").innerHTML = "<p>Keine Sequenz angegeben.</p>";
+        return;
+      }
+
+      await loadSequence();
+    }
+
+    function displayName(u) {
+      const parts = [u.first_name, u.last_name].filter(Boolean);
+      return parts.length ? parts.join(" ") : (u.email || "");
+    }
+
+    function esc(str) {
+      const div = document.createElement("div");
+      div.textContent = str || "";
+      return div.innerHTML;
+    }
+
+    async function loadSequence() {
+      const { data: seq, error } = await supabaseClient
+        .from("asana_sequences")
+        .select(`
+          id, title, description, created_by, is_public,
+          asana_sequence_items (
+            id, position, is_flow_step, flow_repeat_count, breath_cue, hold_duration_override, side, notes,
+            asana_id, pranayama_id,
+            asanas ( id, name_deutsch, hold_duration, asana_media ( media_type, storage_path ) ),
+            pranayamas ( id, name_deutsch, duration_recommendation, pranayama_media ( media_type, storage_path ) )
+          ),
+          sequence_equipment ( equipment ( name ) )
+        `)
+        .eq("id", sequenceId)
+        .single();
+
+      if (error || !seq) {
+        document.getElementById("content").innerHTML = "<p>Sequenz nicht gefunden.</p>";
+        return;
+      }
+
+      isOwnerOrAdmin = currentUserRole === "admin" || seq.created_by === currentUserId;
+      canAssign = isOwnerOrAdmin || (currentUserRole === "therapeut" && seq.is_public);
+
+      let assignedYogis = [];
+      let candidateYogis = [];
+      if (canAssign) {
+        const { data: assignments } = await supabaseClient
+          .from("sequence_assignments")
+          .select("id, yogi_id, profiles:yogi_id ( id, first_name, last_name, email )")
+          .eq("sequence_id", sequenceId);
+        assignedYogis = assignments || [];
+
+        // Für Therapeut:innen: nur die eigenen zugewiesenen/geteilten Yoginis zur Auswahl anbieten.
+        // Für Admin: alle Yoginis.
+        const { data: yogis } = await supabaseClient
+          .from("profiles")
+          .select("id, first_name, last_name, email, assigned_therapist_id")
+          .eq("role", "yogi");
+        candidateYogis = yogis || [];
+      }
+
+      render(seq, assignedYogis, candidateYogis);
+    }
+
+    const breathLabels = { einatmen: "Einatmen", ausatmen: "Ausatmen", atem_halten: "Atem halten", kein_bezug: "Kein Atembezug" };
+
+    function getThumb(mediaList, altName, cssClass) {
+      const image = (mediaList || []).find(m => m.media_type === "image");
+      if (image) {
+        const { data: pub } = supabaseClient.storage.from("asana-media").getPublicUrl(image.storage_path);
+        return `<img class="${cssClass}" src="${pub.publicUrl}" alt="${esc(altName || "")}" />`;
+      }
+      return `<div class="${cssClass} ${cssClass}-placeholder"></div>`;
+    }
+
+    function renderSingleStep(item, i) {
+      const isPranayama = !!item.pranayama_id;
+      const content = isPranayama ? item.pranayamas : item.asanas;
+      const mediaList = isPranayama ? (content && content.pranayama_media) : (content && content.asana_media);
+      const detailPage = isPranayama ? "pranayama-detail.html" : "asana-detail.html";
+      const duration = isPranayama ? (content && content.duration_recommendation) : (content && content.hold_duration);
+      const thumbHtml = getThumb(mediaList, content ? content.name_deutsch : "", "step-thumb");
+      return `<div class="step-item">
+        <div class="step-number">${i + 1}</div>
+        ${thumbHtml}
+        <div class="step-content">
+          <div class="name">${content ? `<a href="${detailPage}?id=${content.id}${backLinkParams()}">${esc(content.name_deutsch)}</a>${isPranayama ? ' <span style="font-size:11px; color: var(--color-sand-dark);">(Pranayama)</span>' : ""}` : "(Inhalt gelöscht)"}</div>
+          <div class="meta">
+            ${item.breath_cue ? `<span class="tag" style="margin-right:6px;">${breathLabels[item.breath_cue] || item.breath_cue}</span>` : ""}
+            ${item.hold_duration_override ? esc(item.hold_duration_override) : (duration ? esc(duration) : "")}
+            ${item.side ? " · " + esc(item.side) : ""}
+          </div>
+          ${item.notes ? `<div class="notes">${esc(item.notes)}</div>` : ""}
+        </div>
+      </div>`;
+    }
+
+    function renderFlowGroup(flowItems, startIndex) {
+      const repeatCount = Math.max(1, ...flowItems.map(i => i.flow_repeat_count || 1));
+      let html = `<div class="flow-block">
+        <div class="flow-block-label">Flow${repeatCount > 1 ? ` · × ${repeatCount} wiederholen` : ""}</div>
+        <div class="flow-row">`;
+      flowItems.forEach((item, idx) => {
+        const a = item.asanas;
+        const thumbHtml = getThumb(a && a.asana_media, a ? a.name_deutsch : "", "flow-thumb");
+        html += `<div class="flow-step">
+          ${a ? `<a href="asana-detail.html?id=${a.id}${backLinkParams()}">${thumbHtml}</a>` : thumbHtml}
+          <div class="flow-step-number">${startIndex + idx + 1}</div>
+          <div class="flow-label">${item.breath_cue ? breathLabels[item.breath_cue] : ""}</div>
+          <div class="flow-sublabel">${item.side ? esc(item.side) : ""}</div>
+        </div>`;
+        if (idx < flowItems.length - 1) html += `<div class="flow-arrow">→</div>`;
+      });
+      if (repeatCount > 1) {
+        html += `<div class="flow-arrow" style="padding-top:0; align-self:center;">↻</div>
+        <div class="flow-step">
+          <div class="flow-repeat-badge">× ${repeatCount}</div>
+        </div>`;
+      }
+      html += `</div></div>`;
+      return html;
+    }
+
+    function render(seq, assignedYogis, candidateYogis) {
+      currentSequenceTitle = seq.title;
+      const items = (seq.asana_sequence_items || []).slice().sort((a, b) => a.position - b.position);
+      let html = "";
+
+      html += `<div class="title-row">
+        <h1>${esc(seq.title)}</h1>`;
+      if (isOwnerOrAdmin) {
+        html += `<div class="admin-buttons">
+          <a href="sequence-form.html?id=${seq.id}" class="btn-secondary">Bearbeiten</a>
+          <button class="btn-danger" id="delete-btn">Löschen</button>
+        </div>`;
+      }
+      html += `</div>`;
+
+      if (seq.description) html += `<p class="desc">${esc(seq.description)}</p>`;
+
+      html += `<div class="card"><h2>Ablauf</h2><div class="step-list">`;
+      if (!items.length) {
+        html += `<p class="muted">Diese Sequenz enthält noch keine Asanas.</p>`;
+      }
+
+      // Aufeinanderfolgende Schritte mit is_flow_step=true werden zu einem
+      // zusammenhängenden Flow-Block gruppiert; alle anderen bleiben einzeln.
+      const groups = [];
+      let currentFlowGroup = null;
+      items.forEach((item, i) => {
+        if (item.is_flow_step) {
+          if (!currentFlowGroup) {
+            currentFlowGroup = { type: "flow", items: [], startIndex: i };
+            groups.push(currentFlowGroup);
+          }
+          currentFlowGroup.items.push(item);
+        } else {
+          currentFlowGroup = null;
+          groups.push({ type: "single", item, index: i });
+        }
+      });
+
+      groups.forEach(group => {
+        if (group.type === "single") {
+          html += renderSingleStep(group.item, group.index);
+        } else {
+          html += renderFlowGroup(group.items, group.startIndex);
+        }
+      });
+      html += `</div></div>`;
+
+      if ((seq.sequence_equipment || []).length) {
+        html += `<div class="card"><h2>Hilfsmittel</h2><div class="tag-row">`;
+        seq.sequence_equipment.forEach(se => {
+          if (se.equipment) html += `<span class="tag">${esc(se.equipment.name)}</span>`;
+        });
+        html += `</div></div>`;
+      }
+
+      if (canAssign) {
+        html += `<div class="card"><h2>Zuweisung an Yogi:nis</h2>
+          <div class="field" style="margin-bottom:12px;">
+            <input type="text" id="assign-search" placeholder="Yogi:ni suchen..." />
+          </div>
+          <div class="assign-list" id="assign-list"></div>
+        </div>`;
+      }
+
+      document.getElementById("content").innerHTML = html;
+
+      if (canAssign) {
+        renderAssignList(assignedYogis, candidateYogis);
+        document.getElementById("assign-search").addEventListener("input", (e) => {
+          renderAssignList(assignedYogis, candidateYogis, e.target.value);
+        });
+      }
+
+      const deleteBtn = document.getElementById("delete-btn");
+      if (deleteBtn) {
+        deleteBtn.addEventListener("click", async () => {
+          if (!confirm("Diese Sequenz wirklich löschen?")) return;
+          const { error } = await supabaseClient.from("asana_sequences").delete().eq("id", seq.id);
+          if (error) {
+            alert("Fehler beim Löschen: " + error.message);
+            return;
+          }
+          window.location.href = "sequences.html";
+        });
+      }
+    }
+
+    function renderAssignList(assignedYogis, candidateYogis, searchTerm) {
+      const container = document.getElementById("assign-list");
+      const assignedIds = new Set(assignedYogis.map(a => a.yogi_id));
+
+      // Für Therapeut:innen: nur eigene Yoginis anzeigen, plus bereits zugewiesene (falls von anderswo zugewiesen)
+      let relevantYogis = candidateYogis;
+      if (currentUserRole === "therapeut") {
+        relevantYogis = candidateYogis.filter(y => y.assigned_therapist_id === currentUserId || assignedIds.has(y.id));
+      }
+
+      if (searchTerm) {
+        const q = searchTerm.trim().toLowerCase();
+        relevantYogis = relevantYogis.filter(y => displayName(y).toLowerCase().includes(q));
+      }
+
+      if (!relevantYogis.length) {
+        container.innerHTML = `<p class="muted">Keine Yogi:nis gefunden.</p>`;
+        return;
+      }
+
+      container.innerHTML = "";
+      relevantYogis.forEach(y => {
+        const row = document.createElement("div");
+        row.className = "assign-row";
+        row.innerHTML = `
+          <label>
+            <input type="checkbox" data-yogi-id="${y.id}" ${assignedIds.has(y.id) ? "checked" : ""} />
+            ${esc(displayName(y))}
+          </label>
+        `;
+        const cb = row.querySelector("input");
+        cb.addEventListener("change", async () => {
+          cb.disabled = true;
+          if (cb.checked) {
+            const { error } = await supabaseClient.from("sequence_assignments").insert({
+              sequence_id: sequenceId,
+              yogi_id: y.id,
+              assigned_by: currentUserId,
+            });
+            if (error) {
+              alert("Fehler: " + error.message);
+              cb.checked = false;
+            }
+          } else {
+            const { error } = await supabaseClient
+              .from("sequence_assignments")
+              .delete()
+              .eq("sequence_id", sequenceId)
+              .eq("yogi_id", y.id);
+            if (error) {
+              alert("Fehler: " + error.message);
+              cb.checked = true;
+            }
+          }
+          cb.disabled = false;
+        });
+        container.appendChild(row);
+      });
+    }
+
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+      window.location.href = "index.html";
+    });
+
+    init();
+  </script>
+</body>
+</html>

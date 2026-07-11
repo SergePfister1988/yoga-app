@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mantra-Detail – Yoga-App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --color-bg: #FDFCFB; --color-surface: #FFFFFF; --color-pine: #572E2A; --color-pine-dark: #3E211D;
+  --color-sand: #DBAEA4; --color-sand-dark: #C08F84; --color-text: #1E2622; --color-text-muted: #5B6660;
+  --color-border: #DBDFD5; --color-error: #A6483A;
+  --font-display: "Cormorant Garamond", Georgia, serif; --font-script: "Alex Brush", cursive; --font-body: "Work Sans", "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "Courier New", monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-body); background-color: var(--color-bg); color: var(--color-text); min-height: 100vh; }
+a { color: inherit; }
+.app-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+.nav-links { display: flex; gap: 20px; margin-left: 32px; flex-wrap: wrap; }
+.nav-links a { font-size: 14px; color: var(--color-text-muted); font-weight: 600; text-decoration: none; }
+.nav-links a.active, .nav-links a:hover { color: var(--color-pine); }
+.header-left { display: flex; align-items: center; flex-wrap: wrap; }
+.role-badge { display: inline-block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; background: var(--color-sand); color: #fff; margin-left: 10px; }
+.btn-primary { padding: 10px 18px; background: var(--color-sand); color: #fff; border: none; border-radius: 3px; font-size: 14px; font-family: var(--font-body); font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--color-sand-dark); }
+.btn-secondary { padding: 8px 16px; background: transparent; color: var(--color-pine-dark); border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); cursor: pointer; text-decoration: none; display: inline-block; }
+.btn-secondary:hover { border-color: var(--color-pine); }
+.btn-danger { padding: 8px 16px; background: transparent; color: var(--color-error); border: 1px solid var(--color-error); border-radius: 3px; font-size: 14px; font-family: var(--font-body); cursor: pointer; }
+.app-main { padding: 32px; max-width: 760px; margin: 0 auto; }
+.back-link { font-size: 13px; color: var(--color-text-muted); text-decoration: none; }
+.back-link:hover { color: var(--color-pine); }
+.title-row { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 12px; }
+.sanskrit { font-size: 13px; color: var(--color-text-muted); }
+h1 { font-family: var(--font-display); color: var(--color-pine-dark); margin: 4px 0 12px 0; }
+.admin-buttons { display: flex; gap: 8px; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
+.tag { font-size: 11px; padding: 3px 9px; border-radius: 12px; background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-text-muted); }
+.tag.category { background: var(--color-pine-dark); color: #fff; }
+.tag.reviewed { background: rgba(87,46,42,0.08); color: var(--color-pine); border-color: transparent; font-weight: 600; }
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 22px 24px; margin-bottom: 18px; }
+.card h2 { font-family: var(--font-display); font-size: 17px; color: var(--color-pine-dark); margin: 0 0 12px 0; }
+.muted { color: var(--color-text-muted); font-size: 14px; }
+.mantra-text { font-family: var(--font-mono); font-size: 15px; line-height: 1.7; white-space: pre; background: var(--color-bg); border-radius: 4px; padding: 16px; overflow-x: auto; }
+.media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.media-grid img, .media-grid video { width: 100%; border-radius: 4px; display: block; }
+.media-grid audio { width: 100%; }
+@media (max-width: 640px) {
+  .app-header { flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+  .nav-links { margin-left: 0; gap: 14px; }
+  .app-main { padding: 20px 16px; }
+  .title-row { flex-direction: column; gap: 12px; }
+  .admin-buttons { width: 100%; }
+  .admin-buttons a, .admin-buttons button { flex: 1; text-align: center; }
+  .card { padding: 18px 16px; }
+  .mantra-text { font-size: 13px; }
+}
+.brand-banner { background: linear-gradient(135deg, #C08F84 0%, #E3C4BC 55%, #EBD3CC 100%); display: flex; justify-content: center; align-items: center; padding: 10px 20px; }
+.brand-lockup { display: inline-flex; flex-direction: column; align-items: flex-end; text-decoration: none; line-height: 1; }
+.brand-script { font-family: var(--font-script); font-weight: 400; font-size: 44px; color: var(--color-pine-dark); }
+.brand-serif { font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--color-pine-dark); margin-top: -6px; letter-spacing: 0.01em; }
+@media (max-width: 640px) { .brand-banner { padding: 8px 16px; } .brand-script { font-size: 32px; } .brand-serif { font-size: 14px; } }
+  </style>
+</head>
+<body>
+  <div class="brand-banner"><a href="dashboard.html" class="brand-lockup"><span class="brand-script">Pandora</span><span class="brand-serif">Community Bern</span></a></div>
+  <header class="app-header">
+    <div class="header-left">
+      <nav class="nav-links">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="meine-angaben.html" id="nav-meine-angaben">Meine Angaben</a>
+        <a href="selbstdeklaration.html" id="nav-selbstdeklaration" style="display:none;">Selbstdeklaration</a>
+        <a href="mein-kontakt.html" id="nav-mein-kontakt" style="display:none;">Mein Kontakt</a>
+        <a href="meine-yoginis.html" id="nav-meine-yoginis" style="display:none;">Meine Yogi:nis</a>
+        <a href="meine-therapeuten.html" id="nav-meine-therapeuten" style="display:none;">Meine Therapeut:innen</a>
+        <a href="dokumentvorlagen.html" id="nav-dokumentvorlagen" style="display:none;">Vorlagen verwalten</a>
+        <a href="asanas.html" id="nav-asanas">Asanas</a>
+        <a href="sequences.html">Sequenzen</a>
+        <a href="flows.html" id="nav-flows">Flows</a>
+        <a href="pranayama.html" id="nav-pranayama">Pranayama</a>
+        <a href="mantras.html" class="active" id="nav-mantras">Mantras</a>
+        <a href="users.html" id="nav-users" style="display:none;">Benutzer</a>
+      </nav>
+      <span class="role-badge" id="role-badge" style="display:none;"></span>
+    </div>
+    <button class="btn-secondary" id="logout-btn">Ausloggen</button>
+  </header>
+
+  <main class="app-main">
+    <a href="mantras.html" class="back-link">← Zurück zur Übersicht</a>
+    <div id="content"></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://yqklyumvybthkzlbsspj.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable__DLVShYfXjf0C27LLK1zbg_5vpFcxJy";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function roleLabel(role, gender) {
+      if (role === "admin") return "Admin";
+      if (role === "therapeut") {
+        if (gender === "frau") return "Therapeutin";
+        if (gender === "mann") return "Therapeut";
+        return "Therapeut:in";
+      }
+      if (role === "yogi") {
+        if (gender === "frau") return "Yogini";
+        if (gender === "mann") return "Yogi";
+        return "Yogi:ni";
+      }
+      return role;
+    }
+
+    const itemId = new URLSearchParams(window.location.search).get("id");
+    let isAdmin = false;
+
+    async function init() {
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      if (!sessionData.session) { window.location.href = "index.html"; return; }
+
+      const { data: profile } = await supabaseClient.from("profiles").select("role, gender").eq("id", sessionData.session.user.id).single();
+      if (profile) {
+        const badge = document.getElementById("role-badge");
+        badge.textContent = roleLabel(profile.role, profile.gender);
+        badge.style.display = "inline-block";
+        if (profile.role === "admin") {
+          const mt = document.getElementById("nav-meine-therapeuten");
+          if (mt) mt.style.display = "inline";
+          const dv = document.getElementById("nav-dokumentvorlagen");
+          if (dv) dv.style.display = "inline";
+        }
+        if (profile.role === "therapeut") {
+          const sd = document.getElementById("nav-selbstdeklaration");
+          if (sd) sd.style.display = "inline";
+        }
+        if (profile.role === "yogi") {
+          const mk = document.getElementById("nav-mein-kontakt");
+          if (mk) mk.style.display = "inline";
+        }
+        if (profile.role !== "admin") {
+          const maLink = document.getElementById("nav-meine-angaben");
+          if (maLink) {
+            maLink.textContent = "Passwort";
+            maLink.parentElement.appendChild(maLink);
+          }
+        }
+        if (profile.role !== "admin") {
+          ["nav-asanas", "nav-flows", "nav-pranayama", "nav-mantras"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = "none";
+          });
+        }
+        isAdmin = profile.role === "admin";
+        if (profile.role === "admin" || profile.role === "therapeut") {
+          document.getElementById("nav-users").style.display = "inline";
+          if (profile.role === "therapeut") {
+            document.getElementById("nav-meine-yoginis").style.display = "inline";
+          }
+        }
+      }
+
+      if (!itemId) { document.getElementById("content").innerHTML = "<p>Kein Mantra angegeben.</p>"; return; }
+      await load();
+    }
+
+    // Verkleinert die Schrift automatisch so weit, dass die längste Zeile
+    // (Akkorde + Text) ohne Zeilenumbruch ins Fenster passt. Reicht das
+    // selbst bei der Mindestgrösse nicht, bleibt der Block horizontal
+    // scrollbar (siehe overflow-x:auto in .mantra-text).
+    function autoFitMonospace(el) {
+      el.style.fontSize = ""; // zurück auf CSS-Standardgrösse
+      requestAnimationFrame(() => {
+        const baseFontSize = parseFloat(window.getComputedStyle(el).fontSize);
+        const scrollW = el.scrollWidth;
+        const clientW = el.clientWidth;
+        if (scrollW > clientW && clientW > 0) {
+          const minFontSize = 9;
+          let newSize = baseFontSize * (clientW / scrollW) * 0.98;
+          newSize = Math.max(minFontSize, newSize);
+          el.style.fontSize = newSize + "px";
+        }
+      });
+    }
+
+    function esc(str) {
+      const div = document.createElement("div");
+      div.textContent = str || "";
+      return div.innerHTML;
+    }
+
+    let resizeTimeout;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        const el = document.getElementById("mantra-text-display");
+        if (el) autoFitMonospace(el);
+      }, 150);
+    });
+
+    async function load() {
+      const { data: a, error } = await supabaseClient
+        .from("mantras")
+        .select(`
+          id, name_deutsch, author, mantra_text, base_capo, translation, meaning,
+          reviewed, reviewed_at, reviewed_by, reviewer:profiles!mantras_reviewed_by_fkey ( email ),
+          verified, verified_at, verified_by, verifier:profiles!mantras_verified_by_fkey ( email ),
+          mantra_category_links ( mantra_categories ( name ) ),
+          mantra_benefits ( id, content ),
+          mantra_media ( id, media_type, storage_path, caption )
+        `)
+        .eq("id", itemId)
+        .single();
+
+      if (error || !a) { document.getElementById("content").innerHTML = "<p>Mantra nicht gefunden.</p>"; return; }
+      render(a);
+    }
+
+    // ------------------------------------------------------------
+    // Akkorde transponieren (Anzeige: C C# D D# E F F# G G# A B H)
+    // Eingabe akzeptiert zusätzlich deutsche is/es-Schreibweise
+    // ------------------------------------------------------------
+    const NOTE_TO_INDEX = { C:0, Cis:1, Des:1, D:2, Dis:3, Es:3, E:4, F:5, Fis:6, Ges:6, G:7, Gis:8, As:8, A:9, Ais:10, B:10, H:11 };
+    const INDEX_TO_NOTE = ["C","C#","D","D#","E","F","F#","G","G#","A","B","H"];
+    const CHORD_SUFFIXES = "maj7|dim|aug|sus2|sus4|add9|6|7|9|11|13";
+    const chordTokenRegex = new RegExp(`^([a-hA-H])(is|es|IS|ES|#)?(m)?(${CHORD_SUFFIXES})?(?:\\/([a-hA-H])(is|es|IS|ES|#)?(m)?)?$`);
+
+    function noteIndex(letter, mod) {
+      let normalized = mod ? mod.toLowerCase() : "";
+      if (normalized === "#") normalized = "is";
+      const key = letter.toUpperCase() + normalized;
+      return NOTE_TO_INDEX[key];
+    }
+
+    function transposeToken(token, shift) {
+      const m = token.match(chordTokenRegex);
+      if (!m) return null;
+      const [, letter, mod, minor, suffix, bassLetter, bassMod] = m;
+      const idx = noteIndex(letter, mod);
+      if (idx === undefined) return null;
+      const newIdx = ((idx + shift) % 12 + 12) % 12;
+      let result = INDEX_TO_NOTE[newIdx] + (minor || "") + (suffix || "");
+      if (bassLetter) {
+        const bIdx = noteIndex(bassLetter, bassMod);
+        if (bIdx !== undefined) {
+          const bNewIdx = ((bIdx + shift) % 12 + 12) % 12;
+          result += "/" + INDEX_TO_NOTE[bNewIdx];
+        }
+      }
+      return result;
+    }
+
+    function transposeMantraText(text, shift) {
+      if (!shift) return text;
+      return text.split("\n").map(line => {
+        if (!line.trim()) return line;
+        const tokenRegex = /\S+/g;
+        let match;
+        const tokens = [];
+        while ((match = tokenRegex.exec(line)) !== null) tokens.push({ text: match[0], index: match.index });
+        if (!tokens.length) return line;
+        const transposed = tokens.map(t => transposeToken(t.text, shift));
+        if (transposed.some(t => t === null)) return line; // keine reine Akkordzeile -> unverändert lassen
+        let result = "", cursor = 0;
+        tokens.forEach((t, i) => {
+          result += line.slice(cursor, t.index);
+          result += transposed[i];
+          cursor = t.index + t.text.length;
+        });
+        result += line.slice(cursor);
+        return result;
+      }).join("\n");
+    }
+
+    // ------------------------------------------------------------
+    // Singmodus: Bildschirm nicht abstellen lassen (Screen Wake Lock API)
+    // ------------------------------------------------------------
+    let wakeLock = null;
+    let wakeLockEnabled = false;
+
+    async function requestWakeLock() {
+      try {
+        wakeLock = await navigator.wakeLock.request("screen");
+      } catch (err) {
+        console.error("Wake Lock Fehler:", err);
+      }
+    }
+
+    async function toggleWakeLock() {
+      const btn = document.getElementById("wake-lock-btn");
+      wakeLockEnabled = !wakeLockEnabled;
+      if (wakeLockEnabled) {
+        await requestWakeLock();
+        btn.textContent = "✓ Singmodus aktiv – zum Beenden tippen";
+        btn.style.background = "var(--color-sand)";
+        btn.style.color = "#fff";
+        btn.style.borderColor = "transparent";
+      } else {
+        if (wakeLock) {
+          await wakeLock.release();
+          wakeLock = null;
+        }
+        btn.textContent = "🎵 Singmodus (Bildschirm bleibt an)";
+        btn.style.background = "";
+        btn.style.color = "";
+        btn.style.borderColor = "";
+      }
+    }
+
+    document.addEventListener("visibilitychange", async () => {
+      if (wakeLockEnabled && document.visibilityState === "visible") {
+        await requestWakeLock();
+      }
+    });
+
+    function render(a) {
+      let html = "";
+      html += `<div class="title-row">
+        <div>
+          ${a.author ? `<div class="sanskrit">von ${esc(a.author)}</div>` : ""}
+          <h1>${esc(a.name_deutsch)}</h1>
+        </div>`;
+      if (isAdmin) {
+        html += `<div class="admin-buttons">
+          <a href="mantra-form.html?id=${a.id}" class="btn-secondary">Bearbeiten</a>
+          <button class="btn-danger" id="delete-btn">Löschen</button>
+        </div>`;
+      }
+      html += `</div>`;
+
+      html += `<div class="tag-row">`;
+      (a.mantra_category_links || []).forEach(cl => {
+        if (cl.mantra_categories) html += `<span class="tag category">${esc(cl.mantra_categories.name)}</span>`;
+      });
+      if (a.reviewed && isAdmin) html += `<span class="tag reviewed">✓ Erfasst</span>`;
+      if (a.verified && isAdmin) html += `<span class="tag reviewed">✓ Geprüft</span>`;
+      html += `</div>`;
+
+      html += `<div style="margin-bottom:20px;">
+        <button class="btn-secondary" id="wake-lock-btn" type="button">🎵 Singmodus (Bildschirm bleibt an)</button>
+        <p id="wake-lock-hint" style="font-size:12px; color: var(--color-text-muted); margin-top:6px; display:none;"></p>
+      </div>`;
+
+      if (a.mantra_media && a.mantra_media.length) {
+        html += `<div class="card"><div class="media-grid">`;
+        a.mantra_media.forEach(m => {
+          const { data: pub } = supabaseClient.storage.from("asana-media").getPublicUrl(m.storage_path);
+          const url = pub.publicUrl;
+          if (m.media_type === "image") html += `<img src="${url}" alt="${esc(m.caption || a.name_deutsch)}" />`;
+          else if (m.media_type === "video") html += `<video src="${url}" controls></video>`;
+          else html += `<audio src="${url}" controls></audio>`;
+        });
+        html += `</div></div>`;
+      }
+
+      if (isAdmin) {
+        const reviewedDate = a.reviewed_at ? new Date(a.reviewed_at).toLocaleDateString("de-CH") : "";
+        const reviewerEmail = a.reviewer ? a.reviewer.email : "";
+        const verifiedDate = a.verified_at ? new Date(a.verified_at).toLocaleDateString("de-CH") : "";
+        const verifierEmail = a.verifier ? a.verifier.email : "";
+        html += `<div class="card">
+          <h2>Kontroll-Status</h2>
+          <p class="muted" style="margin-bottom:6px;"><strong>Erfasst</strong> (eigene Kontrolle)</p>
+          ${a.reviewed
+            ? `<p class="muted">Erfasst am ${reviewedDate}${reviewerEmail ? " von " + esc(reviewerEmail) : ""}.</p><button class="btn-secondary" id="review-toggle-btn">Als "nicht erfasst" markieren</button>`
+            : `<p class="muted">Noch nicht als erfasst markiert.</p><button class="btn-primary" id="review-toggle-btn">Als "erfasst" markieren</button>`}
+          <hr style="margin:16px 0; border:none; border-top:1px solid var(--color-border);" />
+          <p class="muted" style="margin-bottom:6px;"><strong>Geprüft</strong> (fachliche Prüfung)</p>
+          ${a.verified
+            ? `<p class="muted">Geprüft am ${verifiedDate}${verifierEmail ? " von " + esc(verifierEmail) : ""}.</p><button class="btn-secondary" id="verify-toggle-btn">Als "nicht geprüft" markieren</button>`
+            : `<p class="muted">Noch nicht fachlich geprüft.</p><button class="btn-primary" id="verify-toggle-btn">Als "geprüft" markieren</button>`}
+        </div>`;
+      }
+
+      if (a.mantra_text) {
+        const baseCapo = a.base_capo || 0;
+        const capoOptions = Array.from({ length: 12 }, (_, n) => n)
+          .map(n => `<option value="${n}" ${n === baseCapo ? "selected" : ""}>${n}${n === baseCapo ? " (Original)" : ""}</option>`)
+          .join("");
+        html += `<div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+            <h2 style="margin:0;">Mantra-Text</h2>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <label for="capo-select" style="font-size:13px; color: var(--color-text-muted);">Capo:</label>
+              <select id="capo-select">${capoOptions}</select>
+              <button class="btn-secondary" id="capo-reset-btn" type="button">Zurücksetzen</button>
+            </div>
+          </div>
+          <div class="mantra-text" id="mantra-text-display">${esc(a.mantra_text)}</div>
+        </div>`;
+      }
+      if (a.translation) {
+        html += `<div class="card"><h2>Übersetzung</h2><p>${esc(a.translation)}</p></div>`;
+      }
+      if (a.meaning) {
+        html += `<div class="card"><h2>Bedeutung</h2><p>${esc(a.meaning)}</p></div>`;
+      }
+      if (a.mantra_benefits && a.mantra_benefits.length) {
+        html += `<div class="card"><h2>Wirkung</h2><ul style="margin:0; padding-left:20px;">`;
+        a.mantra_benefits.forEach(b => { html += `<li style="margin-bottom:6px;">${esc(b.content)}</li>`; });
+        html += `</ul></div>`;
+      }
+
+      document.getElementById("content").innerHTML = html;
+
+      const wakeLockBtn = document.getElementById("wake-lock-btn");
+      const wakeLockHint = document.getElementById("wake-lock-hint");
+      if (!("wakeLock" in navigator)) {
+        wakeLockHint.textContent = "Dein Browser unterstützt diese Funktion leider nicht.";
+        wakeLockHint.style.display = "block";
+        wakeLockBtn.disabled = true;
+      } else {
+        wakeLockBtn.addEventListener("click", toggleWakeLock);
+      }
+
+      const capoSelect = document.getElementById("capo-select");
+      if (capoSelect) {
+        const baseCapo = a.base_capo || 0;
+        const textDisplay = document.getElementById("mantra-text-display");
+        autoFitMonospace(textDisplay);
+        capoSelect.addEventListener("change", () => {
+          const targetCapo = parseInt(capoSelect.value, 10);
+          const shift = baseCapo - targetCapo;
+          textDisplay.textContent = transposeMantraText(a.mantra_text, shift);
+          autoFitMonospace(textDisplay);
+        });
+        const resetBtn = document.getElementById("capo-reset-btn");
+        resetBtn.addEventListener("click", () => {
+          capoSelect.value = baseCapo;
+          textDisplay.textContent = a.mantra_text;
+          autoFitMonospace(textDisplay);
+        });
+      }
+
+      const deleteBtn = document.getElementById("delete-btn");
+      if (deleteBtn) {
+        deleteBtn.addEventListener("click", async () => {
+          if (!confirm("Dieses Mantra wirklich löschen?")) return;
+          const { error } = await supabaseClient.from("mantras").delete().eq("id", a.id);
+          if (error) { alert("Fehler: " + error.message); return; }
+          window.location.href = "mantras.html";
+        });
+      }
+
+      const reviewBtn = document.getElementById("review-toggle-btn");
+      if (reviewBtn) {
+        reviewBtn.addEventListener("click", async () => {
+          reviewBtn.disabled = true;
+          const { data: sessionData } = await supabaseClient.auth.getSession();
+          const payload = a.reviewed
+            ? { reviewed: false, reviewed_by: null, reviewed_at: null }
+            : { reviewed: true, reviewed_by: sessionData.session.user.id, reviewed_at: new Date().toISOString() };
+          const { error } = await supabaseClient.from("mantras").update(payload).eq("id", a.id);
+          if (error) { alert("Fehler: " + error.message); reviewBtn.disabled = false; return; }
+          await load();
+        });
+      }
+
+      const verifyBtn = document.getElementById("verify-toggle-btn");
+      if (verifyBtn) {
+        verifyBtn.addEventListener("click", async () => {
+          verifyBtn.disabled = true;
+          const { data: sessionData } = await supabaseClient.auth.getSession();
+          const payload = a.verified
+            ? { verified: false, verified_by: null, verified_at: null }
+            : { verified: true, verified_by: sessionData.session.user.id, verified_at: new Date().toISOString() };
+          const { error } = await supabaseClient.from("mantras").update(payload).eq("id", a.id);
+          if (error) { alert("Fehler: " + error.message); verifyBtn.disabled = false; return; }
+          await load();
+        });
+      }
+    }
+
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+      window.location.href = "index.html";
+    });
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pranayama erfassen – Yoga-App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --color-bg: #FDFCFB; --color-surface: #FFFFFF; --color-pine: #572E2A; --color-pine-dark: #3E211D;
+  --color-sand: #DBAEA4; --color-sand-dark: #C08F84; --color-text: #1E2622; --color-text-muted: #5B6660;
+  --color-border: #DBDFD5; --color-error: #A6483A;
+  --font-display: "Cormorant Garamond", Georgia, serif; --font-script: "Alex Brush", cursive; --font-body: "Work Sans", "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-body); background-color: var(--color-bg); color: var(--color-text); min-height: 100vh; }
+a { color: inherit; }
+.app-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+.nav-links { display: flex; gap: 20px; margin-left: 32px; flex-wrap: wrap; }
+.nav-links a { font-size: 14px; color: var(--color-text-muted); font-weight: 600; text-decoration: none; }
+.nav-links a.active, .nav-links a:hover { color: var(--color-pine); }
+.header-left { display: flex; align-items: center; flex-wrap: wrap; }
+.role-badge { display: inline-block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; background: var(--color-sand); color: #fff; margin-left: 10px; }
+.btn-primary { padding: 11px 20px; background: var(--color-sand); color: #fff; border: none; border-radius: 3px; font-size: 15px; font-family: var(--font-body); font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--color-sand-dark); }
+.btn-secondary { padding: 8px 16px; background: transparent; color: var(--color-pine-dark); border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); cursor: pointer; text-decoration: none; display: inline-block; }
+.btn-small { padding: 5px 10px; font-size: 12px; background: transparent; border: 1px solid var(--color-border); border-radius: 3px; cursor: pointer; color: var(--color-text-muted); }
+.btn-small:hover { border-color: var(--color-error); color: var(--color-error); }
+.app-main { padding: 32px; max-width: 760px; margin: 0 auto; }
+.app-main h1 { font-family: var(--font-display); color: var(--color-pine-dark); margin-top: 8px; }
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 22px 24px; margin-bottom: 18px; }
+.card h2 { font-family: var(--font-display); font-size: 16px; color: var(--color-pine-dark); margin: 0 0 14px 0; }
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 13px; color: var(--color-text-muted); margin-bottom: 5px; }
+.field input[type=text], .field textarea, .field select { width: 100%; padding: 10px 11px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); background: var(--color-bg); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.dynamic-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
+.dynamic-row textarea { flex: 1; }
+.checkbox-group { display: flex; flex-direction: column; gap: 8px; }
+.checkbox-row { display: flex; align-items: center; gap: 10px; }
+.media-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; }
+.media-item img, .media-item video { width: 60px; height: 60px; object-fit: cover; border-radius: 3px; }
+.form-message { font-size: 13px; margin-top: 10px; }
+.form-message.error { color: var(--color-error); }
+.form-message.success { color: var(--color-pine); }
+@media (max-width: 640px) {
+  .app-header { flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+  .nav-links { margin-left: 0; gap: 14px; }
+  .app-main { padding: 20px 16px; }
+  .two-col { grid-template-columns: 1fr; }
+  .card { padding: 18px 16px; }
+  .field input[type=text], .field textarea, .field select { font-size: 16px; }
+  .btn-primary { width: 100%; padding: 14px; font-size: 16px; }
+}
+.brand-banner { background: linear-gradient(135deg, #C08F84 0%, #E3C4BC 55%, #EBD3CC 100%); display: flex; justify-content: center; align-items: center; padding: 10px 20px; }
+.brand-lockup { display: inline-flex; flex-direction: column; align-items: flex-end; text-decoration: none; line-height: 1; }
+.brand-script { font-family: var(--font-script); font-weight: 400; font-size: 44px; color: var(--color-pine-dark); }
+.brand-serif { font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--color-pine-dark); margin-top: -6px; letter-spacing: 0.01em; }
+@media (max-width: 640px) { .brand-banner { padding: 8px 16px; } .brand-script { font-size: 32px; } .brand-serif { font-size: 14px; } }
+  </style>
+</head>
+<body>
+  <div class="brand-banner"><a href="dashboard.html" class="brand-lockup"><span class="brand-script">Pandora</span><span class="brand-serif">Community Bern</span></a></div>
+  <header class="app-header">
+    <div class="header-left">
+      <nav class="nav-links">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="meine-angaben.html" id="nav-meine-angaben">Meine Angaben</a>
+        <a href="selbstdeklaration.html" id="nav-selbstdeklaration" style="display:none;">Selbstdeklaration</a>
+        <a href="mein-kontakt.html" id="nav-mein-kontakt" style="display:none;">Mein Kontakt</a>
+        <a href="meine-yoginis.html" id="nav-meine-yoginis" style="display:none;">Meine Yogi:nis</a>
+        <a href="meine-therapeuten.html" id="nav-meine-therapeuten" style="display:none;">Meine Therapeut:innen</a>
+        <a href="dokumentvorlagen.html" id="nav-dokumentvorlagen" style="display:none;">Vorlagen verwalten</a>
+        <a href="asanas.html" id="nav-asanas">Asanas</a>
+        <a href="sequences.html">Sequenzen</a>
+        <a href="flows.html" id="nav-flows">Flows</a>
+        <a href="pranayama.html" class="active" id="nav-pranayama">Pranayama</a>
+        <a href="mantras.html" id="nav-mantras">Mantras</a>
+        <a href="users.html" id="nav-users" style="display:none;">Benutzer</a>
+      </nav>
+      <span class="role-badge" id="role-badge" style="display:none;"></span>
+    </div>
+    <button class="btn-secondary" id="logout-btn">Ausloggen</button>
+  </header>
+
+  <main class="app-main">
+    <a href="pranayama.html" class="btn-secondary" style="margin-bottom: 10px;">← Zurück zur Übersicht</a>
+    <h1 id="page-title">Neues Pranayama erfassen</h1>
+
+    <div class="card">
+      <h2>Grunddaten</h2>
+      <div class="two-col">
+        <div class="field"><label for="name-deutsch">Name (Deutsch) *</label><input type="text" id="name-deutsch" /></div>
+        <div class="field"><label for="name-sanskrit">Name (Sanskrit)</label><input type="text" id="name-sanskrit" /></div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label for="difficulty">Schwierigkeit</label>
+          <select id="difficulty">
+            <option value="">– auswählen –</option>
+            <option value="Anfänger">Anfänger</option>
+            <option value="Fortgeschritten">Fortgeschritten</option>
+            <option value="Experte">Experte</option>
+          </select>
+        </div>
+        <div class="field"><label for="duration">Empfohlene Dauer / Runden</label><input type="text" id="duration" placeholder="z.B. 5-10 Runden" /></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Kategorien</h2>
+      <div id="categories" class="checkbox-group"></div>
+    </div>
+
+    <div class="card">
+      <h2>Ausführung</h2>
+      <p style="font-size:13px; color: var(--color-text-muted); margin-top:-8px; margin-bottom:14px;">Freitext-Schritte – hier kann auch das Atemverhältnis beschrieben werden (z.B. "4 Sekunden einatmen, 4 Sekunden halten...").</p>
+      <div id="steps-list"></div>
+      <button type="button" class="btn-small" id="add-step">+ Schritt hinzufügen</button>
+    </div>
+
+    <div class="card">
+      <h2>Vorteile / Wirkung</h2>
+      <div id="benefits-list"></div>
+      <button type="button" class="btn-small" id="add-benefit">+ Vorteil hinzufügen</button>
+    </div>
+
+    <div class="card">
+      <h2>Wann ist Vorsicht geboten?</h2>
+      <div id="contraindications-list"></div>
+      <button type="button" class="btn-small" id="add-contraindication">+ Punkt hinzufügen</button>
+    </div>
+
+    <div class="card">
+      <h2>Bilder & Videos</h2>
+      <div id="existing-media"></div>
+      <div class="field"><label for="media-file">Neue Datei hochladen</label><input type="file" id="media-file" accept="image/*,video/*" /></div>
+      <div class="field"><label for="media-caption">Bildunterschrift (optional)</label><input type="text" id="media-caption" /></div>
+      <button type="button" class="btn-secondary" id="upload-media-btn">Hochladen</button>
+      <p class="form-message" id="media-message"></p>
+    </div>
+
+    <button class="btn-primary" id="save-btn">Speichern</button>
+    <p class="form-message" id="form-message"></p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://yqklyumvybthkzlbsspj.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable__DLVShYfXjf0C27LLK1zbg_5vpFcxJy";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function roleLabel(role, gender) {
+      if (role === "admin") return "Admin";
+      if (role === "therapeut") {
+        if (gender === "frau") return "Therapeutin";
+        if (gender === "mann") return "Therapeut";
+        return "Therapeut:in";
+      }
+      if (role === "yogi") {
+        if (gender === "frau") return "Yogini";
+        if (gender === "mann") return "Yogi";
+        return "Yogi:ni";
+      }
+      return role;
+    }
+
+    const itemId = new URLSearchParams(window.location.search).get("id");
+    let categoriesData = [];
+
+    async function init() {
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      if (!sessionData.session) { window.location.href = "index.html"; return; }
+
+      const { data: profile } = await supabaseClient.from("profiles").select("role, gender").eq("id", sessionData.session.user.id).single();
+      if (!profile || profile.role !== "admin") {
+        alert("Nur Admins können Pranayama-Übungen erfassen oder bearbeiten.");
+        window.location.href = "pranayama.html";
+        return;
+      }
+      const badge = document.getElementById("role-badge");
+      badge.textContent = roleLabel(profile.role, profile.gender);
+      badge.style.display = "inline-block";
+        if (profile.role === "admin") {
+          const mt = document.getElementById("nav-meine-therapeuten");
+          if (mt) mt.style.display = "inline";
+          const dv = document.getElementById("nav-dokumentvorlagen");
+          if (dv) dv.style.display = "inline";
+        }
+        if (profile.role === "therapeut") {
+          const sd = document.getElementById("nav-selbstdeklaration");
+          if (sd) sd.style.display = "inline";
+        }
+        if (profile.role === "yogi") {
+          const mk = document.getElementById("nav-mein-kontakt");
+          if (mk) mk.style.display = "inline";
+        }
+        if (profile.role !== "admin") {
+          const maLink = document.getElementById("nav-meine-angaben");
+          if (maLink) {
+            maLink.textContent = "Passwort";
+            maLink.parentElement.appendChild(maLink);
+          }
+        }
+        if (profile.role !== "admin") {
+          ["nav-asanas", "nav-flows", "nav-pranayama", "nav-mantras"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = "none";
+          });
+        }
+      document.getElementById("nav-users").style.display = "inline";
+      if (profile.role === "therapeut") {
+        document.getElementById("nav-meine-yoginis").style.display = "inline";
+      }
+      const { data: cats } = await supabaseClient.from("pranayama_categories").select("id, name").order("sort_order");
+      categoriesData = cats || [];
+      const catContainer = document.getElementById("categories");
+      categoriesData.forEach(c => {
+        const row = document.createElement("div");
+        row.className = "checkbox-row";
+        row.innerHTML = `<input type="checkbox" id="cat-${c.id}" value="${c.id}" /><label for="cat-${c.id}">${escapeHtml(c.name)}</label>`;
+        catContainer.appendChild(row);
+      });
+
+      if (itemId) {
+        document.getElementById("page-title").textContent = "Pranayama bearbeiten";
+        await loadExisting();
+      } else {
+        addStepRow(); addBenefitRow(); addContraindicationRow();
+      }
+    }
+
+    async function loadExisting() {
+      const { data: a, error } = await supabaseClient
+        .from("pranayamas")
+        .select(`
+          name_deutsch, name_sanskrit, difficulty, duration_recommendation,
+          pranayama_category_links ( category_id ),
+          pranayama_steps ( step_number, content ),
+          pranayama_benefits ( content ),
+          pranayama_contraindications ( content ),
+          pranayama_media ( id, media_type, storage_path, caption )
+        `)
+        .eq("id", itemId)
+        .single();
+
+      if (error || !a) { alert("Pranayama konnte nicht geladen werden."); return; }
+
+      document.getElementById("name-deutsch").value = a.name_deutsch || "";
+      document.getElementById("name-sanskrit").value = a.name_sanskrit || "";
+      document.getElementById("difficulty").value = a.difficulty || "";
+      document.getElementById("duration").value = a.duration_recommendation || "";
+
+      (a.pranayama_category_links || []).forEach(cl => {
+        const cb = document.getElementById("cat-" + cl.category_id);
+        if (cb) cb.checked = true;
+      });
+
+      const steps = (a.pranayama_steps || []).slice().sort((x, y) => x.step_number - y.step_number);
+      steps.forEach(s => addStepRow(s.content));
+      if (!steps.length) addStepRow();
+
+      const benefits = a.pranayama_benefits || [];
+      benefits.forEach(b => addBenefitRow(b.content));
+      if (!benefits.length) addBenefitRow();
+
+      const contras = a.pranayama_contraindications || [];
+      contras.forEach(c => addContraindicationRow(c.content));
+      if (!contras.length) addContraindicationRow();
+
+      renderExistingMedia(a.pranayama_media || []);
+    }
+
+    function addDynamicRow(containerId, value) {
+      const container = document.getElementById(containerId);
+      const row = document.createElement("div");
+      row.className = "dynamic-row";
+      row.innerHTML = `<textarea rows="2">${value ? escapeHtml(value) : ""}</textarea><button type="button" class="btn-small">✕</button>`;
+      row.querySelector("button").addEventListener("click", () => row.remove());
+      container.appendChild(row);
+    }
+    function addStepRow(v) { addDynamicRow("steps-list", v); }
+    function addBenefitRow(v) { addDynamicRow("benefits-list", v); }
+    function addContraindicationRow(v) { addDynamicRow("contraindications-list", v); }
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str || "";
+      return div.innerHTML;
+    }
+
+    document.getElementById("add-step").addEventListener("click", () => addStepRow());
+    document.getElementById("add-benefit").addEventListener("click", () => addBenefitRow());
+    document.getElementById("add-contraindication").addEventListener("click", () => addContraindicationRow());
+
+    function renderExistingMedia(mediaList) {
+      const container = document.getElementById("existing-media");
+      container.innerHTML = "";
+      mediaList.forEach(m => {
+        const { data: pub } = supabaseClient.storage.from("asana-media").getPublicUrl(m.storage_path);
+        const item = document.createElement("div");
+        item.className = "media-item";
+        const preview = m.media_type === "image" ? `<img src="${pub.publicUrl}" />` : `<video src="${pub.publicUrl}"></video>`;
+        item.innerHTML = `${preview}<span>${escapeHtml(m.caption || "(ohne Beschriftung)")}</span><button type="button" class="btn-small" data-id="${m.id}">Entfernen</button>`;
+        item.querySelector("button").addEventListener("click", async () => {
+          await supabaseClient.from("pranayama_media").delete().eq("id", m.id);
+          item.remove();
+        });
+        container.appendChild(item);
+      });
+    }
+
+    document.getElementById("upload-media-btn").addEventListener("click", async () => {
+      const fileInput = document.getElementById("media-file");
+      const messageEl = document.getElementById("media-message");
+      const file = fileInput.files[0];
+      if (!file) { messageEl.textContent = "Bitte zuerst eine Datei auswählen."; messageEl.className = "form-message error"; return; }
+      if (!itemId) { messageEl.textContent = "Bitte zuerst speichern, bevor du Medien hochlädst."; messageEl.className = "form-message error"; return; }
+
+      messageEl.textContent = "Wird hochgeladen …"; messageEl.className = "form-message";
+      const mediaType = file.type.startsWith("video") ? "video" : "image";
+      const safeName = file.name.replace(/[^a-zA-Z0-9.\-]/g, "_");
+      const path = `pranayama/${itemId}/${Date.now()}_${safeName}`;
+
+      const { error: uploadError } = await supabaseClient.storage.from("asana-media").upload(path, file);
+      if (uploadError) { messageEl.textContent = "Fehler beim Hochladen: " + uploadError.message; messageEl.className = "form-message error"; return; }
+
+      const caption = document.getElementById("media-caption").value.trim();
+      const { error: insertError } = await supabaseClient.from("pranayama_media").insert({
+        pranayama_id: itemId, media_type: mediaType, storage_path: path, caption: caption || null,
+      });
+      if (insertError) { messageEl.textContent = "Fehler beim Speichern: " + insertError.message; messageEl.className = "form-message error"; return; }
+
+      messageEl.textContent = "Hochgeladen."; messageEl.className = "form-message success";
+      fileInput.value = ""; document.getElementById("media-caption").value = "";
+      const { data: media } = await supabaseClient.from("pranayama_media").select("id, media_type, storage_path, caption").eq("pranayama_id", itemId);
+      renderExistingMedia(media || []);
+    });
+
+    function getRowValues(containerId) {
+      return Array.from(document.querySelectorAll(`#${containerId} textarea`)).map(t => t.value.trim()).filter(v => v.length > 0);
+    }
+
+    document.getElementById("save-btn").addEventListener("click", async () => {
+      const messageEl = document.getElementById("form-message");
+      const saveBtn = document.getElementById("save-btn");
+      const nameDeutsch = document.getElementById("name-deutsch").value.trim();
+      if (!nameDeutsch) { messageEl.textContent = "Bitte mindestens den deutschen Namen ausfüllen."; messageEl.className = "form-message error"; return; }
+
+      const { data: sessionCheck } = await supabaseClient.auth.getSession();
+      if (!sessionCheck.session) { messageEl.textContent = "Sitzung abgelaufen, bitte neu einloggen."; messageEl.className = "form-message error"; return; }
+
+      saveBtn.disabled = true; messageEl.textContent = "Wird gespeichert …"; messageEl.className = "form-message";
+
+      const payload = {
+        name_deutsch: nameDeutsch,
+        name_sanskrit: document.getElementById("name-sanskrit").value.trim() || null,
+        difficulty: document.getElementById("difficulty").value || null,
+        duration_recommendation: document.getElementById("duration").value.trim() || null,
+        updated_at: new Date().toISOString(),
+      };
+
+      let currentId = itemId;
+      if (currentId) {
+        const { error } = await supabaseClient.from("pranayamas").update(payload).eq("id", currentId);
+        if (error) { messageEl.textContent = "Fehler: " + error.message; messageEl.className = "form-message error"; saveBtn.disabled = false; return; }
+        await Promise.all([
+          supabaseClient.from("pranayama_steps").delete().eq("pranayama_id", currentId),
+          supabaseClient.from("pranayama_benefits").delete().eq("pranayama_id", currentId),
+          supabaseClient.from("pranayama_contraindications").delete().eq("pranayama_id", currentId),
+          supabaseClient.from("pranayama_category_links").delete().eq("pranayama_id", currentId),
+        ]);
+      } else {
+        payload.created_by = sessionCheck.session.user.id;
+        const { data: inserted, error } = await supabaseClient.from("pranayamas").insert(payload).select("id").single();
+        if (error) { messageEl.textContent = "Fehler: " + error.message; messageEl.className = "form-message error"; saveBtn.disabled = false; return; }
+        currentId = inserted.id;
+      }
+
+      const steps = getRowValues("steps-list");
+      const benefits = getRowValues("benefits-list");
+      const contras = getRowValues("contraindications-list");
+      const inserts = [];
+      if (steps.length) inserts.push(supabaseClient.from("pranayama_steps").insert(steps.map((c, i) => ({ pranayama_id: currentId, step_number: i + 1, content: c }))));
+      if (benefits.length) inserts.push(supabaseClient.from("pranayama_benefits").insert(benefits.map(c => ({ pranayama_id: currentId, content: c }))));
+      if (contras.length) inserts.push(supabaseClient.from("pranayama_contraindications").insert(contras.map(c => ({ pranayama_id: currentId, content: c }))));
+
+      const categoryIds = categoriesData.filter(c => document.getElementById("cat-" + c.id).checked).map(c => c.id);
+      if (categoryIds.length) inserts.push(supabaseClient.from("pranayama_category_links").insert(categoryIds.map(id => ({ pranayama_id: currentId, category_id: id }))));
+
+      await Promise.all(inserts);
+
+      messageEl.textContent = "Gespeichert."; messageEl.className = "form-message success"; saveBtn.disabled = false;
+      setTimeout(() => { window.location.href = "pranayama-detail.html?id=" + currentId; }, 600);
+    });
+
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+      window.location.href = "index.html";
+    });
+
+    init();
+  </script>
+</body>
+</html>

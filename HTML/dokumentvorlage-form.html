@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vorlage bearbeiten – Yoga-App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --color-bg: #FDFCFB; --color-surface: #FFFFFF; --color-pine: #572E2A; --color-pine-dark: #3E211D;
+  --color-sand: #DBAEA4; --color-sand-dark: #C08F84; --color-text: #1E2622; --color-text-muted: #5B6660;
+  --color-border: #DBDFD5; --color-error: #A6483A;
+  --font-display: "Cormorant Garamond", Georgia, serif; --font-script: "Alex Brush", cursive; --font-body: "Work Sans", "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-body); background-color: var(--color-bg); color: var(--color-text); min-height: 100vh; }
+a { color: inherit; }
+.app-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+.role-badge { display: inline-block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; background: var(--color-sand); color: #fff; }
+.btn-primary { padding: 11px 20px; background: var(--color-sand); color: #fff; border: none; border-radius: 3px; font-size: 15px; font-family: var(--font-body); font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--color-sand-dark); }
+.btn-secondary { padding: 8px 16px; background: transparent; color: var(--color-pine-dark); border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); cursor: pointer; text-decoration: none; display: inline-block; }
+.btn-small { padding: 6px 12px; font-size: 12px; background: transparent; border: 1px solid var(--color-border); border-radius: 3px; cursor: pointer; color: var(--color-text-muted); }
+.btn-small:hover { border-color: var(--color-pine); color: var(--color-pine); }
+.btn-small.danger:hover { border-color: var(--color-error); color: var(--color-error); }
+.app-main { padding: 32px; max-width: 780px; margin: 0 auto; }
+.app-main h1 { font-family: var(--font-display); color: var(--color-pine-dark); margin-top: 8px; }
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 20px 22px; margin-bottom: 16px; }
+.card h2 { font-family: var(--font-display); font-size: 16px; color: var(--color-pine-dark); margin: 0 0 14px 0; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 13px; color: var(--color-text-muted); margin-bottom: 5px; }
+.field input[type=text] { width: 100%; padding: 9px 10px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); background: var(--color-bg); }
+.section-card { border-left: 4px solid var(--color-sand); }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.section-type-badge { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-sand-dark); }
+.section-controls { display: flex; gap: 6px; }
+.checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 8px; }
+.row-item { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+.row-item input { flex: 1; padding: 7px 9px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 13px; font-family: var(--font-body); background: var(--color-bg); }
+.row-item input.subcol-input { flex: 1; }
+.add-section-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.form-message { font-size: 13px; margin-top: 10px; }
+.form-message.error { color: var(--color-error); }
+.form-message.success { color: var(--color-pine); }
+@media (max-width: 640px) {
+  .app-header { flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+  .app-main { padding: 20px 16px; }
+  .btn-primary { width: 100%; padding: 14px; font-size: 16px; }
+}
+.brand-banner { background: linear-gradient(135deg, #C08F84 0%, #E3C4BC 55%, #EBD3CC 100%); display: flex; justify-content: center; align-items: center; padding: 10px 20px; }
+.brand-lockup { display: inline-flex; flex-direction: column; align-items: flex-end; text-decoration: none; line-height: 1; }
+.brand-script { font-family: var(--font-script); font-weight: 400; font-size: 44px; color: var(--color-pine-dark); }
+.brand-serif { font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--color-pine-dark); margin-top: -6px; letter-spacing: 0.01em; }
+@media (max-width: 640px) { .brand-banner { padding: 8px 16px; } .brand-script { font-size: 32px; } .brand-serif { font-size: 14px; } }
+  </style>
+</head>
+<body>
+  <div class="brand-banner"><a href="dashboard.html" class="brand-lockup"><span class="brand-script">Pandora</span><span class="brand-serif">Community Bern</span></a></div>
+  <header class="app-header">
+    <a href="dokumentvorlagen.html" class="btn-secondary">← Zurück zu Vorlagen</a>
+    <span class="role-badge" id="role-badge" style="display:none;"></span>
+  </header>
+
+  <main class="app-main">
+    <h1 id="page-title">Neue Vorlage</h1>
+
+    <div class="card">
+      <div class="field">
+        <label for="template-name">Name der Vorlage</label>
+        <input type="text" id="template-name" placeholder="z.B. 12er-Test" />
+      </div>
+    </div>
+
+    <div id="sections-container"></div>
+
+    <div class="add-section-bar">
+      <button class="btn-secondary" type="button" data-add="text">+ Freitext</button>
+      <button class="btn-secondary" type="button" data-add="date">+ Datum</button>
+      <button class="btn-secondary" type="button" data-add="select">+ Dropdown</button>
+      <button class="btn-secondary" type="button" data-add="boolean">+ Ja/Nein</button>
+      <button class="btn-secondary" type="button" data-add="history">+ Verlauf</button>
+      <button class="btn-secondary" type="button" data-add="table">+ Tabelle</button>
+    </div>
+
+    <button class="btn-primary" id="save-btn">Vorlage speichern</button>
+    <p class="form-message" id="form-message"></p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://yqklyumvybthkzlbsspj.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable__DLVShYfXjf0C27LLK1zbg_5vpFcxJy";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function roleLabel(role, gender) {
+      if (role === "admin") return "Admin";
+      if (role === "therapeut") {
+        if (gender === "frau") return "Therapeutin";
+        if (gender === "mann") return "Therapeut";
+        return "Therapeut:in";
+      }
+      if (role === "yogi") {
+        if (gender === "frau") return "Yogini";
+        if (gender === "mann") return "Yogi";
+        return "Yogi:ni";
+      }
+      return role;
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str || "";
+      return div.innerHTML;
+    }
+
+    function newId() {
+      return "f_" + Math.random().toString(36).slice(2, 10);
+    }
+
+    const templateId = new URLSearchParams(window.location.search).get("id");
+    let sections = [];
+
+    async function init() {
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      if (!sessionData.session) { window.location.href = "index.html"; return; }
+
+      const { data: profile } = await supabaseClient.from("profiles").select("role, gender").eq("id", sessionData.session.user.id).single();
+      if (!profile || profile.role !== "admin") {
+        alert("Diese Seite ist nur für Admins.");
+        window.location.href = "dashboard.html";
+        return;
+      }
+      const badge = document.getElementById("role-badge");
+      badge.textContent = roleLabel(profile.role, profile.gender);
+      badge.style.display = "inline-block";
+
+      if (templateId) {
+        document.getElementById("page-title").textContent = "Vorlage bearbeiten";
+        await loadTemplate();
+      }
+      renderSections();
+    }
+
+    async function loadTemplate() {
+      const { data, error } = await supabaseClient
+        .from("document_templates")
+        .select("name, fields")
+        .eq("id", templateId)
+        .single();
+
+      if (error || !data) {
+        alert("Vorlage konnte nicht geladen werden.");
+        return;
+      }
+      document.getElementById("template-name").value = data.name || "";
+      sections = (data.fields && data.fields.sections) ? data.fields.sections.map(s => ({
+        ...s,
+        columns: s.columns ? [...s.columns] : ["Links", "Rechts"],
+        rows: s.rows ? s.rows.map(r => ({ ...r, subcolumns: r.subcolumns ? [...r.subcolumns] : null })) : [],
+        weights: s.weights ? [...s.weights] : undefined,
+        cellOptions: s.cellOptions ? [...s.cellOptions] : [],
+        options: s.options ? [...s.options] : [],
+      })) : [];
+    }
+
+    document.querySelectorAll("[data-add]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const type = btn.dataset.add;
+        if (type === "text") {
+          sections.push({ type: "text", id: newId(), label: "Neuer Abschnitt", multiline: true });
+        } else if (type === "date") {
+          sections.push({ type: "date", id: newId(), label: "Datum" });
+        } else if (type === "select") {
+          sections.push({ type: "select", id: newId(), label: "Neue Auswahl", options: ["Option A", "Option B"] });
+        } else if (type === "boolean") {
+          sections.push({ type: "boolean", id: newId(), label: "Neue Ja/Nein-Frage" });
+        } else if (type === "history") {
+          sections.push({ type: "history", id: newId(), label: "Verlauf" });
+        } else if (type === "table") {
+          sections.push({
+            type: "table", id: newId(), label: "Neue Tabelle",
+            columns: ["Links", "Rechts"], notes: true, rows: [],
+            weights: [1.5, 1, 1], cellType: "text", cellOptions: [],
+          });
+        }
+        renderSections();
+      });
+    });
+
+    function renderSections() {
+      const container = document.getElementById("sections-container");
+      container.innerHTML = "";
+
+      sections.forEach((section, sIndex) => {
+        const card = document.createElement("div");
+        card.className = "card section-card";
+
+        const typeLabels = { text: "Freitext", date: "Datum", select: "Dropdown", boolean: "Ja/Nein", history: "Verlauf", table: "Tabelle" };
+        let html = `
+          <div class="section-header">
+            <span class="section-type-badge">${typeLabels[section.type]}</span>
+            <div class="section-controls">
+              <button type="button" class="btn-small" data-action="move-up" ${sIndex === 0 ? "disabled" : ""}>↑</button>
+              <button type="button" class="btn-small" data-action="move-down" ${sIndex === sections.length - 1 ? "disabled" : ""}>↓</button>
+              <button type="button" class="btn-small danger" data-action="remove-section">Entfernen</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Beschriftung</label>
+            <input type="text" data-field="label" value="${escapeHtml(section.label)}" />
+          </div>
+        `;
+
+        if (section.type === "text") {
+          html += `<label class="checkbox-row"><input type="checkbox" data-field="multiline" ${section.multiline ? "checked" : ""} /> Mehrzeilig (Textfeld statt einzeiliger Eingabe)</label>`;
+        }
+
+        if (section.type === "select") {
+          html += `
+            <div class="field">
+              <label>Optionen (kommagetrennt)</label>
+              <input type="text" data-field="options" value="${escapeHtml((section.options || []).join(", "))}" />
+            </div>
+          `;
+        }
+
+        if (section.type === "boolean") {
+          html += `<p style="font-size:12px; color: var(--color-text-muted); margin:0;">Erscheint als Ja/Nein-Auswahl, kein weiteres Setup nötig.</p>`;
+        }
+
+        if (section.type === "history") {
+          html += `<p style="font-size:12px; color: var(--color-text-muted); margin:0;">Erscheint als Liste "Datum + Kommentar", bei jedem Ausfüllen können neue Einträge ergänzt werden, ältere Einträge bleiben als Verlauf erhalten.</p>`;
+        }
+
+        if (section.type === "table") {
+          html += `
+            <div class="field">
+              <label>Spalten (kommagetrennt)</label>
+              <input type="text" data-field="columns" value="${escapeHtml(section.columns.join(", "))}" />
+            </div>
+            <div class="field">
+              <label>Spaltenbreiten-Verhältnis (Doppelpunkt-getrennt: zuerst Testname-Spalte, dann die Spalten oben in derselben Reihenfolge)</label>
+              <input type="text" data-field="weights" value="${escapeHtml((section.weights || []).join(":"))}" placeholder="z.B. 1.5:1:1" />
+            </div>
+            <div class="field">
+              <label>Zellentyp (gilt für alle Zellen dieser Tabelle)</label>
+              <select data-field="cellType" style="width:100%; padding:9px 10px; border:1px solid var(--color-border); border-radius:3px; font-family: var(--font-body); font-size:14px; background: var(--color-bg);">
+                <option value="text" ${section.cellType !== "select" ? "selected" : ""}>Freitext</option>
+                <option value="select" ${section.cellType === "select" ? "selected" : ""}>Auswahl (Dropdown)</option>
+              </select>
+            </div>
+            <div class="field" data-cell-options-field style="${section.cellType === "select" ? "" : "display:none;"}">
+              <label>Auswahl-Optionen für alle Zellen (kommagetrennt)</label>
+              <input type="text" data-field="cellOptions" value="${escapeHtml((section.cellOptions || []).join(", "))}" placeholder="z.B. Normal, Eingeschränkt, Stark eingeschränkt" />
+            </div>
+            <label class="checkbox-row"><input type="checkbox" data-field="notes" ${section.notes ? "checked" : ""} /> Notizen-Feld unter der Tabelle</label>
+            <div style="margin-top:14px;">
+              <div style="font-size:13px; color: var(--color-text-muted); margin-bottom:8px;">Zeilen (Testnamen)</div>
+              <div class="rows-list" data-rows-for="${sIndex}"></div>
+              <button type="button" class="btn-small" data-action="add-row">+ Zeile hinzufügen</button>
+            </div>
+          `;
+        }
+
+        html += `<label class="checkbox-row" style="margin-top:14px;"><input type="checkbox" data-field="pageBreakAfter" ${section.pageBreakAfter ? "checked" : ""} /> Seitenumbruch im PDF nach diesem Abschnitt</label>`;
+
+        card.innerHTML = html;
+        container.appendChild(card);
+
+        card.querySelector('[data-field="label"]').addEventListener("input", e => { section.label = e.target.value; });
+        const multilineEl = card.querySelector('[data-field="multiline"]');
+        if (multilineEl) multilineEl.addEventListener("change", e => { section.multiline = e.target.checked; });
+        const columnsEl = card.querySelector('[data-field="columns"]');
+        if (columnsEl) columnsEl.addEventListener("input", e => {
+          section.columns = e.target.value.split(",").map(c => c.trim()).filter(Boolean);
+        });
+        const optionsEl = card.querySelector('[data-field="options"]');
+        if (optionsEl) optionsEl.addEventListener("input", e => {
+          section.options = e.target.value.split(",").map(c => c.trim()).filter(Boolean);
+        });
+        const weightsEl = card.querySelector('[data-field="weights"]');
+        if (weightsEl) weightsEl.addEventListener("input", e => {
+          const nums = e.target.value.split(":").map(v => parseFloat(v.trim())).filter(v => !isNaN(v) && v > 0);
+          section.weights = nums.length ? nums : undefined;
+        });
+        const cellTypeEl = card.querySelector('[data-field="cellType"]');
+        if (cellTypeEl) cellTypeEl.addEventListener("change", e => {
+          section.cellType = e.target.value;
+          card.querySelector("[data-cell-options-field]").style.display = e.target.value === "select" ? "block" : "none";
+        });
+        const cellOptionsEl = card.querySelector('[data-field="cellOptions"]');
+        if (cellOptionsEl) cellOptionsEl.addEventListener("input", e => {
+          section.cellOptions = e.target.value.split(",").map(c => c.trim()).filter(Boolean);
+        });
+        const notesEl = card.querySelector('[data-field="notes"]');
+        if (notesEl) notesEl.addEventListener("change", e => { section.notes = e.target.checked; });
+        card.querySelector('[data-field="pageBreakAfter"]').addEventListener("change", e => { section.pageBreakAfter = e.target.checked; });
+
+        card.querySelector('[data-action="remove-section"]').addEventListener("click", () => {
+          if (!confirm("Diesen Abschnitt wirklich entfernen?")) return;
+          sections.splice(sIndex, 1);
+          renderSections();
+        });
+        const upBtn = card.querySelector('[data-action="move-up"]');
+        if (upBtn) upBtn.addEventListener("click", () => {
+          if (sIndex === 0) return;
+          [sections[sIndex - 1], sections[sIndex]] = [sections[sIndex], sections[sIndex - 1]];
+          renderSections();
+        });
+        const downBtn = card.querySelector('[data-action="move-down"]');
+        if (downBtn) downBtn.addEventListener("click", () => {
+          if (sIndex === sections.length - 1) return;
+          [sections[sIndex + 1], sections[sIndex]] = [sections[sIndex], sections[sIndex + 1]];
+          renderSections();
+        });
+
+        if (section.type === "table") {
+          renderRows(card, section, sIndex);
+          card.querySelector('[data-action="add-row"]').addEventListener("click", () => {
+            section.rows.push({ id: newId(), label: "Neuer Test", subcolumns: null });
+            renderSections();
+          });
+        }
+      });
+    }
+
+    function renderRows(card, section, sIndex) {
+      const rowsContainer = card.querySelector(`[data-rows-for="${sIndex}"]`);
+      rowsContainer.innerHTML = "";
+      section.rows.forEach((row, rIndex) => {
+        const rowEl = document.createElement("div");
+        rowEl.className = "row-item";
+        rowEl.innerHTML = `
+          <input type="text" placeholder="Testname" value="${escapeHtml(row.label)}" data-row-field="label" />
+          <input type="text" class="subcol-input" placeholder="Unterspalten (optional, z.B. Konzentrisch, Exzentrisch)" value="${escapeHtml((row.subcolumns || []).join(", "))}" data-row-field="subcolumns" />
+          <button type="button" class="btn-small danger" data-action="remove-row">✕</button>
+        `;
+        rowEl.querySelector('[data-row-field="label"]').addEventListener("input", e => { row.label = e.target.value; });
+        rowEl.querySelector('[data-row-field="subcolumns"]').addEventListener("input", e => {
+          const vals = e.target.value.split(",").map(v => v.trim()).filter(Boolean);
+          row.subcolumns = vals.length ? vals : null;
+        });
+        rowEl.querySelector('[data-action="remove-row"]').addEventListener("click", () => {
+          section.rows.splice(rIndex, 1);
+          renderSections();
+        });
+        rowsContainer.appendChild(rowEl);
+      });
+    }
+
+    document.getElementById("save-btn").addEventListener("click", async () => {
+      const messageEl = document.getElementById("form-message");
+      const saveBtn = document.getElementById("save-btn");
+      const name = document.getElementById("template-name").value.trim();
+
+      if (!name) {
+        messageEl.textContent = "Bitte einen Namen für die Vorlage eintragen.";
+        messageEl.className = "form-message error";
+        return;
+      }
+
+      saveBtn.disabled = true;
+      messageEl.textContent = "Wird gespeichert …";
+      messageEl.className = "form-message";
+
+      const fields = { sections };
+      let error;
+      if (templateId) {
+        ({ error } = await supabaseClient.from("document_templates").update({ name, fields }).eq("id", templateId));
+      } else {
+        const { data: maxRow } = await supabaseClient.from("document_templates").select("sort_order").order("sort_order", { ascending: false }).limit(1).maybeSingle();
+        const nextSort = maxRow ? (maxRow.sort_order || 0) + 1 : 1;
+        ({ error } = await supabaseClient.from("document_templates").insert({ name, fields, sort_order: nextSort }));
+      }
+
+      if (error) {
+        messageEl.textContent = "Fehler: " + error.message;
+        messageEl.className = "form-message error";
+        saveBtn.disabled = false;
+        return;
+      }
+
+      messageEl.textContent = "Gespeichert.";
+      messageEl.className = "form-message success";
+      setTimeout(() => { window.location.href = "dokumentvorlagen.html"; }, 600);
+    });
+
+    init();
+  </script>
+</body>
+</html>

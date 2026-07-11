@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registrieren – Yoga-App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --color-bg: #FDFCFB;
+  --color-surface: #FFFFFF;
+  --color-pine: #572E2A;
+  --color-pine-dark: #3E211D;
+  --color-sand: #DBAEA4;
+  --color-sand-dark: #C08F84;
+  --color-text: #1E2622;
+  --color-text-muted: #5B6660;
+  --color-border: #DBDFD5;
+  --color-error: #A6483A;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-script: "Alex Brush", cursive;
+  --font-body: "Work Sans", "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-body); background-color: var(--color-bg); color: var(--color-text); min-height: 100vh; }
+.auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.auth-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 48px 40px; width: 100%; max-width: 380px; box-shadow: 0 1px 2px rgba(30, 38, 34, 0.04); }
+.auth-eyebrow { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-sand); font-weight: 600; margin: 0 0 8px 0; }
+.auth-title { font-family: var(--font-script); font-weight: 400; font-size: 50px; color: var(--color-pine-dark); margin: 0 0 10px 0; line-height: 1; }
+.auth-intro { font-size: 14px; color: var(--color-text-muted); margin: 0 0 28px 0; line-height: 1.5; }
+.field { margin-bottom: 18px; }
+.field label { display: block; font-size: 13px; color: var(--color-text-muted); margin-bottom: 6px; }
+.field input { width: 100%; padding: 11px 12px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 16px; font-family: var(--font-body); background: var(--color-bg); color: var(--color-text); }
+.field input:focus { outline: 2px solid var(--color-pine); outline-offset: 1px; background: var(--color-surface); }
+.btn-primary { width: 100%; padding: 12px; background: var(--color-sand); color: #fff; border: none; border-radius: 3px; font-size: 15px; font-family: var(--font-body); font-weight: 600; cursor: pointer; margin-top: 6px; }
+.btn-primary:hover { background: var(--color-sand-dark); }
+.btn-primary:disabled { opacity: 0.6; cursor: default; }
+.form-message { font-size: 13px; margin-top: 16px; min-height: 18px; line-height: 1.5; }
+.form-message.error { color: var(--color-error); }
+.form-message.success { color: var(--color-pine); }
+.back-link { display: block; text-align: center; margin-top: 20px; font-size: 13px; color: var(--color-text-muted); text-decoration: none; }
+.back-link:hover { color: var(--color-pine); }
+
+@media (max-width: 480px) {
+  .auth-screen { padding: 16px; }
+  .auth-card { padding: 32px 24px; }
+  .auth-title { font-size: 38px; }
+  .btn-primary { padding: 14px; font-size: 16px; }
+}
+
+.brand-banner { background: linear-gradient(135deg, #C08F84 0%, #E3C4BC 55%, #EBD3CC 100%); display: flex; justify-content: center; align-items: center; padding: 14px 20px; }
+.brand-lockup { display: inline-flex; flex-direction: column; align-items: flex-end; text-decoration: none; line-height: 1; }
+.brand-script { font-family: var(--font-script); font-weight: 400; font-size: 54px; color: var(--color-pine-dark); }
+.brand-serif { font-family: var(--font-display); font-weight: 600; font-size: 22px; color: var(--color-pine-dark); margin-top: -6px; letter-spacing: 0.01em; }
+@media (max-width: 640px) {
+  .brand-banner { padding: 10px 16px; }
+    .brand-script { font-size: 38px; }
+  .brand-serif { font-size: 16px; }
+}
+  </style>
+</head>
+<body>
+  <div class="brand-banner"><div class="brand-lockup"><span class="brand-script">Pandora</span><span class="brand-serif">Community Bern</span></div></div>
+  <div class="auth-screen">
+    <div class="auth-card">
+      <h1 class="auth-title">Account erstellen</h1>
+      <p style="font-size:14px; color: var(--color-pine-dark); background: rgba(219,174,164,0.15); padding:12px 14px; border-radius:4px; margin-bottom:20px;">
+        Die Selbstregistrierung ist deaktiviert. Bitte wende dich an deine Therapeut:in oder den Admin – dein Konto wird dort direkt erstellt.
+      </p>
+      <a href="index.html" style="display:block; text-align:center; font-size:14px; color: var(--color-pine); text-decoration:none;">← Zurück zum Login</a>
+      <p class="auth-intro">Nach der Registrierung erhältst du eine Bestätigungs-E-Mail. Erst danach kannst du dich einloggen. Ein Admin schaltet dich anschliessend für den passenden Bereich frei.</p>
+
+      <form id="register-form" novalidate>
+        <div class="field">
+          <label for="email">E-Mail</label>
+          <input type="email" id="email" required autocomplete="username" />
+        </div>
+        <div class="field">
+          <label for="password">Passwort</label>
+          <input type="password" id="password" required autocomplete="new-password" minlength="6" />
+        </div>
+        <div class="field">
+          <label for="password2">Passwort bestätigen</label>
+          <input type="password" id="password2" required autocomplete="new-password" minlength="6" />
+        </div>
+        <button type="submit" class="btn-primary" id="register-btn">Registrieren</button>
+        <p class="form-message" id="form-message"></p>
+      </form>
+
+      <a href="index.html" class="back-link">← Zurück zum Login</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://yqklyumvybthkzlbsspj.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable__DLVShYfXjf0C27LLK1zbg_5vpFcxJy";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const form = document.getElementById("register-form");
+    const messageEl = document.getElementById("form-message");
+    const btn = document.getElementById("register-btn");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      messageEl.textContent = "";
+      messageEl.className = "form-message";
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const password2 = document.getElementById("password2").value;
+
+      if (password !== password2) {
+        messageEl.textContent = "Die Passwörter stimmen nicht überein.";
+        messageEl.className = "form-message error";
+        return;
+      }
+      if (password.length < 6) {
+        messageEl.textContent = "Das Passwort muss mindestens 6 Zeichen lang sein.";
+        messageEl.className = "form-message error";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Wird erstellt …";
+
+      const invitingTherapistId = new URLSearchParams(window.location.search).get("therapist");
+      const { error } = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: invitingTherapistId
+          ? { data: { assigned_therapist_id: invitingTherapistId } }
+          : {},
+      });
+
+      btn.disabled = false;
+      btn.textContent = "Registrieren";
+
+      if (error) {
+        messageEl.textContent = "Fehler: " + error.message;
+        messageEl.className = "form-message error";
+        return;
+      }
+
+      messageEl.textContent = "Fast geschafft! Wir haben dir eine Bestätigungs-E-Mail geschickt. Klick auf den Link darin, danach kannst du dich einloggen.";
+      messageEl.className = "form-message success";
+      form.reset();
+    });
+  </script>
+</body>
+</html>

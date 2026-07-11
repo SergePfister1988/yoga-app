@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pranayama – Yoga-App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --color-bg: #FDFCFB; --color-surface: #FFFFFF; --color-pine: #572E2A; --color-pine-dark: #3E211D;
+  --color-sand: #DBAEA4; --color-sand-dark: #C08F84; --color-text: #1E2622; --color-text-muted: #5B6660;
+  --color-border: #DBDFD5; --color-error: #A6483A;
+  --font-display: "Cormorant Garamond", Georgia, serif; --font-script: "Alex Brush", cursive; --font-body: "Work Sans", "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-body); background-color: var(--color-bg); color: var(--color-text); min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+.app-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+.nav-links { display: flex; gap: 20px; margin-left: 32px; flex-wrap: wrap; }
+.nav-links a { font-size: 14px; color: var(--color-text-muted); font-weight: 600; }
+.nav-links a.active, .nav-links a:hover { color: var(--color-pine); }
+.header-left { display: flex; align-items: center; flex-wrap: wrap; }
+.role-badge { display: inline-block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; background: var(--color-sand); color: #fff; margin-left: 10px; }
+.btn-primary { padding: 10px 18px; background: var(--color-sand); color: #fff; border: none; border-radius: 3px; font-size: 14px; font-family: var(--font-body); font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--color-sand-dark); }
+.btn-secondary { padding: 8px 16px; background: transparent; color: var(--color-pine-dark); border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); cursor: pointer; }
+.btn-secondary:hover { border-color: var(--color-pine); }
+.app-main { padding: 32px; max-width: 1000px; margin: 0 auto; }
+.app-main h1 { font-family: var(--font-display); color: var(--color-pine-dark); margin-top: 0; }
+.info-note { background: rgba(219,174,164,0.12); border: 1px solid var(--color-sand); color: var(--color-pine-dark); padding: 12px 16px; border-radius: 4px; font-size: 13px; line-height: 1.5; margin-bottom: 20px; }
+.filter-bar { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.filter-field label { display: block; font-size: 12px; color: var(--color-text-muted); margin-bottom: 5px; }
+.filter-field input, .filter-field select { width: 100%; padding: 9px 10px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); background: var(--color-bg); }
+.asana-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.asana-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 18px; display: block; }
+.asana-card:hover { border-color: var(--color-pine); }
+.asana-card .sanskrit { font-size: 12px; color: var(--color-text-muted); }
+.asana-card .name { font-family: var(--font-display); font-size: 19px; color: var(--color-pine-dark); margin: 2px 0 10px 0; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-size: 11px; padding: 3px 8px; border-radius: 12px; background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-text-muted); }
+.tag.category { background: var(--color-pine-dark); color: #fff; }
+.tag.reviewed { background: rgba(87,46,42,0.08); color: var(--color-pine); border-color: transparent; font-weight: 600; }
+.tag.unreviewed { background: rgba(192,143,132,0.15); color: var(--color-sand-dark); border-color: transparent; }
+.empty-state { color: var(--color-text-muted); padding: 40px 0; text-align: center; }
+@media (max-width: 640px) {
+  .app-header { flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+  .nav-links { margin-left: 0; gap: 14px; }
+  .app-main { padding: 20px 16px; }
+  .filter-bar { grid-template-columns: 1fr; }
+  .filter-field input, .filter-field select { font-size: 16px; }
+  .asana-list { grid-template-columns: 1fr; }
+  #admin-actions .btn-primary { width: 100%; padding: 13px; }
+}
+.brand-banner { background: linear-gradient(135deg, #C08F84 0%, #E3C4BC 55%, #EBD3CC 100%); display: flex; justify-content: center; align-items: center; padding: 10px 20px; }
+.brand-lockup { display: inline-flex; flex-direction: column; align-items: flex-end; text-decoration: none; line-height: 1; }
+.brand-script { font-family: var(--font-script); font-weight: 400; font-size: 44px; color: var(--color-pine-dark); }
+.brand-serif { font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--color-pine-dark); margin-top: -6px; letter-spacing: 0.01em; }
+@media (max-width: 640px) { .brand-banner { padding: 8px 16px; } .brand-script { font-size: 32px; } .brand-serif { font-size: 14px; } }
+  </style>
+</head>
+<body>
+  <div class="brand-banner"><a href="dashboard.html" class="brand-lockup"><span class="brand-script">Pandora</span><span class="brand-serif">Community Bern</span></a></div>
+  <header class="app-header">
+    <div class="header-left">
+      <nav class="nav-links">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="meine-angaben.html" id="nav-meine-angaben">Meine Angaben</a>
+        <a href="selbstdeklaration.html" id="nav-selbstdeklaration" style="display:none;">Selbstdeklaration</a>
+        <a href="mein-kontakt.html" id="nav-mein-kontakt" style="display:none;">Mein Kontakt</a>
+        <a href="meine-yoginis.html" id="nav-meine-yoginis" style="display:none;">Meine Yogi:nis</a>
+        <a href="meine-therapeuten.html" id="nav-meine-therapeuten" style="display:none;">Meine Therapeut:innen</a>
+        <a href="dokumentvorlagen.html" id="nav-dokumentvorlagen" style="display:none;">Vorlagen verwalten</a>
+        <a href="asanas.html" id="nav-asanas">Asanas</a>
+        <a href="sequences.html">Sequenzen</a>
+        <a href="flows.html" id="nav-flows">Flows</a>
+        <a href="pranayama.html" class="active" id="nav-pranayama">Pranayama</a>
+        <a href="mantras.html" id="nav-mantras">Mantras</a>
+        <a href="users.html" id="nav-users" style="display:none;">Benutzer</a>
+      </nav>
+      <span class="role-badge" id="role-badge" style="display:none;"></span>
+    </div>
+    <button class="btn-secondary" id="logout-btn">Ausloggen</button>
+  </header>
+
+  <main class="app-main">
+    <h1>Pranayama-Datenbank</h1>
+
+    <div class="filter-bar">
+      <div class="filter-field">
+        <label for="f-search">Suche (Name)</label>
+        <input type="text" id="f-search" placeholder="z.B. Wechselatmung..." />
+      </div>
+      <div class="filter-field">
+        <label for="f-category">Kategorie</label>
+        <select id="f-category"><option value="">Alle</option></select>
+      </div>
+      <div class="filter-field">
+        <label for="f-difficulty">Schwierigkeit</label>
+        <select id="f-difficulty">
+          <option value="">Alle</option>
+          <option value="Anfänger">Anfänger</option>
+          <option value="Fortgeschritten">Fortgeschritten</option>
+          <option value="Experte">Experte</option>
+        </select>
+      </div>
+      <div class="filter-field" id="f-reviewed-field" style="display:none;">
+        <label for="f-reviewed">Erfasst</label>
+        <select id="f-reviewed">
+          <option value="">Alle</option>
+          <option value="yes">Nur erfasste</option>
+          <option value="no">Nur nicht erfasste</option>
+        </select>
+      </div>
+      <div class="filter-field" id="f-verified-field" style="display:none;">
+        <label for="f-verified">Geprüft</label>
+        <select id="f-verified">
+          <option value="">Alle</option>
+          <option value="yes">Nur geprüfte</option>
+          <option value="no">Nur nicht geprüfte</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="admin-actions" style="display:none; margin-bottom: 16px; gap: 10px; flex-wrap: wrap;">
+      <a href="pranayama-form.html"><button class="btn-primary">+ Neues Pranayama erfassen</button></a>
+      <button class="btn-primary" id="export-csv-btn">CSV Exportieren</button>
+      <button class="btn-primary" id="create-backup-btn">Backup erstellen</button>
+      <button class="btn-primary" id="restore-backup-btn">Backup restoren</button>
+      <input type="file" id="restore-file-input" accept="application/json" style="display:none;" />
+    </div>
+    <p class="form-status" id="backup-status" style="font-size:13px; color: var(--color-text-muted); margin-top:-10px; margin-bottom:16px;"></p>
+
+    <div id="asana-list" class="asana-list"></div>
+    <p id="empty-state" class="empty-state" style="display:none;"></p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://yqklyumvybthkzlbsspj.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable__DLVShYfXjf0C27LLK1zbg_5vpFcxJy";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function roleLabel(role, gender) {
+      if (role === "admin") return "Admin";
+      if (role === "therapeut") {
+        if (gender === "frau") return "Therapeutin";
+        if (gender === "mann") return "Therapeut";
+        return "Therapeut:in";
+      }
+      if (role === "yogi") {
+        if (gender === "frau") return "Yogini";
+        if (gender === "mann") return "Yogi";
+        return "Yogi:ni";
+      }
+      return role;
+    }
+
+    let allItems = [];
+    let isAdmin = false;
+
+    async function init() {
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      if (!sessionData.session) { window.location.href = "index.html"; return; }
+
+      const { data: profile } = await supabaseClient.from("profiles").select("role, gender").eq("id", sessionData.session.user.id).single();
+
+      if (profile) {
+        const badge = document.getElementById("role-badge");
+        badge.textContent = roleLabel(profile.role, profile.gender);
+        badge.style.display = "inline-block";
+        if (profile.role === "admin") {
+          const mt = document.getElementById("nav-meine-therapeuten");
+          if (mt) mt.style.display = "inline";
+          const dv = document.getElementById("nav-dokumentvorlagen");
+          if (dv) dv.style.display = "inline";
+        }
+        if (profile.role === "therapeut") {
+          const sd = document.getElementById("nav-selbstdeklaration");
+          if (sd) sd.style.display = "inline";
+        }
+        if (profile.role === "yogi") {
+          const mk = document.getElementById("nav-mein-kontakt");
+          if (mk) mk.style.display = "inline";
+        }
+        if (profile.role !== "admin") {
+          const maLink = document.getElementById("nav-meine-angaben");
+          if (maLink) {
+            maLink.textContent = "Passwort";
+            maLink.parentElement.appendChild(maLink);
+          }
+        }
+        if (profile.role !== "admin") {
+          ["nav-asanas", "nav-flows", "nav-pranayama", "nav-mantras"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = "none";
+          });
+        }
+        isAdmin = profile.role === "admin";
+        if (profile.role === "admin" || profile.role === "therapeut") {
+          document.getElementById("nav-users").style.display = "inline";
+          if (profile.role === "therapeut") {
+            document.getElementById("nav-meine-yoginis").style.display = "inline";
+          }
+        }
+        if (isAdmin) {
+          document.getElementById("admin-actions").style.display = "flex";
+          document.getElementById("f-reviewed-field").style.display = "block";
+          document.getElementById("f-verified-field").style.display = "block";
+        }
+      }
+
+      await loadCategories();
+      await loadItems();
+    }
+
+    async function loadCategories() {
+      const { data } = await supabaseClient.from("pranayama_categories").select("id, name").order("sort_order");
+      const sel = document.getElementById("f-category");
+      (data || []).forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.id; opt.textContent = c.name;
+        sel.appendChild(opt);
+      });
+    }
+
+    async function loadItems() {
+      const { data, error } = await supabaseClient
+        .from("pranayamas")
+        .select(`
+          id, name_deutsch, name_sanskrit, difficulty, reviewed, verified,
+          pranayama_category_links ( pranayama_categories ( id, name ) )
+        `)
+        .order("name_deutsch");
+
+      if (error) {
+        document.getElementById("empty-state").style.display = "block";
+        document.getElementById("empty-state").textContent = "Fehler beim Laden: " + error.message;
+        return;
+      }
+      allItems = data || [];
+      renderList();
+    }
+
+    function renderList() {
+      const search = document.getElementById("f-search").value.trim().toLowerCase();
+      const categoryId = document.getElementById("f-category").value;
+      const difficulty = document.getElementById("f-difficulty").value;
+      const reviewedFilter = document.getElementById("f-reviewed").value;
+      const verifiedFilter = document.getElementById("f-verified").value;
+
+      const filtered = allItems.filter(a => {
+        if (search) {
+          const haystack = (a.name_deutsch + " " + (a.name_sanskrit || "")).toLowerCase();
+          if (!haystack.includes(search)) return false;
+        }
+        if (categoryId) {
+          const has = (a.pranayama_category_links || []).some(cl => cl.pranayama_categories && cl.pranayama_categories.id === categoryId);
+          if (!has) return false;
+        }
+        if (difficulty && a.difficulty !== difficulty) return false;
+        if (reviewedFilter === "yes" && !a.reviewed) return false;
+        if (reviewedFilter === "no" && a.reviewed) return false;
+        if (verifiedFilter === "yes" && !a.verified) return false;
+        if (verifiedFilter === "no" && a.verified) return false;
+        return true;
+      });
+
+      const listEl = document.getElementById("asana-list");
+      const emptyEl = document.getElementById("empty-state");
+      listEl.innerHTML = "";
+
+      if (!filtered.length) {
+        emptyEl.style.display = "block";
+        emptyEl.textContent = "Keine Pranayamas gefunden.";
+        return;
+      }
+      emptyEl.style.display = "none";
+
+      filtered.forEach(a => {
+        const card = document.createElement("a");
+        card.href = "pranayama-detail.html?id=" + a.id;
+        card.className = "asana-card";
+        let html = "";
+        if (a.name_sanskrit) html += `<div class="sanskrit">${escapeHtml(a.name_sanskrit)}</div>`;
+        html += `<div class="name">${escapeHtml(a.name_deutsch)}</div>`;
+        html += `<div class="tag-row">`;
+        (a.pranayama_category_links || []).forEach(cl => {
+          if (cl.pranayama_categories) html += `<span class="tag category">${escapeHtml(cl.pranayama_categories.name)}</span>`;
+        });
+        if (a.difficulty) html += `<span class="tag">${escapeHtml(a.difficulty)}</span>`;
+        if (isAdmin) {
+          html += a.reviewed ? `<span class="tag reviewed">✓ Erfasst</span>` : `<span class="tag unreviewed">Nicht erfasst</span>`;
+          html += a.verified ? `<span class="tag reviewed">✓ Geprüft</span>` : `<span class="tag unreviewed">Nicht geprüft</span>`;
+        }
+        html += `</div>`;
+        card.innerHTML = html;
+        listEl.appendChild(card);
+      });
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str || "";
+      return div.innerHTML;
+    }
+
+    ["f-search", "f-category", "f-difficulty", "f-reviewed", "f-verified"].forEach(id => {
+      document.getElementById(id).addEventListener("input", renderList);
+      document.getElementById(id).addEventListener("change", renderList);
+    });
+
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+      window.location.href = "index.html";
+    });
+
+    function downloadFile(content, filename, mime) {
+      const blob = new Blob(["\uFEFF" + content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function csvEscape(val) {
+      const str = String(val == null ? "" : val);
+      if (/[;"\n]/.test(str)) return '"' + str.replace(/"/g, '""') + '"';
+      return str;
+    }
+
+    function todayStr() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function setBackupStatus(text, isError) {
+      const el = document.getElementById("backup-status");
+      el.textContent = text;
+      el.style.color = isError ? "var(--color-error, #A6483A)" : "var(--color-text-muted)";
+    }
+
+    // ============================================================
+    // CSV-Export
+    // ============================================================
+    document.getElementById("export-csv-btn").addEventListener("click", () => {
+      const rows = [["Name Deutsch", "Name Sanskrit", "Kategorie", "Schwierigkeit", "Erfasst", "Geprüft", "Bild vorhanden"]];
+      allItems.slice()
+        .sort((a, b) => a.name_deutsch.localeCompare(b.name_deutsch, "de"))
+        .forEach(a => {
+          const categories = (a.pranayama_category_links || [])
+            .map(cl => cl.pranayama_categories ? cl.pranayama_categories.name : "")
+            .filter(Boolean)
+            .join(", ");
+          rows.push([
+            a.name_deutsch,
+            a.name_sanskrit || "",
+            categories,
+            a.difficulty || "",
+            a.reviewed ? "Ja" : "Nein",
+            a.verified ? "Ja" : "Nein",
+            (a.pranayama_media && a.pranayama_media.length > 0) ? "Ja" : "Nein",
+          ]);
+        });
+      const csv = rows.map(r => r.map(csvEscape).join(";")).join("\r\n");
+      downloadFile(csv, "pranayama_export_" + todayStr() + ".csv", "text/csv;charset=utf-8;");
+      setBackupStatus("CSV-Export heruntergeladen.");
+    });
+
+    // ============================================================
+    // Backup erstellen (JSON mit allen Pranayama-Tabellen)
+    // ============================================================
+    const BACKUP_TABLES = [
+      "pranayama_categories", "pranayamas", "pranayama_steps", "pranayama_benefits",
+      "pranayama_contraindications", "pranayama_media", "pranayama_category_links",
+    ];
+
+    document.getElementById("create-backup-btn").addEventListener("click", async () => {
+      setBackupStatus("Backup wird erstellt …");
+      const backup = { created_at: new Date().toISOString(), version: 1, data: {} };
+
+      for (const table of BACKUP_TABLES) {
+        const { data, error } = await supabaseClient.from(table).select("*");
+        if (error) {
+          setBackupStatus("Fehler beim Sichern von " + table + ": " + error.message, true);
+          return;
+        }
+        backup.data[table] = data;
+      }
+
+      downloadFile(JSON.stringify(backup, null, 2), "pranayama-backup_" + todayStr() + ".json", "application/json");
+      setBackupStatus("Backup heruntergeladen. Hinweis: Bild-/Videodateien selbst liegen weiterhin im Storage-Bucket und sind in dieser Datei nicht enthalten.");
+    });
+
+    // ============================================================
+    // Backup restoren
+    // ============================================================
+    document.getElementById("restore-backup-btn").addEventListener("click", () => {
+      document.getElementById("restore-file-input").click();
+    });
+
+    document.getElementById("restore-file-input").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      e.target.value = "";
+      if (!file) return;
+
+      let backup;
+      try {
+        backup = JSON.parse(await file.text());
+      } catch (err) {
+        setBackupStatus("Diese Datei ist kein gültiges Backup (kein lesbares JSON).", true);
+        return;
+      }
+      if (!backup.data || !backup.data.pranayamas) {
+        setBackupStatus("Diese Datei sieht nicht wie ein gültiges Pranayama-Backup aus.", true);
+        return;
+      }
+
+      const backupDate = backup.created_at ? new Date(backup.created_at).toLocaleString("de-CH") : "unbekannt";
+      const sure1 = confirm(
+        `Achtung: Das ersetzt ALLE aktuellen Pranayamas durch den Stand vom ${backupDate}.\n` +
+        `Alle seither vorgenommenen Änderungen gehen verloren. Das kann nicht rückgängig gemacht werden.\n\nFortfahren?`
+      );
+      if (!sure1) return;
+      const sure2 = confirm("Bist du wirklich sicher? Bitte bestätige ein zweites Mal, um fortzufahren.");
+      if (!sure2) return;
+
+      setBackupStatus("Wiederherstellung läuft …");
+
+      const refTables = ["pranayama_categories"];
+      for (const table of refTables) {
+        const rows = backup.data[table] || [];
+        if (rows.length) {
+          const { error } = await supabaseClient.from(table).upsert(rows, { onConflict: "id" });
+          if (error) {
+            setBackupStatus("Fehler beim Wiederherstellen von " + table + ": " + error.message, true);
+            return;
+          }
+        }
+      }
+
+      const { error: deleteError } = await supabaseClient
+        .from("pranayamas")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000");
+      if (deleteError) {
+        setBackupStatus("Fehler beim Leeren der bestehenden Daten: " + deleteError.message, true);
+        return;
+      }
+
+      const restoreOrder = [
+        "pranayamas", "pranayama_steps", "pranayama_benefits",
+        "pranayama_contraindications", "pranayama_media", "pranayama_category_links",
+      ];
+      for (const table of restoreOrder) {
+        const rows = backup.data[table] || [];
+        if (rows.length) {
+          const { error } = await supabaseClient.from(table).insert(rows);
+          if (error) {
+            setBackupStatus("Fehler beim Wiederherstellen von " + table + ": " + error.message, true);
+            return;
+          }
+        }
+      }
+
+      setBackupStatus("Wiederherstellung abgeschlossen. Seite wird neu geladen …");
+      setTimeout(() => window.location.reload(), 1200);
+    });
+
+    init();
+  </script>
+</body>
+</html>

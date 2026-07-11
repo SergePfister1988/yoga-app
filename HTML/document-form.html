@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dokument – Yoga-App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --color-bg: #FDFCFB; --color-surface: #FFFFFF; --color-pine: #572E2A; --color-pine-dark: #3E211D;
+  --color-sand: #DBAEA4; --color-sand-dark: #C08F84; --color-text: #1E2622; --color-text-muted: #5B6660;
+  --color-border: #DBDFD5; --color-error: #A6483A;
+  --font-display: "Cormorant Garamond", Georgia, serif; --font-script: "Alex Brush", cursive; --font-body: "Work Sans", "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-body); background-color: var(--color-bg); color: var(--color-text); min-height: 100vh; }
+a { color: inherit; }
+.app-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+.role-badge { display: inline-block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; background: var(--color-sand); color: #fff; }
+.btn-primary { padding: 11px 20px; background: var(--color-sand); color: #fff; border: none; border-radius: 3px; font-size: 15px; font-family: var(--font-body); font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--color-sand-dark); }
+.btn-primary:disabled { opacity: 0.6; }
+.btn-secondary { padding: 8px 16px; background: transparent; color: var(--color-pine-dark); border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); cursor: pointer; text-decoration: none; display: inline-block; }
+.btn-small { padding: 5px 10px; font-size: 12px; background: transparent; border: 1px solid var(--color-border); border-radius: 3px; cursor: pointer; color: var(--color-text-muted); }
+.btn-small.danger:hover { border-color: var(--color-error); color: var(--color-error); }
+.app-main { padding: 32px; max-width: 900px; margin: 0 auto; }
+.app-main h1 { font-family: var(--font-display); color: var(--color-pine-dark); margin-top: 8px; margin-bottom: 2px; }
+.sub { color: var(--color-text-muted); font-size: 13px; margin-top: 0; margin-bottom: 20px; }
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 22px 24px; margin-bottom: 18px; }
+.card h2 { font-family: var(--font-display); font-size: 16px; color: var(--color-pine-dark); margin: 0 0 14px 0; }
+.field label { display: block; font-size: 13px; color: var(--color-text-muted); margin-bottom: 5px; }
+.field input[type=text], .field input[type=date], .field textarea { width: 100%; padding: 10px 11px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); background: var(--color-bg); }
+.test-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.test-table th, .test-table td { border: 1px solid var(--color-border); padding: 8px 10px; text-align: left; }
+.test-table th { background: var(--color-bg); font-weight: 600; color: var(--color-pine-dark); font-size: 12px; }
+.test-table td.row-label { font-weight: 600; background: rgba(219,174,164,0.08); width: 30%; }
+.test-table input { width: 100%; border: none; background: transparent; font-size: 13px; font-family: var(--font-body); padding: 4px; }
+.test-table input:focus { outline: 1px solid var(--color-sand); background: var(--color-surface); }
+.sub-col-label { font-size: 10px; color: var(--color-text-muted); display: block; margin-bottom: 2px; }
+.notes-field { margin-top: 14px; }
+.history-entry { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--color-border); }
+.history-entry-date { font-size: 12px; color: var(--color-text-muted); min-width: 80px; padding-top: 2px; }
+.history-entry-comment { flex: 1; font-size: 14px; }
+.form-message { font-size: 13px; margin-top: 10px; }
+.form-message.error { color: var(--color-error); }
+.form-message.success { color: var(--color-pine); }
+@media (max-width: 640px) {
+  .app-header { flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+  .app-main { padding: 20px 16px; }
+  .field input[type=text], .field textarea { font-size: 16px; }
+  .btn-primary { width: 100%; padding: 14px; font-size: 16px; }
+  .test-table { font-size: 11px; }
+  .test-table th, .test-table td { padding: 5px 6px; }
+}
+.brand-banner { background: linear-gradient(135deg, #C08F84 0%, #E3C4BC 55%, #EBD3CC 100%); display: flex; justify-content: center; align-items: center; padding: 10px 20px; }
+.brand-lockup { display: inline-flex; flex-direction: column; align-items: flex-end; text-decoration: none; line-height: 1; }
+.brand-script { font-family: var(--font-script); font-weight: 400; font-size: 44px; color: var(--color-pine-dark); }
+.brand-serif { font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--color-pine-dark); margin-top: -6px; letter-spacing: 0.01em; }
+@media (max-width: 640px) { .brand-banner { padding: 8px 16px; } .brand-script { font-size: 32px; } .brand-serif { font-size: 14px; } }
+  </style>
+</head>
+<body>
+  <div class="brand-banner"><a href="dashboard.html" class="brand-lockup"><span class="brand-script">Pandora</span><span class="brand-serif">Community Bern</span></a></div>
+  <header class="app-header">
+    <a href="#" id="back-link" class="btn-secondary">← Zurück zur Benutzerakte</a>
+    <span class="role-badge" id="role-badge" style="display:none;"></span>
+  </header>
+
+  <main class="app-main">
+    <h1 id="page-title">Dokument</h1>
+    <p class="sub" id="template-name-sub"></p>
+
+    <div class="field" style="max-width:320px; margin-bottom:18px;">
+      <label for="doc-title">Titel des Dokuments</label>
+      <input type="text" id="doc-title" />
+    </div>
+
+    <div id="sections-container"></div>
+
+    <button class="btn-primary" id="save-btn">Speichern</button>
+    <p class="form-message" id="form-message"></p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://yqklyumvybthkzlbsspj.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable__DLVShYfXjf0C27LLK1zbg_5vpFcxJy";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function roleLabel(role, gender) {
+      if (role === "admin") return "Admin";
+      if (role === "therapeut") {
+        if (gender === "frau") return "Therapeutin";
+        if (gender === "mann") return "Therapeut";
+        return "Therapeut:in";
+      }
+      if (role === "yogi") {
+        if (gender === "frau") return "Yogini";
+        if (gender === "mann") return "Yogi";
+        return "Yogi:ni";
+      }
+      return role;
+    }
+
+    function esc(str) {
+      const div = document.createElement("div");
+      div.textContent = str || "";
+      return div.innerHTML;
+    }
+
+    const docId = new URLSearchParams(window.location.search).get("id");
+    let yogiId = null;
+    let isReadOnly = true;
+    let fieldSchema = null;
+    let existingContent = {};
+
+    async function init() {
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      if (!sessionData.session) { window.location.href = "index.html"; return; }
+
+      const { data: profile } = await supabaseClient.from("profiles").select("role, gender").eq("id", sessionData.session.user.id).single();
+      if (profile) {
+        const badge = document.getElementById("role-badge");
+        badge.textContent = roleLabel(profile.role, profile.gender);
+        badge.style.display = "inline-block";
+        isReadOnly = profile.role !== "therapeut";
+      }
+
+      if (!docId) {
+        document.getElementById("page-title").textContent = "Kein Dokument angegeben.";
+        document.getElementById("save-btn").style.display = "none";
+        return;
+      }
+
+      await loadDocument();
+    }
+
+    async function loadDocument() {
+      const { data: doc, error } = await supabaseClient
+        .from("client_documents")
+        .select("yogi_id, title, content, document_templates ( name, fields )")
+        .eq("id", docId)
+        .single();
+
+      if (error || !doc) {
+        document.getElementById("page-title").textContent = "Dokument nicht gefunden oder kein Zugriff.";
+        document.getElementById("save-btn").style.display = "none";
+        return;
+      }
+
+      yogiId = doc.yogi_id;
+      existingContent = doc.content || {};
+      document.getElementById("back-link").href = "client-file.html?id=" + yogiId;
+      document.getElementById("page-title").textContent = doc.title;
+      document.getElementById("doc-title").value = doc.title || "";
+
+      if (doc.document_templates) {
+        document.getElementById("template-name-sub").textContent = "Vorlage: " + doc.document_templates.name;
+        fieldSchema = doc.document_templates.fields;
+      }
+
+      renderSections();
+
+      if (isReadOnly) {
+        document.querySelectorAll("input, textarea").forEach(el => el.setAttribute("readonly", "readonly"));
+        document.getElementById("save-btn").style.display = "none";
+      }
+    }
+
+    function renderSections() {
+      const container = document.getElementById("sections-container");
+      if (!fieldSchema || !fieldSchema.sections || !fieldSchema.sections.length) {
+        container.innerHTML = `<div class="card"><div class="field"><label for="doc-content-fallback">Inhalt (Freitext)</label>
+          <textarea id="doc-content-fallback" rows="14">${esc(existingContent.text || "")}</textarea></div></div>`;
+        return;
+      }
+
+      let html = "";
+      fieldSchema.sections.forEach(section => {
+        if (section.type === "date") {
+          html += `<div class="card">
+            <div class="field"><label for="field-${section.id}">${esc(section.label)}</label>
+            <input type="date" id="field-${section.id}" value="${esc(existingContent[section.id] || "")}" /></div>
+          </div>`;
+        } else if (section.type === "text") {
+          const val = existingContent[section.id] || "";
+          html += `<div class="card">
+            <div class="field"><label for="field-${section.id}">${esc(section.label)}</label>
+            ${section.multiline
+              ? `<textarea id="field-${section.id}" rows="4">${esc(val)}</textarea>`
+              : `<input type="text" id="field-${section.id}" value="${esc(val)}" />`}
+            </div>
+          </div>`;
+        } else if (section.type === "select") {
+          const val = existingContent[section.id] || "";
+          html += `<div class="card">
+            <div class="field"><label for="field-${section.id}">${esc(section.label)}</label>
+            <select id="field-${section.id}">
+              <option value="">– auswählen –</option>
+              ${(section.options || []).map(opt => `<option value="${esc(opt)}" ${opt === val ? "selected" : ""}>${esc(opt)}</option>`).join("")}
+            </select>
+            </div>
+          </div>`;
+        } else if (section.type === "boolean") {
+          const val = existingContent[section.id] || "";
+          html += `<div class="card">
+            <div class="field"><label for="field-${section.id}">${esc(section.label)}</label>
+            <select id="field-${section.id}">
+              <option value="">– auswählen –</option>
+              <option value="Ja" ${val === "Ja" ? "selected" : ""}>Ja</option>
+              <option value="Nein" ${val === "Nein" ? "selected" : ""}>Nein</option>
+            </select>
+            </div>
+          </div>`;
+        } else if (section.type === "history") {
+          const entries = existingContent[section.id] || [];
+          html += `<div class="card"><h2>${esc(section.label)}</h2>
+            <div class="history-list" data-history="${section.id}">`;
+          entries.forEach(entry => {
+            html += `<div class="history-entry" data-entry-id="${entry.id}">
+              <div class="history-entry-date">${entry.date ? new Date(entry.date).toLocaleDateString("de-CH") : ""}</div>
+              <div class="history-entry-comment">${esc(entry.comment)}</div>
+              <button type="button" class="btn-small danger" data-remove-history="${section.id}" data-remove-entry="${entry.id}">✕</button>
+            </div>`;
+          });
+          html += `</div>
+            <div class="history-add-row" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
+              <div class="field" style="max-width:160px; margin-bottom:0;">
+                <label>Datum</label>
+                <input type="date" data-history-date="${section.id}" value="${new Date().toISOString().slice(0,10)}" />
+              </div>
+              <div class="field" style="flex:1; min-width:200px; margin-bottom:0;">
+                <label>Kommentar</label>
+                <input type="text" data-history-comment="${section.id}" />
+              </div>
+              <button type="button" class="btn-secondary" data-add-history="${section.id}">+ Eintrag hinzufügen</button>
+            </div>
+          </div>`;
+        } else if (section.type === "table") {
+          const sectionData = existingContent[section.id] || {};
+          const cellType = section.cellType === "select" ? "select" : "text";
+          const cellOptions = section.cellOptions || [];
+          const weights = (section.weights && section.weights.length === section.columns.length + 1)
+            ? section.weights : [1.5, ...section.columns.map(() => 1)];
+          const totalWeight = weights.reduce((a, b) => a + b, 0);
+          const widthPct = w => ((w / totalWeight) * 100).toFixed(2) + "%";
+
+          html += `<div class="card"><h2>${esc(section.label)}</h2>
+            <table class="test-table"><colgroup>
+              <col style="width:${widthPct(weights[0])};" />
+              ${section.columns.map((c, i) => `<col style="width:${widthPct(weights[i + 1])};" />`).join("")}
+            </colgroup><thead><tr><th></th>`;
+          section.columns.forEach(col => { html += `<th>${esc(col)}</th>`; });
+          html += `</tr></thead><tbody>`;
+
+          section.rows.forEach(row => {
+            const rowData = sectionData[row.id] || {};
+            html += `<tr><td class="row-label">${esc(row.label)}</td>`;
+            section.columns.forEach(col => {
+              if (row.subcolumns) {
+                html += `<td>`;
+                row.subcolumns.forEach(sub => {
+                  const key = col + "_" + sub;
+                  html += `<span class="sub-col-label">${esc(sub)}</span>
+                    ${cellType === "select"
+                      ? `<select data-section="${section.id}" data-row="${row.id}" data-col="${key}">
+                          <option value="">–</option>
+                          ${cellOptions.map(opt => `<option value="${esc(opt)}" ${opt === (rowData[key] || "") ? "selected" : ""}>${esc(opt)}</option>`).join("")}
+                        </select>`
+                      : `<input type="text" data-section="${section.id}" data-row="${row.id}" data-col="${key}" value="${esc(rowData[key] || "")}" />`}`;
+                });
+                html += `</td>`;
+              } else {
+                html += `<td>${cellType === "select"
+                  ? `<select data-section="${section.id}" data-row="${row.id}" data-col="${col}">
+                      <option value="">–</option>
+                      ${cellOptions.map(opt => `<option value="${esc(opt)}" ${opt === (rowData[col] || "") ? "selected" : ""}>${esc(opt)}</option>`).join("")}
+                    </select>`
+                  : `<input type="text" data-section="${section.id}" data-row="${row.id}" data-col="${col}" value="${esc(rowData[col] || "")}" />`}</td>`;
+              }
+            });
+            html += `</tr>`;
+          });
+
+          html += `</tbody></table>`;
+          if (section.notes) {
+            const notesVal = sectionData.notizen || "";
+            html += `<div class="field notes-field"><label for="notes-${section.id}">Notizen</label>
+              <textarea id="notes-${section.id}" rows="3" data-section="${section.id}" data-row="notizen" data-col="text">${esc(notesVal)}</textarea></div>`;
+          }
+          html += `</div>`;
+        }
+      });
+
+      container.innerHTML = html;
+      attachHistoryListeners();
+    }
+
+    function attachHistoryListeners() {
+      document.querySelectorAll("[data-add-history]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const sectionId = btn.dataset.addHistory;
+          const dateInput = document.querySelector(`[data-history-date="${sectionId}"]`);
+          const commentInput = document.querySelector(`[data-history-comment="${sectionId}"]`);
+          const comment = commentInput.value.trim();
+          if (!comment) { commentInput.focus(); return; }
+
+          if (!existingContent[sectionId]) existingContent[sectionId] = [];
+          existingContent[sectionId].push({
+            id: "h_" + Math.random().toString(36).slice(2, 10),
+            date: dateInput.value || new Date().toISOString().slice(0, 10),
+            comment,
+          });
+          renderSections();
+        });
+      });
+
+      document.querySelectorAll("[data-remove-history]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const sectionId = btn.dataset.removeHistory;
+          const entryId = btn.dataset.removeEntry;
+          if (!confirm("Diesen Verlaufs-Eintrag wirklich löschen?")) return;
+          existingContent[sectionId] = (existingContent[sectionId] || []).filter(e => e.id !== entryId);
+          renderSections();
+        });
+      });
+    }
+
+    function collectContent() {
+      const content = {};
+      if (!fieldSchema || !fieldSchema.sections || !fieldSchema.sections.length) {
+        const fallback = document.getElementById("doc-content-fallback");
+        if (fallback) content.text = fallback.value;
+        return content;
+      }
+
+      fieldSchema.sections.forEach(section => {
+        if (section.type === "date" || section.type === "text" || section.type === "select" || section.type === "boolean") {
+          const el = document.getElementById("field-" + section.id);
+          if (el) content[section.id] = el.value;
+        } else if (section.type === "history") {
+          content[section.id] = existingContent[section.id] || [];
+        } else if (section.type === "table") {
+          const sectionData = {};
+          document.querySelectorAll(`[data-section="${section.id}"]`).forEach(el => {
+            const rowId = el.dataset.row;
+            const col = el.dataset.col;
+            if (!sectionData[rowId]) sectionData[rowId] = {};
+            sectionData[rowId][col] = el.value;
+          });
+          if (sectionData.notizen && sectionData.notizen.text !== undefined) {
+            sectionData.notizen = sectionData.notizen.text;
+          }
+          content[section.id] = sectionData;
+        }
+      });
+      return content;
+    }
+
+    document.getElementById("save-btn").addEventListener("click", async () => {
+      const messageEl = document.getElementById("form-message");
+      const saveBtn = document.getElementById("save-btn");
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+
+      saveBtn.disabled = true;
+      messageEl.textContent = "Wird gespeichert …";
+      messageEl.className = "form-message";
+
+      const { error } = await supabaseClient
+        .from("client_documents")
+        .update({
+          title: document.getElementById("doc-title").value.trim() || "Unbenanntes Dokument",
+          content: collectContent(),
+          updated_by: sessionData.session.user.id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", docId);
+
+      if (error) {
+        messageEl.textContent = "Fehler: " + error.message;
+        messageEl.className = "form-message error";
+        saveBtn.disabled = false;
+        return;
+      }
+
+      messageEl.textContent = "Gespeichert.";
+      messageEl.className = "form-message success";
+      saveBtn.disabled = false;
+    });
+
+    init();
+  </script>
+</body>
+</html>

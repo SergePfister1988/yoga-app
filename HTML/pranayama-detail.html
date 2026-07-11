@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pranayama-Detail – Yoga-App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --color-bg: #FDFCFB; --color-surface: #FFFFFF; --color-pine: #572E2A; --color-pine-dark: #3E211D;
+  --color-sand: #DBAEA4; --color-sand-dark: #C08F84; --color-text: #1E2622; --color-text-muted: #5B6660;
+  --color-border: #DBDFD5; --color-error: #A6483A;
+  --font-display: "Cormorant Garamond", Georgia, serif; --font-script: "Alex Brush", cursive; --font-body: "Work Sans", "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-body); background-color: var(--color-bg); color: var(--color-text); min-height: 100vh; }
+a { color: inherit; }
+.app-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+.nav-links { display: flex; gap: 20px; margin-left: 32px; flex-wrap: wrap; }
+.nav-links a { font-size: 14px; color: var(--color-text-muted); font-weight: 600; text-decoration: none; }
+.nav-links a.active, .nav-links a:hover { color: var(--color-pine); }
+.header-left { display: flex; align-items: center; flex-wrap: wrap; }
+.role-badge { display: inline-block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; background: var(--color-sand); color: #fff; margin-left: 10px; }
+.btn-primary { padding: 10px 18px; background: var(--color-sand); color: #fff; border: none; border-radius: 3px; font-size: 14px; font-family: var(--font-body); font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--color-sand-dark); }
+.btn-secondary { padding: 8px 16px; background: transparent; color: var(--color-pine-dark); border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); cursor: pointer; text-decoration: none; display: inline-block; }
+.btn-secondary:hover { border-color: var(--color-pine); }
+.btn-danger { padding: 8px 16px; background: transparent; color: var(--color-error); border: 1px solid var(--color-error); border-radius: 3px; font-size: 14px; font-family: var(--font-body); cursor: pointer; }
+.app-main { padding: 32px; max-width: 760px; margin: 0 auto; }
+.back-link { font-size: 13px; color: var(--color-text-muted); text-decoration: none; }
+.back-link:hover { color: var(--color-pine); }
+.title-row { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 12px; }
+.sanskrit { font-size: 13px; color: var(--color-text-muted); }
+h1 { font-family: var(--font-display); color: var(--color-pine-dark); margin: 4px 0 12px 0; }
+.admin-buttons { display: flex; gap: 8px; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
+.tag { font-size: 11px; padding: 3px 9px; border-radius: 12px; background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-text-muted); }
+.tag.category { background: var(--color-pine-dark); color: #fff; }
+.tag.reviewed { background: rgba(87,46,42,0.08); color: var(--color-pine); border-color: transparent; font-weight: 600; }
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 22px 24px; margin-bottom: 18px; }
+.card h2 { font-family: var(--font-display); font-size: 17px; color: var(--color-pine-dark); margin: 0 0 12px 0; }
+.timer-display { font-family: var(--font-display); font-size: 48px; text-align: center; color: var(--color-pine-dark); margin-bottom: 16px; }
+.timer-controls .field { margin: 0 auto 12px auto; }
+.timer-controls .field label { display: block; font-size: 13px; color: var(--color-text-muted); margin-bottom: 5px; }
+.timer-controls .field input { width: 100%; padding: 9px 10px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); background: var(--color-bg); }
+.timer-presets { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 8px; }
+.timer-presets .btn-small { padding: 6px 12px; }
+.btn-small { font-size: 12px; background: transparent; border: 1px solid var(--color-border); border-radius: 3px; cursor: pointer; color: var(--color-text-muted); }
+.btn-small:hover { border-color: var(--color-pine); color: var(--color-pine); }
+.timer-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+.timer-buttons button { min-width: 120px; }
+.card ol, .card ul { margin: 0; padding-left: 20px; }
+.card li { margin-bottom: 6px; line-height: 1.5; }
+.muted { color: var(--color-text-muted); font-size: 14px; }
+.media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.media-grid img, .media-grid video { width: 100%; border-radius: 4px; display: block; }
+@media (max-width: 640px) {
+  .app-header { flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+  .nav-links { margin-left: 0; gap: 14px; }
+  .app-main { padding: 20px 16px; }
+  .title-row { flex-direction: column; gap: 12px; }
+  .admin-buttons { width: 100%; }
+  .admin-buttons a, .admin-buttons button { flex: 1; text-align: center; }
+  .card { padding: 18px 16px; }
+  .timer-display { font-size: 38px; }
+  .timer-buttons button { min-width: 100px; padding: 12px; }
+}
+.brand-banner { background: linear-gradient(135deg, #C08F84 0%, #E3C4BC 55%, #EBD3CC 100%); display: flex; justify-content: center; align-items: center; padding: 10px 20px; }
+.brand-lockup { display: inline-flex; flex-direction: column; align-items: flex-end; text-decoration: none; line-height: 1; }
+.brand-script { font-family: var(--font-script); font-weight: 400; font-size: 44px; color: var(--color-pine-dark); }
+.brand-serif { font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--color-pine-dark); margin-top: -6px; letter-spacing: 0.01em; }
+@media (max-width: 640px) { .brand-banner { padding: 8px 16px; } .brand-script { font-size: 32px; } .brand-serif { font-size: 14px; } }
+  </style>
+</head>
+<body>
+  <div class="brand-banner"><a href="dashboard.html" class="brand-lockup"><span class="brand-script">Pandora</span><span class="brand-serif">Community Bern</span></a></div>
+  <header class="app-header">
+    <div class="header-left">
+      <nav class="nav-links">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="meine-angaben.html" id="nav-meine-angaben">Meine Angaben</a>
+        <a href="selbstdeklaration.html" id="nav-selbstdeklaration" style="display:none;">Selbstdeklaration</a>
+        <a href="mein-kontakt.html" id="nav-mein-kontakt" style="display:none;">Mein Kontakt</a>
+        <a href="meine-yoginis.html" id="nav-meine-yoginis" style="display:none;">Meine Yogi:nis</a>
+        <a href="meine-therapeuten.html" id="nav-meine-therapeuten" style="display:none;">Meine Therapeut:innen</a>
+        <a href="dokumentvorlagen.html" id="nav-dokumentvorlagen" style="display:none;">Vorlagen verwalten</a>
+        <a href="asanas.html" id="nav-asanas">Asanas</a>
+        <a href="sequences.html">Sequenzen</a>
+        <a href="flows.html" id="nav-flows">Flows</a>
+        <a href="pranayama.html" class="active" id="nav-pranayama">Pranayama</a>
+        <a href="mantras.html" id="nav-mantras">Mantras</a>
+        <a href="users.html" id="nav-users" style="display:none;">Benutzer</a>
+      </nav>
+      <span class="role-badge" id="role-badge" style="display:none;"></span>
+    </div>
+    <button class="btn-secondary" id="logout-btn">Ausloggen</button>
+  </header>
+
+  <main class="app-main">
+    <a href="pranayama.html" class="back-link" id="back-link">← Zurück zur Übersicht</a>
+    <div id="content"></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://yqklyumvybthkzlbsspj.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable__DLVShYfXjf0C27LLK1zbg_5vpFcxJy";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function roleLabel(role, gender) {
+      if (role === "admin") return "Admin";
+      if (role === "therapeut") {
+        if (gender === "frau") return "Therapeutin";
+        if (gender === "mann") return "Therapeut";
+        return "Therapeut:in";
+      }
+      if (role === "yogi") {
+        if (gender === "frau") return "Yogini";
+        if (gender === "mann") return "Yogi";
+        return "Yogi:ni";
+      }
+      return role;
+    }
+
+    const itemId = new URLSearchParams(window.location.search).get("id");
+    let isAdmin = false;
+
+    (function setupBackLink() {
+      const params = new URLSearchParams(window.location.search);
+      const backUrl = params.get("back");
+      const backLabel = params.get("backLabel");
+      if (backUrl) {
+        const link = document.getElementById("back-link");
+        link.href = backUrl;
+        link.textContent = "← " + (backLabel || "Zurück");
+      }
+    })();
+
+    async function init() {
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      if (!sessionData.session) { window.location.href = "index.html"; return; }
+
+      const { data: profile } = await supabaseClient.from("profiles").select("role, gender").eq("id", sessionData.session.user.id).single();
+      if (profile) {
+        const badge = document.getElementById("role-badge");
+        badge.textContent = roleLabel(profile.role, profile.gender);
+        badge.style.display = "inline-block";
+        if (profile.role === "admin") {
+          const mt = document.getElementById("nav-meine-therapeuten");
+          if (mt) mt.style.display = "inline";
+          const dv = document.getElementById("nav-dokumentvorlagen");
+          if (dv) dv.style.display = "inline";
+        }
+        if (profile.role === "therapeut") {
+          const sd = document.getElementById("nav-selbstdeklaration");
+          if (sd) sd.style.display = "inline";
+        }
+        if (profile.role === "yogi") {
+          const mk = document.getElementById("nav-mein-kontakt");
+          if (mk) mk.style.display = "inline";
+        }
+        if (profile.role !== "admin") {
+          const maLink = document.getElementById("nav-meine-angaben");
+          if (maLink) {
+            maLink.textContent = "Passwort";
+            maLink.parentElement.appendChild(maLink);
+          }
+        }
+        if (profile.role !== "admin") {
+          ["nav-asanas", "nav-flows", "nav-pranayama", "nav-mantras"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = "none";
+          });
+        }
+        isAdmin = profile.role === "admin";
+        if (profile.role === "admin" || profile.role === "therapeut") {
+          document.getElementById("nav-users").style.display = "inline";
+          if (profile.role === "therapeut") {
+            document.getElementById("nav-meine-yoginis").style.display = "inline";
+          }
+        }
+      }
+
+      if (!itemId) { document.getElementById("content").innerHTML = "<p>Kein Pranayama angegeben.</p>"; return; }
+      await load();
+    }
+
+    function esc(str) {
+      const div = document.createElement("div");
+      div.textContent = str || "";
+      return div.innerHTML;
+    }
+
+    async function load() {
+      const { data: a, error } = await supabaseClient
+        .from("pranayamas")
+        .select(`
+          id, name_deutsch, name_sanskrit, difficulty, duration_recommendation,
+          reviewed, reviewed_at, reviewed_by, reviewer:profiles!pranayamas_reviewed_by_fkey ( email ),
+          verified, verified_at, verified_by, verifier:profiles!pranayamas_verified_by_fkey ( email ),
+          pranayama_category_links ( pranayama_categories ( name ) ),
+          pranayama_steps ( id, step_number, content ),
+          pranayama_benefits ( id, content ),
+          pranayama_contraindications ( id, content ),
+          pranayama_media ( id, media_type, storage_path, caption )
+        `)
+        .eq("id", itemId)
+        .single();
+
+      if (error || !a) { document.getElementById("content").innerHTML = "<p>Pranayama nicht gefunden.</p>"; return; }
+      render(a);
+    }
+
+    // ------------------------------------------------------------
+    // Übungsmodus: Bildschirm nicht abstellen lassen (Screen Wake Lock API)
+    // ------------------------------------------------------------
+    let wakeLock = null;
+    let wakeLockEnabled = false;
+
+    async function requestWakeLock() {
+      try {
+        wakeLock = await navigator.wakeLock.request("screen");
+      } catch (err) {
+        console.error("Wake Lock Fehler:", err);
+      }
+    }
+
+    async function toggleWakeLock() {
+      const btn = document.getElementById("wake-lock-btn");
+      wakeLockEnabled = !wakeLockEnabled;
+      if (wakeLockEnabled) {
+        await requestWakeLock();
+        btn.textContent = "✓ Übungsmodus aktiv – zum Beenden tippen";
+        btn.style.background = "var(--color-sand)";
+        btn.style.color = "#fff";
+        btn.style.borderColor = "transparent";
+      } else {
+        if (wakeLock) { await wakeLock.release(); wakeLock = null; }
+        btn.textContent = "🧘 Übungsmodus (Bildschirm bleibt an)";
+        btn.style.background = "";
+        btn.style.color = "";
+        btn.style.borderColor = "";
+      }
+    }
+
+    document.addEventListener("visibilitychange", async () => {
+      if (wakeLockEnabled && document.visibilityState === "visible") {
+        await requestWakeLock();
+      }
+    });
+
+    // ------------------------------------------------------------
+    // Klänge (Web Audio API, keine Audiodateien nötig)
+    // ------------------------------------------------------------
+    let audioCtx = null;
+    function getAudioCtx() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return audioCtx;
+    }
+
+    // Holzstab-Klick fürs Metronom ("Dumpf 2": 700/1000 Hz, gedämpft)
+    function playWoodBlock() {
+      const ctx = getAudioCtx();
+      const now = ctx.currentTime;
+      const dur = 0.07;
+
+      const osc1 = ctx.createOscillator();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(700, now);
+      const osc2 = ctx.createOscillator();
+      osc2.type = "sine";
+      osc2.frequency.setValueAtTime(1000, now);
+
+      const gain1 = ctx.createGain();
+      gain1.gain.value = 0.6;
+      const gain2 = ctx.createGain();
+      gain2.gain.value = 0.4;
+
+      const toneGain = ctx.createGain();
+      toneGain.gain.setValueAtTime(0.5, now);
+      toneGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+      osc1.connect(gain1).connect(toneGain);
+      osc2.connect(gain2).connect(toneGain);
+      toneGain.connect(ctx.destination);
+      osc1.start(now); osc1.stop(now + dur);
+      osc2.start(now); osc2.stop(now + dur);
+
+      // kurzer, gedämpfter Rausch-Transient (Tiefpass statt Bandpass -> weniger "Quietschen")
+      const noiseDur = 0.004;
+      const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * noiseDur));
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      const noise = ctx.createBufferSource();
+      noise.buffer = noiseBuffer;
+
+      const noiseFilter = ctx.createBiquadFilter();
+      noiseFilter.type = "lowpass";
+      noiseFilter.frequency.value = 2000;
+
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.4, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.0015);
+
+      noise.connect(noiseFilter).connect(noiseGain).connect(ctx.destination);
+      noise.start(now);
+      noise.stop(now + noiseDur);
+    }
+
+    // Klangschale ("E - Zhada-Stil, mittel") zum Timer-Ende
+    function playGong() {
+      const ctx = getAudioCtx();
+      const now = ctx.currentTime;
+      const baseFreq = 165;
+      const dur = 7.5;
+      const attackTime = 0.12;
+      const partials = [
+        [baseFreq, 1.0],
+        [baseFreq * 1.008, 0.9],
+        [baseFreq * 2.0, 0.55],
+        [baseFreq * 2.02, 0.5],
+        [baseFreq * 2.76, 0.25],
+        [baseFreq * 3.0, 0.22],
+        [baseFreq * 4.1, 0.12],
+        [baseFreq * 5.4, 0.06],
+      ];
+      const totalWeight = partials.reduce((s, p) => s + p[1], 0);
+
+      partials.forEach(([freq, weight]) => {
+        const osc = ctx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, now);
+
+        const gain = ctx.createGain();
+        const peak = (weight / totalWeight) * 0.7;
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(peak, now + attackTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + dur + 0.1);
+      });
+
+      // sanfter Mallet-Anschlag statt hartem Schlag
+      const malletDur = 0.04;
+      const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * malletDur));
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      const noise = ctx.createBufferSource();
+      noise.buffer = noiseBuffer;
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.15, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+      noise.connect(noiseGain).connect(ctx.destination);
+      noise.start(now);
+      noise.stop(now + malletDur);
+    }
+
+    // ------------------------------------------------------------
+    // Timer & Metronom
+    // ------------------------------------------------------------
+    let timerEndTime = null;
+    let timerIntervalId = null;
+    let metronomeTimeoutId = null;
+    let metronomeRunning = false;
+
+    function formatTime(ms) {
+      const totalSeconds = Math.max(0, Math.round(ms / 1000));
+      const mm = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+      const ss = String(totalSeconds % 60).padStart(2, "0");
+      return `${mm}:${ss}`;
+    }
+
+    function startMetronome() {
+      metronomeRunning = true;
+      let nextTick = performance.now();
+      function tick() {
+        if (!metronomeRunning) return;
+        playWoodBlock();
+        nextTick += 1000;
+        metronomeTimeoutId = setTimeout(tick, Math.max(0, nextTick - performance.now()));
+      }
+      tick();
+    }
+
+    function stopMetronome() {
+      metronomeRunning = false;
+      if (metronomeTimeoutId) clearTimeout(metronomeTimeoutId);
+      metronomeTimeoutId = null;
+    }
+
+    function startTimer() {
+      const minutes = parseInt(document.getElementById("timer-minutes").value, 10) || 1;
+      const clamped = Math.min(60, Math.max(1, minutes));
+      timerEndTime = Date.now() + clamped * 60 * 1000;
+
+      document.getElementById("timer-setup").style.display = "none";
+      document.getElementById("timer-start-btn").style.display = "none";
+      document.getElementById("timer-stop-btn").style.display = "inline-block";
+
+      getAudioCtx(); // per Nutzer-Klick freigeben (Autoplay-Richtlinie)
+
+      if (document.getElementById("metronome-checkbox").checked) startMetronome();
+
+      updateTimerDisplay();
+      timerIntervalId = setInterval(updateTimerDisplay, 250);
+    }
+
+    function updateTimerDisplay() {
+      const remaining = timerEndTime - Date.now();
+      document.getElementById("timer-display").textContent = formatTime(remaining);
+      if (remaining <= 0) {
+        finishTimer();
+      }
+    }
+
+    function finishTimer() {
+      clearInterval(timerIntervalId);
+      timerIntervalId = null;
+      stopMetronome();
+      playGong();
+      document.getElementById("timer-display").textContent = "00:00";
+      document.getElementById("timer-setup").style.display = "block";
+      document.getElementById("timer-start-btn").style.display = "inline-block";
+      document.getElementById("timer-stop-btn").style.display = "none";
+    }
+
+    function stopTimer() {
+      clearInterval(timerIntervalId);
+      timerIntervalId = null;
+      stopMetronome();
+      timerEndTime = null;
+      document.getElementById("timer-display").textContent = "00:00";
+      document.getElementById("timer-setup").style.display = "block";
+      document.getElementById("timer-start-btn").style.display = "inline-block";
+      document.getElementById("timer-stop-btn").style.display = "none";
+    }
+
+    function render(a) {
+      const steps = (a.pranayama_steps || []).slice().sort((x, y) => x.step_number - y.step_number);
+      let html = "";
+
+      html += `<div class="title-row">
+        <div>
+          ${a.name_sanskrit ? `<div class="sanskrit">${esc(a.name_sanskrit)}</div>` : ""}
+          <h1>${esc(a.name_deutsch)}</h1>
+        </div>`;
+      if (isAdmin) {
+        html += `<div class="admin-buttons">
+          <a href="pranayama-form.html?id=${a.id}" class="btn-secondary">Bearbeiten</a>
+          <button class="btn-danger" id="delete-btn">Löschen</button>
+        </div>`;
+      }
+      html += `</div>`;
+
+      html += `<div class="tag-row">`;
+      (a.pranayama_category_links || []).forEach(cl => {
+        if (cl.pranayama_categories) html += `<span class="tag category">${esc(cl.pranayama_categories.name)}</span>`;
+      });
+      if (a.difficulty) html += `<span class="tag">${esc(a.difficulty)}</span>`;
+      if (a.duration_recommendation) html += `<span class="tag">${esc(a.duration_recommendation)}</span>`;
+      if (a.reviewed && isAdmin) html += `<span class="tag reviewed">✓ Erfasst</span>`;
+      if (a.verified && isAdmin) html += `<span class="tag reviewed">✓ Geprüft</span>`;
+      html += `</div>`;
+
+      html += `<div style="margin-bottom:20px;">
+        <button class="btn-secondary" id="wake-lock-btn" type="button">🧘 Übungsmodus (Bildschirm bleibt an)</button>
+        <p id="wake-lock-hint" style="font-size:12px; color: var(--color-text-muted); margin-top:6px; display:none;"></p>
+      </div>`;
+
+      html += `<div class="card">
+        <h2>Timer & Metronom</h2>
+        <div class="timer-display" id="timer-display">00:00</div>
+        <div class="timer-controls" id="timer-setup">
+          <div class="field" style="max-width:160px;">
+            <label for="timer-minutes">Dauer (Minuten)</label>
+            <input type="number" id="timer-minutes" min="1" max="60" value="10" />
+          </div>
+          <div class="timer-presets">
+            ${[5, 10, 15, 20, 30, 45, 60].map(m => `<button type="button" class="btn-small" data-minutes="${m}">${m}</button>`).join("")}
+          </div>
+          <label style="display:flex; align-items:center; gap:8px; font-size:14px; margin-top:12px;">
+            <input type="checkbox" id="metronome-checkbox" />
+            Metronom (Sekundentakt) aktivieren
+          </label>
+        </div>
+        <div class="timer-buttons">
+          <button class="btn-primary" id="timer-start-btn" type="button">Start</button>
+          <button class="btn-secondary" id="timer-stop-btn" type="button" style="display:none;">Stopp</button>
+        </div>
+      </div>`;
+
+      if (a.pranayama_media && a.pranayama_media.length) {
+        html += `<div class="card"><div class="media-grid">`;
+        a.pranayama_media.forEach(m => {
+          const { data: pub } = supabaseClient.storage.from("asana-media").getPublicUrl(m.storage_path);
+          const url = pub.publicUrl;
+          html += m.media_type === "image" ? `<img src="${url}" alt="${esc(m.caption || a.name_deutsch)}" />` : `<video src="${url}" controls></video>`;
+        });
+        html += `</div>
+          <p style="font-size:12px; color: var(--color-text-muted); margin: 10px 0 0 0;">Hinweis: Das Bild dient nur als Anhaltspunkt und ersetzt keine Anleitung durch einen/eine Yogalehrer:in.</p>
+        </div>`;
+      }
+
+      if (isAdmin) {
+        const reviewedDate = a.reviewed_at ? new Date(a.reviewed_at).toLocaleDateString("de-CH") : "";
+        const reviewerEmail = a.reviewer ? a.reviewer.email : "";
+        const verifiedDate = a.verified_at ? new Date(a.verified_at).toLocaleDateString("de-CH") : "";
+        const verifierEmail = a.verifier ? a.verifier.email : "";
+        html += `<div class="card">
+          <h2>Kontroll-Status</h2>
+          <p class="muted" style="margin-bottom:6px;"><strong>Erfasst</strong> (eigene Kontrolle)</p>
+          ${a.reviewed
+            ? `<p class="muted">Erfasst am ${reviewedDate}${reviewerEmail ? " von " + esc(reviewerEmail) : ""}.</p><button class="btn-secondary" id="review-toggle-btn">Als "nicht erfasst" markieren</button>`
+            : `<p class="muted">Noch nicht als erfasst markiert.</p><button class="btn-primary" id="review-toggle-btn">Als "erfasst" markieren</button>`}
+          <hr style="margin:16px 0; border:none; border-top:1px solid var(--color-border);" />
+          <p class="muted" style="margin-bottom:6px;"><strong>Geprüft</strong> (fachliche Prüfung)</p>
+          ${a.verified
+            ? `<p class="muted">Geprüft am ${verifiedDate}${verifierEmail ? " von " + esc(verifierEmail) : ""}.</p><button class="btn-secondary" id="verify-toggle-btn">Als "nicht geprüft" markieren</button>`
+            : `<p class="muted">Noch nicht fachlich geprüft.</p><button class="btn-primary" id="verify-toggle-btn">Als "geprüft" markieren</button>`}
+        </div>`;
+      }
+
+      if (steps.length) {
+        html += `<div class="card"><h2>Ausführung</h2><ol>`;
+        steps.forEach(s => { html += `<li>${esc(s.content)}</li>`; });
+        html += `</ol></div>`;
+      }
+
+      if (a.pranayama_benefits && a.pranayama_benefits.length) {
+        html += `<div class="card"><h2>Vorteile / Wirkung</h2><ul>`;
+        a.pranayama_benefits.forEach(b => { html += `<li>${esc(b.content)}</li>`; });
+        html += `</ul></div>`;
+      }
+
+      if (a.pranayama_contraindications && a.pranayama_contraindications.length) {
+        html += `<div class="card"><h2>Wann ist Vorsicht geboten?</h2><ul>`;
+        a.pranayama_contraindications.forEach(c => { html += `<li>${esc(c.content)}</li>`; });
+        html += `</ul></div>`;
+      }
+
+      document.getElementById("content").innerHTML = html;
+
+      const wakeLockBtn = document.getElementById("wake-lock-btn");
+      const wakeLockHint = document.getElementById("wake-lock-hint");
+      if (!("wakeLock" in navigator)) {
+        wakeLockHint.textContent = "Dein Browser unterstützt diese Funktion leider nicht.";
+        wakeLockHint.style.display = "block";
+        wakeLockBtn.disabled = true;
+      } else {
+        wakeLockBtn.addEventListener("click", toggleWakeLock);
+      }
+
+      document.querySelectorAll("[data-minutes]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.getElementById("timer-minutes").value = btn.dataset.minutes;
+        });
+      });
+      document.getElementById("timer-start-btn").addEventListener("click", startTimer);
+      document.getElementById("timer-stop-btn").addEventListener("click", stopTimer);
+
+      const deleteBtn = document.getElementById("delete-btn");
+      if (deleteBtn) {
+        deleteBtn.addEventListener("click", async () => {
+          if (!confirm("Dieses Pranayama wirklich löschen?")) return;
+          const { error } = await supabaseClient.from("pranayamas").delete().eq("id", a.id);
+          if (error) { alert("Fehler: " + error.message); return; }
+          window.location.href = "pranayama.html";
+        });
+      }
+
+      const reviewBtn = document.getElementById("review-toggle-btn");
+      if (reviewBtn) {
+        reviewBtn.addEventListener("click", async () => {
+          reviewBtn.disabled = true;
+          const { data: sessionData } = await supabaseClient.auth.getSession();
+          const payload = a.reviewed
+            ? { reviewed: false, reviewed_by: null, reviewed_at: null }
+            : { reviewed: true, reviewed_by: sessionData.session.user.id, reviewed_at: new Date().toISOString() };
+          const { error } = await supabaseClient.from("pranayamas").update(payload).eq("id", a.id);
+          if (error) { alert("Fehler: " + error.message); reviewBtn.disabled = false; return; }
+          await load();
+        });
+      }
+
+      const verifyBtn = document.getElementById("verify-toggle-btn");
+      if (verifyBtn) {
+        verifyBtn.addEventListener("click", async () => {
+          verifyBtn.disabled = true;
+          const { data: sessionData } = await supabaseClient.auth.getSession();
+          const payload = a.verified
+            ? { verified: false, verified_by: null, verified_at: null }
+            : { verified: true, verified_by: sessionData.session.user.id, verified_at: new Date().toISOString() };
+          const { error } = await supabaseClient.from("pranayamas").update(payload).eq("id", a.id);
+          if (error) { alert("Fehler: " + error.message); verifyBtn.disabled = false; return; }
+          await load();
+        });
+      }
+    }
+
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+      window.location.href = "index.html";
+    });
+
+    init();
+  </script>
+</body>
+</html>
