@@ -354,24 +354,6 @@ h1 { font-family: var(--font-display); color: var(--color-pine-dark); margin: 4p
         html += `</div></div>`;
       }
 
-      if (isAdmin) {
-        const reviewedDate = a.reviewed_at ? new Date(a.reviewed_at).toLocaleDateString("de-CH") : "";
-        const reviewerEmail = a.reviewer ? a.reviewer.email : "";
-        const verifiedDate = a.verified_at ? new Date(a.verified_at).toLocaleDateString("de-CH") : "";
-        const verifierEmail = a.verifier ? a.verifier.email : "";
-        html += `<div class="card">
-          <h2>Kontroll-Status</h2>
-          <p class="muted" style="margin-bottom:6px;"><strong>Erfasst</strong> (eigene Kontrolle)</p>
-          ${a.reviewed
-            ? `<p class="muted">Erfasst am ${reviewedDate}${reviewerEmail ? " von " + esc(reviewerEmail) : ""}.</p><button class="btn-secondary" id="review-toggle-btn">Als "nicht erfasst" markieren</button>`
-            : `<p class="muted">Noch nicht als erfasst markiert.</p><button class="btn-primary" id="review-toggle-btn">Als "erfasst" markieren</button>`}
-          <hr style="margin:16px 0; border:none; border-top:1px solid var(--color-border);" />
-          <p class="muted" style="margin-bottom:6px;"><strong>Geprüft</strong> (fachliche Prüfung)</p>
-          ${a.verified
-            ? `<p class="muted">Geprüft am ${verifiedDate}${verifierEmail ? " von " + esc(verifierEmail) : ""}.</p><button class="btn-secondary" id="verify-toggle-btn">Als "nicht geprüft" markieren</button>`
-            : `<p class="muted">Noch nicht fachlich geprüft.</p><button class="btn-primary" id="verify-toggle-btn">Als "geprüft" markieren</button>`}
-        </div>`;
-      }
 
       if (a.mantra_text) {
         const baseCapo = a.base_capo || 0;
@@ -440,34 +422,6 @@ h1 { font-family: var(--font-display); color: var(--color-pine-dark); margin: 4p
           const { error } = await supabaseClient.from("mantras").delete().eq("id", a.id);
           if (error) { alert("Fehler: " + error.message); return; }
           window.location.href = "mantras.html";
-        });
-      }
-
-      const reviewBtn = document.getElementById("review-toggle-btn");
-      if (reviewBtn) {
-        reviewBtn.addEventListener("click", async () => {
-          reviewBtn.disabled = true;
-          const { data: sessionData } = await supabaseClient.auth.getSession();
-          const payload = a.reviewed
-            ? { reviewed: false, reviewed_by: null, reviewed_at: null }
-            : { reviewed: true, reviewed_by: sessionData.session.user.id, reviewed_at: new Date().toISOString() };
-          const { error } = await supabaseClient.from("mantras").update(payload).eq("id", a.id);
-          if (error) { alert("Fehler: " + error.message); reviewBtn.disabled = false; return; }
-          await load();
-        });
-      }
-
-      const verifyBtn = document.getElementById("verify-toggle-btn");
-      if (verifyBtn) {
-        verifyBtn.addEventListener("click", async () => {
-          verifyBtn.disabled = true;
-          const { data: sessionData } = await supabaseClient.auth.getSession();
-          const payload = a.verified
-            ? { verified: false, verified_by: null, verified_at: null }
-            : { verified: true, verified_by: sessionData.session.user.id, verified_at: new Date().toISOString() };
-          const { error } = await supabaseClient.from("mantras").update(payload).eq("id", a.id);
-          if (error) { alert("Fehler: " + error.message); verifyBtn.disabled = false; return; }
-          await load();
         });
       }
     }
