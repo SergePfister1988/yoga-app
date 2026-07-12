@@ -139,6 +139,8 @@ a { color: inherit; }
     <div class="header-left">
       <nav class="nav-links">
         <a href="dashboard.html">Dashboard</a>
+        <a href="kalender.html" id="nav-kalender" style="display:none;">Kalender</a>
+        <a href="community.html" id="nav-community" style="display:none;">Community</a>
         <a href="meine-angaben.html" id="nav-meine-angaben">Meine Angaben</a>
         <a href="selbstdeklaration.html" id="nav-selbstdeklaration" style="display:none;">Selbstdeklaration</a>
         <a href="mein-kontakt.html" id="nav-mein-kontakt" style="display:none;">Mein Kontakt</a>
@@ -168,6 +170,7 @@ a { color: inherit; }
         <select id="new-user-role" style="padding:8px 10px; border:1px solid var(--color-border); border-radius:3px; background:var(--color-bg);">
           <option value="yogi">Yogi:ni</option>
           <option value="therapeut">Therapeut:in</option>
+          <option value="anbieter">Anbieter:in</option>
         </select>
         <button class="btn-primary" id="create-user-btn" type="button">Erstellen</button>
       </div>
@@ -196,6 +199,12 @@ a { color: inherit; }
     </div>
 
     <div class="role-section">
+      <h2 class="role-section-title">Anbieter:innen</h2>
+      <div id="anbieter-list" class="user-list"></div>
+      <p class="empty-state" id="anbieter-empty" style="display:none;"></p>
+    </div>
+
+    <div class="role-section">
       <h2 class="role-section-title">Yogi:nis</h2>
       <div id="yogi-list" class="user-list"></div>
       <p class="empty-state" id="yogi-empty" style="display:none;"></p>
@@ -219,6 +228,11 @@ a { color: inherit; }
         if (gender === "frau") return "Yogini";
         if (gender === "mann") return "Yogi";
         return "Yogi:ni";
+      }
+      if (role === "anbieter") {
+        if (gender === "frau") return "Anbieterin";
+        if (gender === "mann") return "Anbieter";
+        return "Anbieter:in";
       }
       return role;
     }
@@ -255,6 +269,12 @@ a { color: inherit; }
       const badge = document.getElementById("role-badge");
       badge.textContent = roleLabel(profile.role, profile.gender);
       badge.style.display = "inline-block";
+        if (profile.role === "anbieter") {
+          const nk = document.getElementById("nav-kalender");
+          if (nk) nk.style.display = "inline";
+          const nc = document.getElementById("nav-community");
+          if (nc) nc.style.display = "inline";
+        }
         if (profile.role === "admin") {
           const mt = document.getElementById("nav-meine-therapeuten");
           if (mt) mt.style.display = "inline";
@@ -396,7 +416,7 @@ a { color: inherit; }
       allUsersRaw = users || [];
       therapistList = allUsersRaw.filter(u => u.role === "therapeut");
 
-      const yogiIds = allUsersRaw.filter(u => u.role === "yogi").map(u => u.id);
+      const yogiIds = allUsersRaw.filter(u => u.role === "yogi" || u.role === "anbieter").map(u => u.id);
       accessByYogi = {};
       if (yogiIds.length) {
         const { data: accessRows } = await supabaseClient
@@ -445,6 +465,7 @@ a { color: inherit; }
       const groups = [
         { role: "admin", listId: "admin-list", emptyId: "admin-empty", emptyText: "Keine Admins gefunden." },
         { role: "therapeut", listId: "therapeut-list", emptyId: "therapeut-empty", emptyText: "Keine Therapeut:innen gefunden." },
+        { role: "anbieter", listId: "anbieter-list", emptyId: "anbieter-empty", emptyText: "Keine Anbieter:innen gefunden." },
         { role: "yogi", listId: "yogi-list", emptyId: "yogi-empty", emptyText: "Keine Yogi:nis gefunden." },
       ];
 
@@ -500,6 +521,7 @@ a { color: inherit; }
         ? `<select data-id="${u.id}">
             <option value="yogi" ${u.role === "yogi" ? "selected" : ""}>Yogi:ni</option>
             <option value="therapeut" ${u.role === "therapeut" ? "selected" : ""}>Therapeut:in</option>
+            <option value="anbieter" ${u.role === "anbieter" ? "selected" : ""}>Anbieter:in</option>
             ${isSuperAdminUser ? `<option value="admin" ${u.role === "admin" ? "selected" : ""}>Admin</option>` : ""}
           </select>`
         : `<span class="role-text">${roleLabel(u.role, u.gender)}${isAdminRow && !isSuperAdminUser ? " (nur Haupt-Admin kann das ändern)" : ""}</span>`;
@@ -537,7 +559,7 @@ a { color: inherit; }
       }
 
       let accessHtml = "";
-      if (u.role === "yogi" && canManageOther) {
+      if ((u.role === "yogi" || u.role === "anbieter") && canManageOther) {
         const access = accessByYogi[u.id] || {};
         accessHtml = `<div class="access-row">Freigaben:
           <label><input type="checkbox" data-access="asanas" ${access.asanas ? "checked" : ""} /> Asanas</label>

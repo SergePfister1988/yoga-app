@@ -68,6 +68,8 @@ a { color: inherit; }
     <div class="header-left">
       <nav class="nav-links">
         <a href="dashboard.html">Dashboard</a>
+        <a href="kalender.html" id="nav-kalender" style="display:none;">Kalender</a>
+        <a href="community.html" id="nav-community" style="display:none;">Community</a>
         <a href="meine-angaben.html" id="nav-meine-angaben">Meine Angaben</a>
         <a href="selbstdeklaration.html" id="nav-selbstdeklaration" style="display:none;">Selbstdeklaration</a>
         <a href="mein-kontakt.html" id="nav-mein-kontakt" style="display:none;">Mein Kontakt</a>
@@ -161,6 +163,11 @@ a { color: inherit; }
         if (gender === "mann") return "Yogi";
         return "Yogi:ni";
       }
+      if (role === "anbieter") {
+        if (gender === "frau") return "Anbieterin";
+        if (gender === "mann") return "Anbieter";
+        return "Anbieter:in";
+      }
       return role;
     }
 
@@ -180,6 +187,12 @@ a { color: inherit; }
       const badge = document.getElementById("role-badge");
       badge.textContent = roleLabel(profile.role, profile.gender);
       badge.style.display = "inline-block";
+        if (profile.role === "anbieter") {
+          const nk = document.getElementById("nav-kalender");
+          if (nk) nk.style.display = "inline";
+          const nc = document.getElementById("nav-community");
+          if (nc) nc.style.display = "inline";
+        }
         if (profile.role === "admin") {
           const mt = document.getElementById("nav-meine-therapeuten");
           if (mt) mt.style.display = "inline";

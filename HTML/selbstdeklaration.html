@@ -59,6 +59,8 @@ a { color: inherit; }
     <div class="header-left">
       <nav class="nav-links">
         <a href="dashboard.html">Dashboard</a>
+        <a href="kalender.html" id="nav-kalender" style="display:none;">Kalender</a>
+        <a href="community.html" id="nav-community" style="display:none;">Community</a>
         <a href="selbstdeklaration.html" class="active">Selbstdeklaration</a>
         <a href="meine-yoginis.html" id="nav-meine-yoginis" style="display:none;">Meine Yogi:nis</a>
         <a href="meine-therapeuten.html" id="nav-meine-therapeuten" style="display:none;">Meine Therapeut:innen</a>
@@ -171,6 +173,11 @@ a { color: inherit; }
         if (gender === "mann") return "Yogi";
         return "Yogi:ni";
       }
+      if (role === "anbieter") {
+        if (gender === "frau") return "Anbieterin";
+        if (gender === "mann") return "Anbieter";
+        return "Anbieter:in";
+      }
       return role;
     }
 
@@ -188,6 +195,12 @@ a { color: inherit; }
       const badge = document.getElementById("role-badge");
       badge.textContent = roleLabel(profile.role, profile.gender);
       badge.style.display = "inline-block";
+        if (profile.role === "anbieter") {
+          const nk = document.getElementById("nav-kalender");
+          if (nk) nk.style.display = "inline";
+          const nc = document.getElementById("nav-community");
+          if (nc) nc.style.display = "inline";
+        }
       document.getElementById("nav-users").style.display = "inline";
       document.getElementById("nav-meine-yoginis").style.display = "inline";
       ["nav-asanas", "nav-flows", "nav-pranayama", "nav-mantras"].forEach(id => {
