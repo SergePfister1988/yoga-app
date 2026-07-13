@@ -57,6 +57,9 @@ a { color: inherit; }
 .chat-msg .bubble { display: inline-block; padding: 8px 12px; border-radius: 10px; background: var(--color-surface); border: 1px solid var(--color-border); font-size: 14px; }
 .chat-msg.own .bubble { background: var(--color-sand); color: #fff; border-color: var(--color-sand); }
 .chat-msg .meta { font-size: 11px; color: var(--color-text-muted); margin-top: 3px; }
+.chat-msg.system { align-self: center; max-width: 90%; text-align: center; }
+.chat-msg.system .bubble { background: rgba(219,174,164,0.15); border-color: var(--color-sand); font-size: 13px; color: var(--color-pine-dark); }
+.chat-msg.system .meta { text-align: center; }
 .chat-input-row { display: flex; gap: 8px; margin-top: 10px; }
 .chat-input-row input { flex: 1; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); }
 
@@ -155,6 +158,10 @@ a { color: inherit; }
           <label>Antwortoptionen</label>
           <div id="poll-options-list"></div>
           <button type="button" class="btn-small" id="poll-add-option">+ Option hinzufügen</button>
+        </div>
+        <div class="field">
+          <label for="poll-deadline">Enddatum (optional – Umfrage schliesst automatisch)</label>
+          <input type="datetime-local" id="poll-deadline" />
         </div>
         <button class="btn-primary" id="poll-save-btn">Umfrage starten</button>
         <p class="form-message" id="poll-message"></p>
@@ -268,8 +275,10 @@ a { color: inherit; }
         document.getElementById("admin-doc-box").style.display = "block";
       }
 
-      // Alle relevanten Profile (Admin + Anbieter:in) laden, für Namensanzeige im Chat etc.
-      const { data: people } = await supabaseClient.from("profiles").select("id, first_name, last_name, email, role").in("role", ["admin", "anbieter"]);
+      // Alle relevanten Profile (Admin, Therapeut:in, Anbieter:in) laden, für Namensanzeige im Chat etc.
+      // Läuft über eine Datenbank-Funktion, damit es unabhängig von den RLS-Regeln auf "profiles" funktioniert
+      // (z.B. Anbieter:innen dürfen fremde Profile sonst nicht direkt selektieren).
+      const { data: people } = await supabaseClient.rpc("community_people");
       (people || []).forEach(p => { peopleMap[p.id] = p; });
 
       setupTabs();
@@ -307,13 +316,35 @@ a { color: inherit; }
       const wrap = document.getElementById("chat-messages");
       const item = document.createElement("div");
       const isOwn = msg.sender_id === currentUserId;
-      item.className = "chat-msg" + (isOwn ? " own" : "");
+      const isSystem = msg.message_type === "system";
+      item.className = "chat-msg" + (isOwn ? " own" : "") + (isSystem ? " system" : "");
+      item.dataset.msgId = msg.id;
       const sender = peopleMap[msg.sender_id];
       const time = new Date(msg.created_at).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+      const canDelete = isOwn || isAdmin;
+      const pollLinkHtml = (isSystem && msg.related_poll_id)
+        ? `<button type="button" class="btn-small" data-action="goto-poll" style="margin-top:6px;">Zur Umfrage</button>`
+        : "";
       item.innerHTML = `
-        <div class="bubble">${escapeHtml(msg.content)}</div>
-        <div class="meta">${isOwn ? "Du" : escapeHtml(displayName(sender))} · ${time}</div>
+        <div class="bubble">${escapeHtml(msg.content)}${pollLinkHtml}</div>
+        <div class="meta">${isOwn ? "Du" : escapeHtml(displayName(sender))} · ${time}${canDelete ? ` · <a href="#" data-action="delete-msg" style="color:var(--color-error);">Löschen</a>` : ""}</div>
       `;
+      const deleteLink = item.querySelector('[data-action="delete-msg"]');
+      if (deleteLink) {
+        deleteLink.addEventListener("click", async (e) => {
+          e.preventDefault();
+          if (!confirm("Nachricht wirklich löschen?")) return;
+          const { error } = await supabaseClient.from("community_messages").delete().eq("id", msg.id);
+          if (error) { alert("Fehler: " + error.message); return; }
+          item.remove();
+        });
+      }
+      const pollLink = item.querySelector('[data-action="goto-poll"]');
+      if (pollLink) {
+        pollLink.addEventListener("click", () => {
+          document.querySelector('.tab-btn[data-tab="polls"]').click();
+        });
+      }
       wrap.appendChild(item);
       wrap.scrollTop = wrap.scrollHeight;
     }
@@ -321,7 +352,7 @@ a { color: inherit; }
     async function loadChatMessages() {
       const { data, error } = await supabaseClient
         .from("community_messages")
-        .select("id, sender_id, content, created_at")
+        .select("id, sender_id, content, created_at, message_type, related_poll_id")
         .order("created_at", { ascending: true })
         .limit(200);
       const wrap = document.getElementById("chat-messages");
@@ -338,6 +369,10 @@ a { color: inherit; }
         .channel("community_messages_realtime")
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "community_messages" }, (payload) => {
           renderChatMessage(payload.new);
+        })
+        .on("postgres_changes", { event: "DELETE", schema: "public", table: "community_messages" }, (payload) => {
+          const el = document.querySelector(`[data-msg-id="${payload.old.id}"]`);
+          if (el) el.remove();
         })
         .subscribe();
     }
@@ -443,17 +478,32 @@ a { color: inherit; }
 
       document.getElementById("poll-save-btn").addEventListener("click", async () => {
         const questionInput = document.getElementById("poll-question");
+        const deadlineInput = document.getElementById("poll-deadline");
         const msgEl = document.getElementById("poll-message");
         const question = questionInput.value.trim();
         const options = Array.from(document.querySelectorAll("#poll-options-list input")).map(i => i.value.trim()).filter(v => v.length > 0);
+        const deadline = deadlineInput.value ? new Date(deadlineInput.value).toISOString() : null;
 
         if (!question) { msgEl.textContent = "Bitte eine Frage eingeben."; msgEl.className = "form-message error"; return; }
         if (options.length < 2) { msgEl.textContent = "Bitte mindestens zwei Antwortoptionen angeben."; msgEl.className = "form-message error"; return; }
 
-        const { error } = await supabaseClient.from("community_polls").insert({ created_by: currentUserId, question, options });
+        const { data: inserted, error } = await supabaseClient
+          .from("community_polls")
+          .insert({ created_by: currentUserId, question, options, closed_at: deadline })
+          .select("id")
+          .single();
         if (error) { msgEl.textContent = "Fehler: " + error.message; msgEl.className = "form-message error"; return; }
 
+        const deadlineNote = deadline ? ` (Enddatum: ${new Date(deadline).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })})` : "";
+        await supabaseClient.from("community_messages").insert({
+          sender_id: currentUserId,
+          content: `📊 Neue Umfrage gestartet: "${question}"${deadlineNote}`,
+          message_type: "system",
+          related_poll_id: inserted.id,
+        });
+
         questionInput.value = "";
+        deadlineInput.value = "";
         document.getElementById("poll-options-list").innerHTML = "";
         addPollOptionRow("Ja");
         addPollOptionRow("Nein");
@@ -486,6 +536,10 @@ a { color: inherit; }
       item.className = "poll-item";
       const date = new Date(poll.created_at).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric" });
       const creator = peopleMap[poll.created_by];
+      const isClosed = !!(poll.closed_at && new Date(poll.closed_at) <= new Date());
+      const closedLabel = isClosed
+        ? `Beendet ${new Date(poll.closed_at).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}`
+        : (poll.closed_at ? `Endet ${new Date(poll.closed_at).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}` : "Offen");
 
       // Eigene Stimme holen
       const { data: myVoteRows } = await supabaseClient
@@ -522,7 +576,7 @@ a { color: inherit; }
         const voters = voterDetails && voterDetails[idx] ? voterDetails[idx].map(escapeHtml).join(", ") : "";
         return `
           <div class="poll-option-row">
-            <label><input type="radio" name="poll-${poll.id}" value="${idx}" ${myVote === idx ? "checked" : ""} /> ${escapeHtml(opt)}</label>
+            <label><input type="radio" name="poll-${poll.id}" value="${idx}" ${myVote === idx ? "checked" : ""} ${isClosed ? "disabled" : ""} /> ${escapeHtml(opt)}</label>
             <div class="poll-bar-track"><div class="poll-bar-fill" style="width:${pct}%;"></div></div>
             <div class="poll-count">${count} (${pct}%)</div>
           </div>
@@ -532,13 +586,17 @@ a { color: inherit; }
 
       item.innerHTML = `
         <h3>${escapeHtml(poll.question)}</h3>
-        <div class="item-meta">${escapeHtml(displayName(creator))} · ${date} · ${totalVotes} Stimme(n)</div>
+        <div class="item-meta">${escapeHtml(displayName(creator))} · ${date} · ${totalVotes} Stimme(n) · <strong>${closedLabel}</strong></div>
         ${optionsHtml}
-        ${isAdmin ? `<button type="button" class="btn-small danger" data-id="${poll.id}" style="margin-top:8px;">Umfrage löschen</button>` : ""}
+        <div style="margin-top:8px; display:flex; gap:8px;">
+          ${isAdmin && !isClosed ? `<button type="button" class="btn-small" data-action="close-poll">Umfrage beenden</button>` : ""}
+          ${isAdmin ? `<button type="button" class="btn-small danger" data-action="delete-poll">Umfrage löschen</button>` : ""}
+        </div>
       `;
 
       item.querySelectorAll(`input[name="poll-${poll.id}"]`).forEach(radio => {
         radio.addEventListener("change", async () => {
+          if (isClosed) return;
           const optionIndex = parseInt(radio.value, 10);
           const { error } = await supabaseClient
             .from("community_poll_votes")
@@ -549,7 +607,26 @@ a { color: inherit; }
       });
 
       if (isAdmin) {
-        item.querySelector('[data-id]').addEventListener("click", async () => {
+        const closeBtn = item.querySelector('[data-action="close-poll"]');
+        if (closeBtn) {
+          closeBtn.addEventListener("click", async () => {
+            if (!confirm("Umfrage jetzt beenden? Es kann danach nicht mehr abgestimmt werden.")) return;
+            const nowIso = new Date().toISOString();
+            const { error } = await supabaseClient.from("community_polls").update({ closed_at: nowIso }).eq("id", poll.id);
+            if (error) { alert("Fehler: " + error.message); return; }
+
+            const resultText = poll.options.map((opt, idx) => `${opt}: ${totals[idx] || 0}`).join(", ");
+            await supabaseClient.from("community_messages").insert({
+              sender_id: currentUserId,
+              content: `📊 Umfrage beendet: "${poll.question}" — Ergebnis: ${resultText}`,
+              message_type: "system",
+              related_poll_id: poll.id,
+            });
+
+            await loadPolls();
+          });
+        }
+        item.querySelector('[data-action="delete-poll"]').addEventListener("click", async () => {
           if (!confirm("Umfrage wirklich löschen?")) return;
           await supabaseClient.from("community_polls").delete().eq("id", poll.id);
           await loadPolls();
