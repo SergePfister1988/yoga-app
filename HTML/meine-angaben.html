@@ -86,6 +86,37 @@ a { color: inherit; }
       <p class="readonly-value" id="current-email">…</p>
     </div>
 
+    <div class="card" id="contact-card" style="display:none;">
+      <h2>Kontaktangaben</h2>
+      <div class="two-col" style="display:flex; gap:16px;">
+        <div class="field" style="flex:1;">
+          <label for="contact-first-name">Vorname</label>
+          <input type="text" id="contact-first-name" />
+        </div>
+        <div class="field" style="flex:1;">
+          <label for="contact-last-name">Nachname</label>
+          <input type="text" id="contact-last-name" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="contact-phone">Telefonnummer</label>
+        <input type="text" id="contact-phone" />
+      </div>
+      <p style="font-size:13px; color: var(--color-text-muted); margin: 4px 0 10px 0;">
+        Deine Login-E-Mail (oben) ist die E-Mail, die im Kontaktverzeichnis der Community angezeigt werden kann.
+      </p>
+      <div class="field" style="margin-top:14px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:14px; color: var(--color-text); margin-bottom:8px;">
+          <input type="checkbox" id="show-phone-community" style="width:auto;" /> Telefonnummer im Community-Kontaktverzeichnis anzeigen
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; font-size:14px; color: var(--color-text);">
+          <input type="checkbox" id="show-email-community" style="width:auto;" /> E-Mail im Community-Kontaktverzeichnis anzeigen
+        </label>
+      </div>
+      <button class="btn-primary" id="save-contact-btn" style="margin-top:14px;">Kontaktangaben speichern</button>
+      <p class="form-message" id="contact-message"></p>
+    </div>
+
     <div class="card">
       <h2>Passwort ändern</h2>
       <div class="field">
@@ -143,6 +174,23 @@ a { color: inherit; }
         const badge = document.getElementById("role-badge");
         badge.textContent = roleLabel(profile.role, profile.gender);
         badge.style.display = "inline-block";
+
+        if (profile.role === "admin" || profile.role === "anbieter") {
+          document.getElementById("contact-card").style.display = "block";
+          const { data: full } = await supabaseClient
+            .from("profiles")
+            .select("first_name, last_name, phone, show_phone_in_community, show_email_in_community")
+            .eq("id", sessionData.session.user.id)
+            .single();
+          if (full) {
+            document.getElementById("contact-first-name").value = full.first_name || "";
+            document.getElementById("contact-last-name").value = full.last_name || "";
+            document.getElementById("contact-phone").value = full.phone || "";
+            document.getElementById("show-phone-community").checked = !!full.show_phone_in_community;
+            document.getElementById("show-email-community").checked = !!full.show_email_in_community;
+          }
+        }
+
         if (profile.role === "anbieter") {
           const nk = document.getElementById("nav-kalender");
           if (nk) nk.style.display = "inline";
@@ -184,6 +232,36 @@ a { color: inherit; }
         }
       }
     }
+
+    document.getElementById("save-contact-btn").addEventListener("click", async () => {
+      const messageEl = document.getElementById("contact-message");
+      const saveBtn = document.getElementById("save-contact-btn");
+      saveBtn.disabled = true;
+      messageEl.textContent = "Wird gespeichert …";
+      messageEl.className = "form-message";
+
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      const payload = {
+        first_name: document.getElementById("contact-first-name").value.trim() || null,
+        last_name: document.getElementById("contact-last-name").value.trim() || null,
+        phone: document.getElementById("contact-phone").value.trim() || null,
+        show_phone_in_community: document.getElementById("show-phone-community").checked,
+        show_email_in_community: document.getElementById("show-email-community").checked,
+      };
+
+      const { error } = await supabaseClient.from("profiles").update(payload).eq("id", sessionData.session.user.id);
+
+      if (error) {
+        messageEl.textContent = "Fehler: " + error.message;
+        messageEl.className = "form-message error";
+        saveBtn.disabled = false;
+        return;
+      }
+
+      messageEl.textContent = "Gespeichert.";
+      messageEl.className = "form-message success";
+      saveBtn.disabled = false;
+    });
 
     document.getElementById("save-password-btn").addEventListener("click", async () => {
       const messageEl = document.getElementById("form-message");

@@ -63,9 +63,14 @@ a { color: inherit; }
 .chat-input-row { display: flex; gap: 8px; margin-top: 10px; }
 .chat-input-row input { flex: 1; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); }
 
-.announcement-item, .poll-item, .doc-item { border-bottom: 1px solid var(--color-border); padding: 14px 0; }
-.announcement-item:last-child, .poll-item:last-child, .doc-item:last-child { border-bottom: none; padding-bottom: 0; }
-.announcement-item h3, .poll-item h3 { font-family: var(--font-display); font-size: 16px; margin: 0 0 4px 0; color: var(--color-pine-dark); }
+.poll-item, .doc-item, .contact-item { border-bottom: 1px solid var(--color-border); padding: 14px 0; }
+.poll-item:last-child, .doc-item:last-child, .contact-item:last-child { border-bottom: none; padding-bottom: 0; }
+.poll-item h3 { font-family: var(--font-display); font-size: 16px; margin: 0 0 4px 0; color: var(--color-pine-dark); }
+.contact-item { display: flex; justify-content: space-between; align-items: center; }
+.contact-name { font-weight: 600; font-size: 14px; }
+.contact-role { font-size: 12px; color: var(--color-text-muted); }
+.contact-details { font-size: 13px; color: var(--color-text-muted); text-align: right; }
+.contact-details div { margin-bottom: 2px; }
 .item-meta { font-size: 12px; color: var(--color-text-muted); margin-bottom: 6px; }
 .poll-option-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .poll-option-row label { flex: 1; font-size: 14px; }
@@ -107,7 +112,7 @@ a { color: inherit; }
 
     <div class="tab-bar">
       <button class="tab-btn active" data-tab="chat">Chat</button>
-      <button class="tab-btn" data-tab="announcements">Ankündigungen</button>
+      <button class="tab-btn" data-tab="contacts">Kontakte</button>
       <button class="tab-btn" data-tab="polls">Umfragen</button>
       <button class="tab-btn" data-tab="documents">Unterlagen</button>
     </div>
@@ -125,24 +130,14 @@ a { color: inherit; }
       </div>
     </div>
 
-    <!-- ANKÜNDIGUNGEN -->
-    <div class="tab-panel" id="panel-announcements">
-      <div class="card" id="admin-announcement-box" style="display:none;">
-        <h2>Neue Ankündigung</h2>
-        <div class="field">
-          <label for="announcement-title">Titel</label>
-          <input type="text" id="announcement-title" />
-        </div>
-        <div class="field">
-          <label for="announcement-content">Text</label>
-          <textarea id="announcement-content" rows="3"></textarea>
-        </div>
-        <button class="btn-primary" id="announcement-save-btn">Veröffentlichen</button>
-        <p class="form-message" id="announcement-message"></p>
-      </div>
+    <!-- KONTAKTE -->
+    <div class="tab-panel" id="panel-contacts">
+      <p style="font-size:13px; color: var(--color-text-muted); margin-top:-4px; margin-bottom:16px;">
+        Alle Personen mit Zugriff auf die Community. Telefonnummer und E-Mail werden nur angezeigt, wenn die jeweilige Person dies unter "Meine Angaben" bzw. "Selbstdeklaration" freigegeben hat.
+      </p>
       <div class="card">
-        <div id="announcement-list"></div>
-        <p class="empty-state" id="announcement-empty" style="display:none;">Noch keine Ankündigungen vorhanden.</p>
+        <div id="contact-list"></div>
+        <p class="empty-state" id="contact-empty" style="display:none;">Keine Kontakte gefunden.</p>
       </div>
     </div>
 
@@ -270,7 +265,6 @@ a { color: inherit; }
       badge.style.display = "inline-block";
 
       if (isAdmin) {
-        document.getElementById("admin-announcement-box").style.display = "block";
         document.getElementById("admin-poll-box").style.display = "block";
         document.getElementById("admin-doc-box").style.display = "block";
       }
@@ -283,12 +277,11 @@ a { color: inherit; }
 
       setupTabs();
       setupChat();
-      setupAnnouncements();
       setupPolls();
       setupDocuments();
 
       await loadChatMessages();
-      await loadAnnouncements();
+      await loadContacts();
       await loadPolls();
       await loadDocuments();
 
@@ -394,65 +387,31 @@ a { color: inherit; }
     }
 
     // ============================================================
-    // Ankündigungen
+    // Kontakte
     // ============================================================
-    function setupAnnouncements() {
-      document.getElementById("announcement-save-btn").addEventListener("click", async () => {
-        const titleInput = document.getElementById("announcement-title");
-        const contentInput = document.getElementById("announcement-content");
-        const msgEl = document.getElementById("announcement-message");
-        const title = titleInput.value.trim();
-        const content = contentInput.value.trim();
-        if (!title || !content) {
-          msgEl.textContent = "Bitte Titel und Text ausfüllen.";
-          msgEl.className = "form-message error";
-          return;
-        }
-        const { error } = await supabaseClient.from("community_announcements").insert({ author_id: currentUserId, title, content });
-        if (error) {
-          msgEl.textContent = "Fehler: " + error.message;
-          msgEl.className = "form-message error";
-          return;
-        }
-        titleInput.value = "";
-        contentInput.value = "";
-        msgEl.textContent = "Veröffentlicht.";
-        msgEl.className = "form-message success";
-        await loadAnnouncements();
-      });
-    }
-
-    async function loadAnnouncements() {
-      const listEl = document.getElementById("announcement-list");
-      const emptyEl = document.getElementById("announcement-empty");
-      const { data, error } = await supabaseClient
-        .from("community_announcements")
-        .select("id, author_id, title, content, created_at")
-        .order("created_at", { ascending: false });
-
+    async function loadContacts() {
+      const listEl = document.getElementById("contact-list");
+      const emptyEl = document.getElementById("contact-empty");
       listEl.innerHTML = "";
-      if (error) { emptyEl.style.display = "block"; emptyEl.textContent = "Fehler: " + error.message; return; }
-      if (!data || !data.length) { emptyEl.style.display = "block"; return; }
+
+      const people = Object.values(peopleMap).sort((a, b) => displayName(a).localeCompare(displayName(b), "de-CH"));
+
+      if (!people.length) { emptyEl.style.display = "block"; return; }
       emptyEl.style.display = "none";
 
-      data.forEach(a => {
-        const author = peopleMap[a.author_id];
+      people.forEach(p => {
         const item = document.createElement("div");
-        item.className = "announcement-item";
-        const date = new Date(a.created_at).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+        item.className = "contact-item";
+        const details = [];
+        if (p.show_phone && p.phone) details.push(`<div>📞 ${escapeHtml(p.phone)}</div>`);
+        if (p.show_email && p.contact_email) details.push(`<div>✉️ ${escapeHtml(p.contact_email)}</div>`);
         item.innerHTML = `
-          <h3>${escapeHtml(a.title)}</h3>
-          <div class="item-meta">${escapeHtml(displayName(author))} · ${date}</div>
-          <div>${escapeHtml(a.content)}</div>
-          ${isAdmin ? `<button type="button" class="btn-small danger" data-id="${a.id}" style="margin-top:8px;">Löschen</button>` : ""}
+          <div>
+            <div class="contact-name">${escapeHtml(displayName(p))}</div>
+            <div class="contact-role">${escapeHtml(roleLabel(p.role))}</div>
+          </div>
+          <div class="contact-details">${details.length ? details.join("") : '<span style="font-style:italic;">Keine Kontaktdaten freigegeben</span>'}</div>
         `;
-        if (isAdmin) {
-          item.querySelector("button").addEventListener("click", async () => {
-            if (!confirm("Ankündigung wirklich löschen?")) return;
-            await supabaseClient.from("community_announcements").delete().eq("id", a.id);
-            await loadAnnouncements();
-          });
-        }
         listEl.appendChild(item);
       });
     }

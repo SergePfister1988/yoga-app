@@ -111,6 +111,14 @@ a { color: inherit; }
         <label for="contact-phone">Telefon</label>
         <input type="text" id="contact-phone" />
       </div>
+      <div class="field" style="margin-top:10px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:14px; color: var(--color-text); margin-bottom:8px;">
+          <input type="checkbox" id="show-phone-community" style="width:auto;" /> Telefonnummer im Community-Kontaktverzeichnis anzeigen
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; font-size:14px; color: var(--color-text);">
+          <input type="checkbox" id="show-email-community" style="width:auto;" /> E-Mail im Community-Kontaktverzeichnis anzeigen
+        </label>
+      </div>
     </div>
 
     <div class="card">
@@ -236,6 +244,16 @@ a { color: inherit; }
         document.getElementById("logo-align").value = decl.document_logo_align || "right";
       }
 
+      const { data: profileRow } = await supabaseClient
+        .from("profiles")
+        .select("show_phone_in_community, show_email_in_community")
+        .eq("id", currentUserId)
+        .single();
+      if (profileRow) {
+        document.getElementById("show-phone-community").checked = !!profileRow.show_phone_in_community;
+        document.getElementById("show-email-community").checked = !!profileRow.show_email_in_community;
+      }
+
       const { data: channels } = await supabaseClient
         .from("therapist_channels")
         .select("id, label, url, sort_order")
@@ -348,6 +366,21 @@ a { color: inherit; }
 
       if (declError) {
         messageEl.textContent = "Fehler: " + declError.message;
+        messageEl.className = "form-message error";
+        saveBtn.disabled = false;
+        return;
+      }
+
+      const { error: profileError } = await supabaseClient
+        .from("profiles")
+        .update({
+          show_phone_in_community: document.getElementById("show-phone-community").checked,
+          show_email_in_community: document.getElementById("show-email-community").checked,
+        })
+        .eq("id", currentUserId);
+
+      if (profileError) {
+        messageEl.textContent = "Angaben gespeichert, aber Fehler bei den Sichtbarkeits-Einstellungen: " + profileError.message;
         messageEl.className = "form-message error";
         saveBtn.disabled = false;
         return;
