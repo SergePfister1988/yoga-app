@@ -73,6 +73,7 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
       <nav class="nav-links">
         <a href="dashboard.html" class="active">Dashboard</a>
 
+        <a href="users.html" id="nav-users" style="display:none;">Benutzer</a>
       </nav>
       <span class="role-badge" id="role-badge" style="display:none;"></span>
     </div>
@@ -225,6 +226,10 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
         const badge = document.getElementById("role-badge");
         badge.textContent = roleLabel(profile.role, profile.gender);
         badge.style.display = "inline-block";
+        if (profile.role === "admin") {
+          const nu = document.getElementById("nav-users");
+          if (nu) nu.style.display = "inline";
+        }
         if (profile.role === "anbieter") {
           }
         if (profile.role === "admin") {

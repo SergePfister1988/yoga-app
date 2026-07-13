@@ -109,6 +109,7 @@ a { color: inherit; }
     <div class="header-left">
       <nav class="nav-links">
         <a href="dashboard.html">Dashboard</a>
+        <a href="users.html" id="nav-users" style="display:none;">Benutzer</a>
       </nav>
       <span class="role-badge" id="role-badge" style="display:none;"></span>
     </div>
@@ -285,6 +286,10 @@ a { color: inherit; }
       badge.textContent = roleLabel(profile.role, profile.gender);
       badge.style.display = "inline-block";
 
+        if (profile.role === "admin") {
+          const nu = document.getElementById("nav-users");
+          if (nu) nu.style.display = "inline";
+        }
       if (isAdmin) {
         document.getElementById("admin-poll-box").style.display = "block";
         document.getElementById("admin-doc-box").style.display = "block";
