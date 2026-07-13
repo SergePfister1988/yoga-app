@@ -3,67 +3,104 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard – Yoga-App</title>
+  <title>Community – Yoga-App</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
   <style>
 :root {
-  --color-bg: #FDFCFB;
-  --color-surface: #FFFFFF;
-  --color-pine: #572E2A;
-  --color-pine-dark: #3E211D;
-  --color-sand: #DBAEA4;
-  --color-sand-dark: #C08F84;
-  --color-text: #1E2622;
-  --color-text-muted: #5B6660;
-  --color-border: #DBDFD5;
-  --font-display: "Cormorant Garamond", Georgia, serif;
-  --font-script: "Alex Brush", cursive;
-  --font-body: "Work Sans", "Segoe UI", sans-serif;
+  --color-bg: #FDFCFB; --color-surface: #FFFFFF; --color-pine: #572E2A; --color-pine-dark: #3E211D;
+  --color-sand: #DBAEA4; --color-sand-dark: #C08F84; --color-text: #1E2622; --color-text-muted: #5B6660;
+  --color-border: #DBDFD5; --color-error: #A6483A;
+  --font-display: "Cormorant Garamond", Georgia, serif; --font-script: "Alex Brush", cursive; --font-body: "Work Sans", "Segoe UI", sans-serif;
 }
 * { box-sizing: border-box; }
 body { margin: 0; font-family: var(--font-body); background-color: var(--color-bg); color: var(--color-text); min-height: 100vh; }
-.btn-secondary { padding: 8px 16px; background: transparent; color: var(--color-pine-dark); border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); cursor: pointer; text-decoration: none; display: inline-block; }
-.btn-secondary:hover { border-color: var(--color-pine); }
-.app-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 32px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
-.app-header .brand { font-family: var(--font-display); font-size: 20px; color: var(--color-pine-dark); }
-.role-badge { display: inline-block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; background: var(--color-sand); color: #fff; margin-left: 10px; vertical-align: middle; }
-.nav-links { display: flex; gap: 20px; margin-left: 32px; }
+a { color: inherit; }
+.app-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+.nav-links { display: flex; gap: 20px; margin-left: 32px; flex-wrap: wrap; }
 .nav-links a { font-size: 14px; color: var(--color-text-muted); font-weight: 600; text-decoration: none; }
 .nav-links a.active, .nav-links a:hover { color: var(--color-pine); }
-.header-left { display: flex; align-items: center; }
-.app-main { padding: 40px 32px; max-width: 720px; }
-.app-main h1 { font-family: var(--font-display); color: var(--color-pine-dark); }
-#dashboard-cards { display: flex; flex-direction: column; gap: 8px; }
-.card-link { display: flex; align-items: center; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 14px 18px; margin-top: 0; text-decoration: none; color: var(--color-text); }
-.card-link:hover { border-color: var(--color-pine); }
-.card-link .title { font-family: var(--font-display); font-size: 17px; color: var(--color-pine-dark); }
-.card-link .desc { display: none; }
-.pending-notice { background: rgba(192,143,132,0.15); border: 1px solid var(--color-sand); color: var(--color-pine-dark); padding: 16px 18px; border-radius: 4px; font-size: 14px; margin-top: 18px; line-height: 1.5; }
-.name-prompt { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 16px 18px; margin: 18px 0; }
-.name-prompt p { margin: 0 0 10px 0; font-size: 14px; color: var(--color-text-muted); }
-.name-prompt-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.name-prompt-row input { flex: 1; min-width: 140px; padding: 9px 10px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); background: var(--color-bg); }
-.form-message { font-size: 13px; margin-top: 8px; }
-.form-message.error { color: var(--color-error, #A6483A); }
-.form-message.success { color: var(--color-pine); }
-
-@media (max-width: 640px) {
-  .app-header { flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
-  .header-left { flex-wrap: wrap; gap: 8px; }
-  .nav-links { margin-left: 0; gap: 14px; }
-  .app-main { padding: 20px 16px; }
+.header-left { display: flex; align-items: center; flex-wrap: wrap; }
+.role-badge { display: inline-block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; background: var(--color-sand); color: #fff; margin-left: 10px; }
+.btn-secondary { padding: 8px 16px; background: transparent; color: var(--color-pine-dark); border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); cursor: pointer; text-decoration: none; display: inline-block; }
+.btn-secondary:hover { border-color: var(--color-pine); }
+.btn-primary { padding: 10px 18px; background: var(--color-sand); color: #fff; border: none; border-radius: 3px; font-size: 14px; font-family: var(--font-body); font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--color-sand-dark); }
+.btn-primary:disabled { opacity: 0.6; cursor: default; }
+.btn-small { padding: 6px 12px; font-size: 12px; background: transparent; border: 1px solid var(--color-border); border-radius: 3px; cursor: pointer; color: var(--color-text-muted); }
+.btn-small:hover { border-color: var(--color-pine); color: var(--color-pine); }
+.btn-small.danger:hover { border-color: var(--color-error); color: var(--color-error); }
+.app-main { padding: 32px; max-width: 760px; margin: 0 auto; }
+.app-main h1 { font-family: var(--font-display); color: var(--color-pine-dark); margin-top: 8px; }
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 20px 22px; margin-bottom: 16px; }
+.card h2 { font-family: var(--font-display); font-size: 17px; color: var(--color-pine-dark); margin: 0 0 14px 0; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 13px; color: var(--color-text-muted); margin-bottom: 5px; }
+.field input[type=text], .field input[type=url], .field input[type=file], .field textarea, .field select {
+  width: 100%; padding: 9px 10px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); background: var(--color-bg);
 }
+.form-message { font-size: 13px; margin-top: 10px; line-height: 1.5; }
+.form-message.error { color: var(--color-error); }
+.form-message.success { color: var(--color-pine); }
+.empty-state { color: var(--color-text-muted); font-size: 14px; }
+
+.tab-bar { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--color-border); flex-wrap: wrap; }
+.tab-btn { padding: 10px 16px; background: none; border: none; border-bottom: 2px solid transparent; font-family: var(--font-body); font-size: 14px; font-weight: 600; color: var(--color-text-muted); cursor: pointer; }
+.tab-btn.active { color: var(--color-pine); border-bottom-color: var(--color-sand-dark); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.chat-box { display: flex; flex-direction: column; height: 420px; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 12px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 4px; display: flex; flex-direction: column; gap: 10px; }
+.chat-msg { max-width: 80%; }
+.chat-msg.own { align-self: flex-end; text-align: right; }
+.chat-msg .bubble { display: inline-block; padding: 8px 12px; border-radius: 10px; background: var(--color-surface); border: 1px solid var(--color-border); font-size: 14px; }
+.chat-msg.own .bubble { background: var(--color-sand); color: #fff; border-color: var(--color-sand); }
+.chat-msg .meta { font-size: 11px; color: var(--color-text-muted); margin-top: 3px; }
+.chat-msg.system { align-self: center; max-width: 90%; text-align: center; }
+.chat-msg.system .bubble { background: rgba(219,174,164,0.15); border-color: var(--color-sand); font-size: 13px; color: var(--color-pine-dark); }
+.chat-msg.system .meta { text-align: center; }
+.chat-input-row { display: flex; gap: 8px; margin-top: 10px; }
+.chat-input-row input { flex: 1; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); }
+
+.poll-item, .doc-item, .contact-item { border-bottom: 1px solid var(--color-border); padding: 14px 0; }
+.poll-item:last-child, .doc-item:last-child, .contact-item:last-child { border-bottom: none; padding-bottom: 0; }
+.poll-item h3 { font-family: var(--font-display); font-size: 16px; margin: 0 0 4px 0; color: var(--color-pine-dark); }
+.contact-item { display: flex; justify-content: space-between; align-items: center; }
+.contact-name { font-weight: 600; font-size: 14px; }
+.contact-role { font-size: 12px; color: var(--color-text-muted); }
+.contact-details { font-size: 13px; color: var(--color-text-muted); text-align: right; }
+.contact-details div { margin-bottom: 2px; }
+.item-meta { font-size: 12px; color: var(--color-text-muted); margin-bottom: 6px; }
+.poll-option-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.poll-option-row label { flex: 1; font-size: 14px; }
+.poll-bar-track { flex: 1; background: var(--color-bg); border-radius: 3px; overflow: hidden; height: 8px; border: 1px solid var(--color-border); }
+.poll-bar-fill { height: 100%; background: var(--color-sand); }
+.poll-count { font-size: 12px; color: var(--color-text-muted); min-width: 70px; text-align: right; }
+.poll-voter-list { font-size: 12px; color: var(--color-text-muted); margin-top: 6px; }
+
+.termin-table-wrap { overflow-x: auto; margin-top: 10px; }
+.termin-table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.termin-table th, .termin-table td { border: 1px solid var(--color-border); padding: 6px 10px; text-align: center; white-space: nowrap; }
+.termin-table th { background: var(--color-bg); font-weight: 600; color: var(--color-pine-dark); font-size: 12px; }
+.termin-table td.name-cell, .termin-table th.name-th { text-align: left; font-weight: 600; }
+.termin-table td.own-row { background: rgba(219,174,164,0.12); }
+.termin-table input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; }
+.termin-table .total-row td { font-weight: 600; background: var(--color-bg); }
+.termin-slot-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: center; }
+.termin-slot-row input[type=datetime-local] { flex: 1; }
+
+.doc-category-title { font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: 0.01em; color: var(--color-sand-dark); margin: 22px 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid var(--color-sand); }
+.doc-category-title:first-child { margin-top: 0; }
+.doc-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
+.doc-row a { font-size: 14px; color: var(--color-pine); text-decoration: none; }
+.doc-row a:hover { text-decoration: underline; }
 
 .brand-banner { background: linear-gradient(135deg, #C08F84 0%, #E3C4BC 55%, #EBD3CC 100%); display: flex; justify-content: center; align-items: center; padding: 10px 20px; }
 .brand-lockup { display: inline-flex; flex-direction: column; align-items: flex-end; text-decoration: none; line-height: 1; }
 .brand-script { font-family: var(--font-script); font-weight: 400; font-size: 44px; color: var(--color-pine-dark); }
 .brand-serif { font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--color-pine-dark); margin-top: -6px; letter-spacing: 0.01em; }
-@media (max-width: 640px) {
-  .brand-banner { padding: 8px 16px; }
-    .brand-script { font-size: 32px; }
-  .brand-serif { font-size: 14px; }
-}
+@media (max-width: 640px) { .brand-banner { padding: 8px 16px; } .brand-script { font-size: 32px; } .brand-serif { font-size: 14px; } }
   </style>
 </head>
 <body>
@@ -71,8 +108,7 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
   <header class="app-header">
     <div class="header-left">
       <nav class="nav-links">
-        <a href="dashboard.html" class="active">Dashboard</a>
-
+        <a href="dashboard.html">Dashboard</a>
       </nav>
       <span class="role-badge" id="role-badge" style="display:none;"></span>
     </div>
@@ -80,105 +116,121 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
   </header>
 
   <main class="app-main">
-    <h1 id="greeting">Hallo!</h1>
-    <p id="greeting-sub">Schön, dass du hier bist!</p>
+    <a href="dashboard.html" class="btn-secondary" style="margin-bottom: 10px;">← Zurück zum Dashboard</a>
+    <h1>Community</h1>
 
-    <div id="name-prompt" class="name-prompt" style="display:none;">
-      <p>Wie dürfen wir dich nennen?</p>
-      <div class="name-prompt-row">
-        <input type="text" id="first-name-input" placeholder="Vorname" />
-        <input type="text" id="last-name-input" placeholder="Nachname (optional)" />
-        <button class="btn-primary" id="save-name-btn">Speichern</button>
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="chat">Chat</button>
+      <button class="tab-btn" data-tab="contacts">Kontakte</button>
+      <button class="tab-btn" data-tab="polls">Umfragen</button>
+      <button class="tab-btn" data-tab="documents">Unterlagen</button>
+    </div>
+
+    <!-- CHAT -->
+    <div class="tab-panel active" id="panel-chat">
+      <div class="card">
+        <div class="chat-box">
+          <div class="chat-messages" id="chat-messages"></div>
+          <div class="chat-input-row">
+            <input type="text" id="chat-input" placeholder="Nachricht schreiben …" />
+            <button class="btn-primary" id="chat-send-btn">Senden</button>
+          </div>
+        </div>
       </div>
-      <p class="form-message" id="name-save-message"></p>
     </div>
 
-    <div id="pending-notice" class="pending-notice" style="display:none;">
-      Dein Konto ist noch nicht freigeschaltet. Ein Admin oder eine Therapeut:in muss dich zuerst bestätigen, bevor du auf die Inhalte zugreifen kannst.
+    <!-- KONTAKTE -->
+    <div class="tab-panel" id="panel-contacts">
+      <p style="font-size:13px; color: var(--color-text-muted); margin-top:-4px; margin-bottom:16px;">
+        Alle Personen mit Zugriff auf die Community. Telefonnummer und E-Mail werden nur angezeigt, wenn die jeweilige Person dies unter "Meine Angaben" bzw. "Selbstdeklaration" freigegeben hat.
+      </p>
+      <div class="card">
+        <div id="contact-list"></div>
+        <p class="empty-state" id="contact-empty" style="display:none;">Keine Kontakte gefunden.</p>
+      </div>
     </div>
 
-    <div id="dashboard-cards">
-      <a href="meine-angaben.html" class="card-link" id="card-meine-angaben">
-        <div class="title">Meine Angaben</div>
-        <div class="desc">Passwort ändern und Login-Daten einsehen.</div>
-      </a>
-      <a href="selbstdeklaration.html" class="card-link" id="card-selbstdeklaration" style="display:none;">
-        <div class="title">Selbstdeklaration</div>
-        <div class="desc">Deine Angaben, die deinen Yogi:nis unter "Mein Kontakt" angezeigt werden.</div>
-      </a>
-      <a href="mein-kontakt.html" class="card-link" id="card-mein-kontakt" style="display:none;">
-        <div class="title">Mein Kontakt</div>
-        <div class="desc">Angaben deiner zugewiesenen Therapeut:in.</div>
-      </a>
-      <a href="meine-yoginis.html" class="card-link" id="card-my-yoginis" style="display:none;">
-        <div class="title">Meine Yogi:nis</div>
-        <div class="desc">Deine zugewiesenen Yogi:nis: Akte, Freigaben und zugewiesene Sequenzen auf einen Blick.</div>
-      </a>
+    <!-- UMFRAGEN -->
+    <div class="tab-panel" id="panel-polls">
+      <div class="card" id="admin-poll-box" style="display:none;">
+        <h2>Neue Umfrage</h2>
+        <div class="field">
+          <label>Umfrageart</label>
+          <select id="poll-type">
+            <option value="text">Freitext (z.B. Ja/Nein/Vielleicht)</option>
+            <option value="termin">Termin (mehrere Terminvorschläge, Doodle-artig)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="poll-question">Frage</label>
+          <input type="text" id="poll-question" placeholder="z.B. Wer ist beim Bepflanzen dabei?" />
+        </div>
+        <div class="field" id="poll-text-options-field">
+          <label>Antwortoptionen</label>
+          <div id="poll-options-list"></div>
+          <button type="button" class="btn-small" id="poll-add-option">+ Option hinzufügen</button>
+        </div>
+        <div class="field" id="poll-termin-options-field" style="display:none;">
+          <label>Terminvorschläge</label>
+          <div id="poll-termin-list"></div>
+          <button type="button" class="btn-small" id="poll-add-termin">+ Termin hinzufügen</button>
+        </div>
+        <div class="field">
+          <label for="poll-deadline">Enddatum (optional – Umfrage schliesst automatisch)</label>
+          <input type="datetime-local" id="poll-deadline" />
+        </div>
+        <button class="btn-primary" id="poll-save-btn">Umfrage starten</button>
+        <p class="form-message" id="poll-message"></p>
+      </div>
+      <div class="card">
+        <div id="poll-list"></div>
+        <p class="empty-state" id="poll-empty" style="display:none;">Noch keine Umfragen vorhanden.</p>
+      </div>
+    </div>
 
-      <a href="meine-therapeuten.html" class="card-link" id="card-meine-therapeuten" style="display:none;">
-        <div class="title">Meine Therapeut:innen</div>
-        <div class="desc">Übersicht aller Therapeut:innen mit Status und betreuten Yogi:nis.</div>
-      </a>
-
-      <a href="dokumentvorlagen.html" class="card-link" id="card-dokumentvorlagen" style="display:none;">
-        <div class="title">Vorlagen verwalten</div>
-        <div class="desc">Dokumentenvorlagen für Benutzerdokumente erstellen und anpassen.</div>
-      </a>
-
-      <a href="client-file.html" class="card-link" id="card-myfile" style="display:none;">
-        <div class="title">Meine Akte</div>
-        <div class="desc">Deine bei deiner Therapeut:in hinterlegten Angaben einsehen und Kontaktdaten selbst pflegen.</div>
-      </a>
-
-      <a href="kalender.html" class="card-link" id="card-kalender" style="display:none;">
-        <div class="title">Kalender</div>
-      </a>
-
-      <a href="community.html" class="card-link" id="card-community" style="display:none;">
-        <div class="title">Community</div>
-      </a>
-
-      <a href="sequences.html" class="card-link" id="card-sequences">
-        <div class="title">Sequenzen</div>
-        <div class="desc">Abfolgen aus mehreren Asanas zusammenstellen und Yogi:nis zuweisen.</div>
-      </a>
-
-      <a href="flows.html" class="card-link" id="card-flows-db">
-        <div class="title">Flows</div>
-        <div class="desc">Wiederverwendbare, atemgeführte Bewegungsabfolgen erfassen.</div>
-      </a>
-
-      <a href="asanas.html" class="card-link" id="card-asanas">
-        <div class="title">Asana-Datenbank</div>
-        <div class="desc">Yoga-Haltungen erfassen, nach Kategorie, Muskelgruppe oder Gelenk durchsuchen.</div>
-      </a>
-
-      <a href="pranayama.html" class="card-link" id="card-pranayama">
-        <div class="title">Pranayama-Datenbank</div>
-        <div class="desc">Atemübungen erfassen und durchsuchen.</div>
-      </a>
-
-      <a href="mantras.html" class="card-link" id="card-mantras">
-        <div class="title">Mantra-Datenbank</div>
-        <div class="desc">Mantras mit Text, Akkorden, Übersetzung und Bedeutung erfassen.</div>
-      </a>
+    <!-- UNTERLAGEN -->
+    <div class="tab-panel" id="panel-documents">
+      <div class="card" id="admin-doc-box" style="display:none;">
+        <h2>Neue Unterlage</h2>
+        <div class="field">
+          <label for="doc-category">Kategorie</label>
+          <input type="text" id="doc-category" list="doc-category-options" placeholder="z.B. Mietkonditionen, Putzplan …" />
+          <datalist id="doc-category-options"></datalist>
+        </div>
+        <div class="field">
+          <label for="doc-title">Titel</label>
+          <input type="text" id="doc-title" />
+        </div>
+        <div class="field">
+          <label for="doc-type">Typ</label>
+          <select id="doc-type">
+            <option value="link">Link</option>
+            <option value="file">Datei-Upload</option>
+          </select>
+        </div>
+        <div class="field" id="doc-url-field">
+          <label for="doc-url">URL</label>
+          <input type="url" id="doc-url" placeholder="https://…" />
+        </div>
+        <div class="field" id="doc-file-field" style="display:none;">
+          <label for="doc-file">Datei</label>
+          <input type="file" id="doc-file" />
+        </div>
+        <button class="btn-primary" id="doc-save-btn">Hinzufügen</button>
+        <p class="form-message" id="doc-message"></p>
+      </div>
+      <div class="card">
+        <div id="doc-list"></div>
+        <p class="empty-state" id="doc-empty" style="display:none;">Noch keine Unterlagen vorhanden.</p>
+      </div>
     </div>
   </main>
 
-  <!-- Supabase-Bibliothek laden -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <script>
-    // ============================================================
-    // Supabase-Konfiguration (dieselben Werte wie in index.html)
-    // ============================================================
     const SUPABASE_URL = "https://yqklyumvybthkzlbsspj.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable__DLVShYfXjf0C27LLK1zbg_5vpFcxJy";
-
-    const supabaseClient = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY
-    );
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     function roleLabel(role, gender) {
       if (role === "admin") return "Admin";
@@ -200,176 +252,635 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
       return role;
     }
 
-    // ============================================================
-    // Seite schützen: ohne gültige Session zurück zum Login
-    // ============================================================
-    (async () => {
-      const { data } = await supabaseClient.auth.getSession();
-      const session = data.session;
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str || "";
+      return div.innerHTML;
+    }
 
-      if (!session) {
-        window.location.href = "index.html";
-        return;
-      }
+    function displayName(p) {
+      if (!p) return "Unbekannt";
+      const name = [p.first_name, p.last_name].filter(Boolean).join(" ");
+      return name || p.email || "Unbekannt";
+    }
 
-      let currentUserId = session.user.id;
+    let currentUserId = null;
+    let isAdmin = false;
+    let peopleMap = {}; // id -> profile (alle Admins + Anbieter:innen)
 
-      // Rolle und Namen aus der profiles-Tabelle holen
-      const { data: profile, error } = await supabaseClient
-        .from("profiles")
-        .select("email, role, gender, active, active_until, first_name, last_name")
-        .eq("id", currentUserId)
-        .single();
-
-      if (!error && profile) {
-        const badge = document.getElementById("role-badge");
-        badge.textContent = roleLabel(profile.role, profile.gender);
-        badge.style.display = "inline-block";
-        if (profile.role === "anbieter") {
-          }
-        if (profile.role === "admin") {
-          const mtCard = document.getElementById("card-meine-therapeuten");
-          if (mtCard) mtCard.style.display = "block";
-          const dvCard = document.getElementById("card-dokumentvorlagen");
-          if (dvCard) dvCard.style.display = "block";
-        }
-        if (profile.role === "admin" || profile.role === "therapeut" || profile.role === "anbieter") {
-          const kalCard = document.getElementById("card-kalender");
-          if (kalCard) kalCard.style.display = "block";
-          const comCard = document.getElementById("card-community");
-          if (comCard) comCard.style.display = "block";
-        }
-        if (profile.role === "therapeut") {
-          const sdCard = document.getElementById("card-selbstdeklaration");
-          if (sdCard) sdCard.style.display = "block";
-        }
-        if (profile.role === "yogi") {
-          const mkCard = document.getElementById("card-mein-kontakt");
-          if (mkCard) mkCard.style.display = "block";
-        }
-        if (profile.role !== "admin") {
-          const maCard = document.getElementById("card-meine-angaben");
-          if (maCard) {
-            maCard.querySelector(".title").textContent = "Passwort";
-            maCard.parentElement.appendChild(maCard);
-          }
-        }
-        if (profile.role === "admin" || profile.role === "therapeut") {
-          if (profile.role === "therapeut") {
-            document.getElementById("card-my-yoginis").style.display = "block";
-          }
-          const cardsContainer = document.getElementById("dashboard-cards");
-          if (profile.role === "therapeut") {
-            // Feste Kartenreihenfolge für Therapeut:in
-            [
-              "card-selbstdeklaration", "card-my-yoginis", "card-kalender", "card-community",
-              "card-sequences", "card-flows-db", "card-asanas", "card-pranayama", "card-mantras",
-              "card-meine-angaben",
-            ].forEach(id => {
-              const el = document.getElementById(id);
-              if (el) cardsContainer.appendChild(el);
-            });
-          } else {
-            // Admin: Kalender und Community ganz zu unterst anzeigen
-            ["card-kalender", "card-community"].forEach(id => {
-              const el = document.getElementById(id);
-              if (el) cardsContainer.appendChild(el);
-            });
-          }
-        }
-
-        const isActiveNow = profile.active && (!profile.active_until || new Date(profile.active_until) > new Date());
-        if (!isActiveNow) {
-          document.getElementById("pending-notice").style.display = "block";
-        }
-
-        if (profile.role === "anbieter") {
-          document.getElementById("card-sequences").style.display = "none";
-          document.getElementById("card-flows-db").style.display = "none";
-
-          const { data: access } = await supabaseClient
-            .from("content_access")
-            .select("content_type, granted")
-            .eq("yogi_id", currentUserId);
-
-          const granted = new Set((access || []).filter(a => a.granted).map(a => a.content_type));
-          if (!granted.has("asanas")) document.getElementById("card-asanas").style.display = "none";
-          if (!granted.has("pranayama")) document.getElementById("card-pranayama").style.display = "none";
-          if (!granted.has("mantras")) document.getElementById("card-mantras").style.display = "none";
-
-          const anbieterContainer = document.getElementById("dashboard-cards");
-          ["card-kalender", "card-community", "card-asanas", "card-pranayama", "card-mantras", "card-meine-angaben"].forEach(id => {
-            anbieterContainer.appendChild(document.getElementById(id));
-          });
-        }
-
-        if (profile.role === "yogi") {
-          const myFileLink = document.getElementById("card-myfile");
-          myFileLink.href = "client-file.html?id=" + currentUserId;
-          myFileLink.style.display = "block";
-
-          // Nur freigegebene Datenbanken anzeigen
-          const { data: access } = await supabaseClient
-            .from("content_access")
-            .select("content_type, granted")
-            .eq("yogi_id", currentUserId);
-
-          const granted = new Set((access || []).filter(a => a.granted).map(a => a.content_type));
-          if (!granted.has("asanas")) document.getElementById("card-asanas").style.display = "none";
-          if (!granted.has("pranayama")) document.getElementById("card-pranayama").style.display = "none";
-          if (!granted.has("mantras")) document.getElementById("card-mantras").style.display = "none";
-          document.getElementById("card-flows-db").style.display = "none";
-
-          // Reihenfolge für Yogi:nis: Meine Akte, Sequenzen, dann freigegebene Datenbanken
-          const container = document.getElementById("dashboard-cards");
-          ["card-myfile", "card-mein-kontakt", "card-sequences", "card-asanas", "card-pranayama", "card-mantras", "card-meine-angaben"].forEach(id => {
-            container.appendChild(document.getElementById(id));
-          });
-        }
-
-        if (profile.first_name) {
-          document.getElementById("greeting").textContent = "Hallo " + profile.first_name + "!";
-        } else {
-          document.getElementById("greeting").textContent = "Hallo!";
-          document.getElementById("name-prompt").style.display = "block";
-        }
-      }
-    })();
-
-    document.getElementById("save-name-btn").addEventListener("click", async () => {
-      const messageEl = document.getElementById("name-save-message");
-      const firstName = document.getElementById("first-name-input").value.trim();
-      const lastName = document.getElementById("last-name-input").value.trim();
-
-      if (!firstName) {
-        messageEl.textContent = "Bitte mindestens deinen Vornamen eintragen.";
-        messageEl.className = "form-message error";
-        return;
-      }
-
+    async function init() {
       const { data: sessionData } = await supabaseClient.auth.getSession();
-      const { error } = await supabaseClient
-        .from("profiles")
-        .update({ first_name: firstName, last_name: lastName || null })
-        .eq("id", sessionData.session.user.id);
+      if (!sessionData.session) { window.location.href = "index.html"; return; }
+      currentUserId = sessionData.session.user.id;
 
-      if (error) {
-        messageEl.textContent = "Fehler: " + error.message;
-        messageEl.className = "form-message error";
+      const { data: profile } = await supabaseClient.from("profiles").select("role, gender").eq("id", currentUserId).single();
+      if (!profile || profile.role === "yogi") {
+        alert("Diese Seite ist für Yogi:nis nicht verfügbar.");
+        window.location.href = "dashboard.html";
         return;
       }
+      isAdmin = profile.role === "admin";
 
-      document.getElementById("greeting").textContent = "Hallo " + firstName + "!";
-      document.getElementById("name-prompt").style.display = "none";
-    });
+      const badge = document.getElementById("role-badge");
+      badge.textContent = roleLabel(profile.role, profile.gender);
+      badge.style.display = "inline-block";
+
+      if (isAdmin) {
+        document.getElementById("admin-poll-box").style.display = "block";
+        document.getElementById("admin-doc-box").style.display = "block";
+      }
+
+      // Alle relevanten Profile (Admin, Therapeut:in, Anbieter:in) laden, für Namensanzeige im Chat etc.
+      // Läuft über eine Datenbank-Funktion, damit es unabhängig von den RLS-Regeln auf "profiles" funktioniert
+      // (z.B. Anbieter:innen dürfen fremde Profile sonst nicht direkt selektieren).
+      const { data: people } = await supabaseClient.rpc("community_people");
+      (people || []).forEach(p => { peopleMap[p.id] = p; });
+
+      setupTabs();
+      setupChat();
+      setupPolls();
+      setupDocuments();
+
+      await loadChatMessages();
+      await loadContacts();
+      await loadPolls();
+      await loadDocuments();
+
+      subscribeToChat();
+    }
 
     // ============================================================
-    // Logout
+    // Tabs
     // ============================================================
+    function setupTabs() {
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+          document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+          btn.classList.add("active");
+          document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+        });
+      });
+    }
+
+    // ============================================================
+    // Chat
+    // ============================================================
+    function renderChatMessage(msg) {
+      const wrap = document.getElementById("chat-messages");
+      const item = document.createElement("div");
+      const isOwn = msg.sender_id === currentUserId;
+      const isSystem = msg.message_type === "system";
+      item.className = "chat-msg" + (isOwn ? " own" : "") + (isSystem ? " system" : "");
+      item.dataset.msgId = msg.id;
+      const sender = peopleMap[msg.sender_id];
+      const time = new Date(msg.created_at).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+      const canDelete = isOwn || isAdmin;
+      const pollLinkHtml = (isSystem && msg.related_poll_id)
+        ? `<button type="button" class="btn-small" data-action="goto-poll" style="margin-top:6px;">Zur Umfrage</button>`
+        : "";
+      item.innerHTML = `
+        <div class="bubble">${escapeHtml(msg.content)}${pollLinkHtml}</div>
+        <div class="meta">${isOwn ? "Du" : escapeHtml(displayName(sender))} · ${time}${canDelete ? ` · <a href="#" data-action="delete-msg" style="color:var(--color-error);">Löschen</a>` : ""}</div>
+      `;
+      const deleteLink = item.querySelector('[data-action="delete-msg"]');
+      if (deleteLink) {
+        deleteLink.addEventListener("click", async (e) => {
+          e.preventDefault();
+          if (!confirm("Nachricht wirklich löschen?")) return;
+          const { error } = await supabaseClient.from("community_messages").delete().eq("id", msg.id);
+          if (error) { alert("Fehler: " + error.message); return; }
+          item.remove();
+        });
+      }
+      const pollLink = item.querySelector('[data-action="goto-poll"]');
+      if (pollLink) {
+        pollLink.addEventListener("click", () => {
+          document.querySelector('.tab-btn[data-tab="polls"]').click();
+        });
+      }
+      wrap.appendChild(item);
+      wrap.scrollTop = wrap.scrollHeight;
+    }
+
+    async function loadChatMessages() {
+      const { data, error } = await supabaseClient
+        .from("community_messages")
+        .select("id, sender_id, content, created_at, message_type, related_poll_id")
+        .order("created_at", { ascending: true })
+        .limit(200);
+      const wrap = document.getElementById("chat-messages");
+      wrap.innerHTML = "";
+      if (error) {
+        wrap.innerHTML = `<p class="empty-state">Fehler beim Laden: ${escapeHtml(error.message)}</p>`;
+        return;
+      }
+      (data || []).forEach(renderChatMessage);
+    }
+
+    function subscribeToChat() {
+      supabaseClient
+        .channel("community_messages_realtime")
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "community_messages" }, (payload) => {
+          renderChatMessage(payload.new);
+        })
+        .on("postgres_changes", { event: "DELETE", schema: "public", table: "community_messages" }, (payload) => {
+          const el = document.querySelector(`[data-msg-id="${payload.old.id}"]`);
+          if (el) el.remove();
+        })
+        .subscribe();
+    }
+
+    function setupChat() {
+      const input = document.getElementById("chat-input");
+      const btn = document.getElementById("chat-send-btn");
+      async function send() {
+        const content = input.value.trim();
+        if (!content) return;
+        btn.disabled = true;
+        const { error } = await supabaseClient.from("community_messages").insert({ sender_id: currentUserId, content });
+        btn.disabled = false;
+        if (error) { alert("Fehler: " + error.message); return; }
+        input.value = "";
+      }
+      btn.addEventListener("click", send);
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
+    }
+
+    // ============================================================
+    // Kontakte
+    // ============================================================
+    async function loadContacts() {
+      const listEl = document.getElementById("contact-list");
+      const emptyEl = document.getElementById("contact-empty");
+      listEl.innerHTML = "";
+
+      const people = Object.values(peopleMap).sort((a, b) => displayName(a).localeCompare(displayName(b), "de-CH"));
+
+      if (!people.length) { emptyEl.style.display = "block"; return; }
+      emptyEl.style.display = "none";
+
+      people.forEach(p => {
+        const item = document.createElement("div");
+        item.className = "contact-item";
+        const details = [];
+        if (p.show_phone && p.phone) details.push(`<div>📞 ${escapeHtml(p.phone)}</div>`);
+        if (p.show_email && p.contact_email) details.push(`<div>✉️ ${escapeHtml(p.contact_email)}</div>`);
+        item.innerHTML = `
+          <div>
+            <div class="contact-name">${escapeHtml(displayName(p))}</div>
+          </div>
+          <div class="contact-details">${details.length ? details.join("") : '<span style="font-style:italic;">Keine Kontaktdaten freigegeben</span>'}</div>
+        `;
+        listEl.appendChild(item);
+      });
+    }
+
+    // ============================================================
+    // Umfragen
+    // ============================================================
+    function addPollOptionRow(value) {
+      const container = document.getElementById("poll-options-list");
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.gap = "8px";
+      row.style.marginBottom = "6px";
+      row.innerHTML = `<input type="text" style="flex:1;" value="${value ? escapeHtml(value) : ""}" placeholder="Option" /><button type="button" class="btn-small">✕</button>`;
+      row.querySelector("button").addEventListener("click", () => row.remove());
+      container.appendChild(row);
+    }
+
+    function addTerminSlotRow() {
+      const container = document.getElementById("poll-termin-list");
+      const row = document.createElement("div");
+      row.className = "termin-slot-row";
+      row.innerHTML = `<input type="datetime-local" /><button type="button" class="btn-small">✕</button>`;
+      row.querySelector("button").addEventListener("click", () => row.remove());
+      container.appendChild(row);
+    }
+
+    function formatTerminLabel(datetimeLocalValue) {
+      const d = new Date(datetimeLocalValue);
+      return d.toLocaleString("de-CH", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    }
+
+    function setupPolls() {
+      addPollOptionRow("Ja");
+      addPollOptionRow("Nein");
+      addTerminSlotRow();
+      addTerminSlotRow();
+      document.getElementById("poll-add-option").addEventListener("click", () => addPollOptionRow());
+      document.getElementById("poll-add-termin").addEventListener("click", () => addTerminSlotRow());
+
+      document.getElementById("poll-type").addEventListener("change", (e) => {
+        const isTermin = e.target.value === "termin";
+        document.getElementById("poll-text-options-field").style.display = isTermin ? "none" : "block";
+        document.getElementById("poll-termin-options-field").style.display = isTermin ? "block" : "none";
+      });
+
+      document.getElementById("poll-save-btn").addEventListener("click", async () => {
+        const questionInput = document.getElementById("poll-question");
+        const deadlineInput = document.getElementById("poll-deadline");
+        const msgEl = document.getElementById("poll-message");
+        const pollType = document.getElementById("poll-type").value;
+        const question = questionInput.value.trim();
+        const deadline = deadlineInput.value ? new Date(deadlineInput.value).toISOString() : null;
+
+        let options;
+        if (pollType === "termin") {
+          const slotValues = Array.from(document.querySelectorAll("#poll-termin-list input[type=datetime-local]"))
+            .map(i => i.value)
+            .filter(v => v);
+          if (slotValues.length < 2) { msgEl.textContent = "Bitte mindestens zwei Terminvorschläge angeben."; msgEl.className = "form-message error"; return; }
+          options = slotValues.sort().map(formatTerminLabel);
+        } else {
+          options = Array.from(document.querySelectorAll("#poll-options-list input")).map(i => i.value.trim()).filter(v => v.length > 0);
+          if (options.length < 2) { msgEl.textContent = "Bitte mindestens zwei Antwortoptionen angeben."; msgEl.className = "form-message error"; return; }
+        }
+
+        if (!question) { msgEl.textContent = "Bitte eine Frage eingeben."; msgEl.className = "form-message error"; return; }
+
+        const { data: inserted, error } = await supabaseClient
+          .from("community_polls")
+          .insert({ created_by: currentUserId, question, options, closed_at: deadline, poll_type: pollType })
+          .select("id")
+          .single();
+        if (error) { msgEl.textContent = "Fehler: " + error.message; msgEl.className = "form-message error"; return; }
+
+        const deadlineNote = deadline ? ` (Enddatum: ${new Date(deadline).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })})` : "";
+        const typeLabel = pollType === "termin" ? "Terminumfrage" : "Umfrage";
+        await supabaseClient.from("community_messages").insert({
+          sender_id: currentUserId,
+          content: `📊 Neue ${typeLabel} gestartet: "${question}"${deadlineNote}`,
+          message_type: "system",
+          related_poll_id: inserted.id,
+        });
+
+        questionInput.value = "";
+        deadlineInput.value = "";
+        document.getElementById("poll-options-list").innerHTML = "";
+        document.getElementById("poll-termin-list").innerHTML = "";
+        addPollOptionRow("Ja");
+        addPollOptionRow("Nein");
+        addTerminSlotRow();
+        addTerminSlotRow();
+        document.getElementById("poll-type").value = "text";
+        document.getElementById("poll-text-options-field").style.display = "block";
+        document.getElementById("poll-termin-options-field").style.display = "none";
+        msgEl.textContent = "Umfrage gestartet.";
+        msgEl.className = "form-message success";
+        await loadPolls();
+      });
+    }
+
+    async function loadPolls() {
+      const listEl = document.getElementById("poll-list");
+      const emptyEl = document.getElementById("poll-empty");
+      const { data: polls, error } = await supabaseClient
+        .from("community_polls")
+        .select("id, created_by, question, options, created_at, closed_at, poll_type")
+        .order("created_at", { ascending: false });
+
+      listEl.innerHTML = "";
+      if (error) { emptyEl.style.display = "block"; emptyEl.textContent = "Fehler: " + error.message; return; }
+      if (!polls || !polls.length) { emptyEl.style.display = "block"; return; }
+      emptyEl.style.display = "none";
+
+      for (const poll of polls) {
+        if (poll.poll_type === "termin") {
+          await renderTerminPoll(poll, listEl);
+        } else {
+          await renderTextPoll(poll, listEl);
+        }
+      }
+    }
+
+    function pollHeaderHtml(poll, isClosed, closedLabel, totalVotes, creator, date) {
+      return `
+        <h3>${escapeHtml(poll.question)}</h3>
+        <div class="item-meta">${escapeHtml(displayName(creator))} · ${date} · ${totalVotes} Stimme(n) · <strong>${closedLabel}</strong></div>
+      `;
+    }
+
+    function pollAdminButtonsHtml(isClosed) {
+      return `
+        <div style="margin-top:8px; display:flex; gap:8px;">
+          ${isAdmin && !isClosed ? `<button type="button" class="btn-small" data-action="close-poll">Umfrage beenden</button>` : ""}
+          ${isAdmin ? `<button type="button" class="btn-small danger" data-action="delete-poll">Umfrage löschen</button>` : ""}
+        </div>
+      `;
+    }
+
+    function wireAdminPollButtons(item, poll, resultTextFn) {
+      if (!isAdmin) return;
+      const closeBtn = item.querySelector('[data-action="close-poll"]');
+      if (closeBtn) {
+        closeBtn.addEventListener("click", async () => {
+          if (!confirm("Umfrage jetzt beenden? Es kann danach nicht mehr abgestimmt werden.")) return;
+          const nowIso = new Date().toISOString();
+          const { error } = await supabaseClient.from("community_polls").update({ closed_at: nowIso }).eq("id", poll.id);
+          if (error) { alert("Fehler: " + error.message); return; }
+
+          await supabaseClient.from("community_messages").insert({
+            sender_id: currentUserId,
+            content: `📊 Umfrage beendet: "${poll.question}" — Ergebnis: ${resultTextFn()}`,
+            message_type: "system",
+            related_poll_id: poll.id,
+          });
+
+          await loadPolls();
+        });
+      }
+      const deleteBtn = item.querySelector('[data-action="delete-poll"]');
+      if (deleteBtn) {
+        deleteBtn.addEventListener("click", async () => {
+          if (!confirm("Umfrage wirklich löschen?")) return;
+          await supabaseClient.from("community_polls").delete().eq("id", poll.id);
+          await loadPolls();
+        });
+      }
+    }
+
+    function pollStatus(poll) {
+      const isClosed = !!(poll.closed_at && new Date(poll.closed_at) <= new Date());
+      const closedLabel = isClosed
+        ? `Beendet ${new Date(poll.closed_at).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}`
+        : (poll.closed_at ? `Endet ${new Date(poll.closed_at).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}` : "Offen");
+      return { isClosed, closedLabel };
+    }
+
+    // ---- Freitext-Umfrage (Einzelauswahl, Admin sieht Namen, andere nur Zahlen) ----
+    async function renderTextPoll(poll, listEl) {
+      const item = document.createElement("div");
+      item.className = "poll-item";
+      const date = new Date(poll.created_at).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric" });
+      const creator = peopleMap[poll.created_by];
+      const { isClosed, closedLabel } = pollStatus(poll);
+
+      const { data: myVoteRows } = await supabaseClient
+        .from("community_poll_votes")
+        .select("option_index")
+        .eq("poll_id", poll.id)
+        .eq("user_id", currentUserId);
+      const myVote = (myVoteRows && myVoteRows.length) ? myVoteRows[0].option_index : null;
+
+      let totals = {};
+      let voterDetails = null;
+
+      if (isAdmin) {
+        const { data: allVotes } = await supabaseClient
+          .from("community_poll_votes")
+          .select("user_id, option_index")
+          .eq("poll_id", poll.id);
+        (allVotes || []).forEach(v => { totals[v.option_index] = (totals[v.option_index] || 0) + 1; });
+        voterDetails = {};
+        (allVotes || []).forEach(v => {
+          if (!voterDetails[v.option_index]) voterDetails[v.option_index] = [];
+          voterDetails[v.option_index].push(displayName(peopleMap[v.user_id]));
+        });
+      } else {
+        const { data: totalRows } = await supabaseClient.rpc("community_poll_totals", { p_poll_id: poll.id });
+        (totalRows || []).forEach(t => { totals[t.option_index] = Number(t.votes); });
+      }
+
+      const totalVotes = Object.values(totals).reduce((a, b) => a + b, 0);
+
+      const optionsHtml = poll.options.map((opt, idx) => {
+        const count = totals[idx] || 0;
+        const pct = totalVotes ? Math.round((count / totalVotes) * 100) : 0;
+        const voters = voterDetails && voterDetails[idx] ? voterDetails[idx].map(escapeHtml).join(", ") : "";
+        return `
+          <div class="poll-option-row">
+            <label><input type="radio" name="poll-${poll.id}" value="${idx}" ${myVote === idx ? "checked" : ""} ${isClosed ? "disabled" : ""} /> ${escapeHtml(opt)}</label>
+            <div class="poll-bar-track"><div class="poll-bar-fill" style="width:${pct}%;"></div></div>
+            <div class="poll-count">${count} (${pct}%)</div>
+          </div>
+          ${voters ? `<div class="poll-voter-list">${voters}</div>` : ""}
+        `;
+      }).join("");
+
+      item.innerHTML = pollHeaderHtml(poll, isClosed, closedLabel, totalVotes, creator, date)
+        + optionsHtml
+        + pollAdminButtonsHtml(isClosed);
+
+      item.querySelectorAll(`input[name="poll-${poll.id}"]`).forEach(radio => {
+        radio.addEventListener("change", async () => {
+          if (isClosed) return;
+          const optionIndex = parseInt(radio.value, 10);
+          // Einzelauswahl: zuerst evtl. vorhandene eigene Stimme(n) entfernen, dann neu setzen
+          await supabaseClient.from("community_poll_votes").delete().eq("poll_id", poll.id).eq("user_id", currentUserId);
+          const { error } = await supabaseClient
+            .from("community_poll_votes")
+            .insert({ poll_id: poll.id, user_id: currentUserId, option_index: optionIndex });
+          if (error) { alert("Fehler: " + error.message); return; }
+          await loadPolls();
+        });
+      });
+
+      wireAdminPollButtons(item, poll, () => poll.options.map((opt, idx) => `${opt}: ${totals[idx] || 0}`).join(", "));
+
+      listEl.appendChild(item);
+    }
+
+    // ---- Terminumfrage (Mehrfachauswahl, volle Tabelle für alle – Doodle-Stil) ----
+    async function renderTerminPoll(poll, listEl) {
+      const item = document.createElement("div");
+      item.className = "poll-item";
+      const date = new Date(poll.created_at).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric" });
+      const creator = peopleMap[poll.created_by];
+      const { isClosed, closedLabel } = pollStatus(poll);
+
+      const { data: allVotes } = await supabaseClient
+        .from("community_poll_votes")
+        .select("user_id, option_index")
+        .eq("poll_id", poll.id);
+
+      const votesByUser = {};
+      (allVotes || []).forEach(v => {
+        if (!votesByUser[v.user_id]) votesByUser[v.user_id] = new Set();
+        votesByUser[v.user_id].add(v.option_index);
+      });
+
+      // Zeilen: alle, die schon abgestimmt haben, plus die aktuelle Person (damit sie abstimmen kann)
+      const rowUserIds = Object.keys(votesByUser);
+      if (!rowUserIds.includes(currentUserId)) rowUserIds.push(currentUserId);
+      rowUserIds.sort((a, b) => displayName(peopleMap[a]).localeCompare(displayName(peopleMap[b]), "de-CH"));
+
+      const totalVotes = (allVotes || []).length;
+
+      const headerCells = poll.options.map(opt => `<th>${escapeHtml(opt)}</th>`).join("");
+      const bodyRows = rowUserIds.map(uid => {
+        const isOwn = uid === currentUserId;
+        const mySet = votesByUser[uid] || new Set();
+        const cells = poll.options.map((opt, idx) => {
+          const checked = mySet.has(idx);
+          if (isOwn) {
+            return `<td class="own-row"><input type="checkbox" data-option="${idx}" ${checked ? "checked" : ""} ${isClosed ? "disabled" : ""} /></td>`;
+          }
+          return `<td>${checked ? "✓" : ""}</td>`;
+        }).join("");
+        return `<tr>${isOwn ? `<td class="name-cell own-row">${escapeHtml(displayName(peopleMap[uid]))} (Du)</td>` : `<td class="name-cell">${escapeHtml(displayName(peopleMap[uid]))}</td>`}${cells}</tr>`;
+      }).join("");
+
+      const totalCells = poll.options.map((opt, idx) => {
+        const count = (allVotes || []).filter(v => v.option_index === idx).length;
+        return `<td>${count}</td>`;
+      }).join("");
+
+      const tableHtml = `
+        <div class="termin-table-wrap">
+          <table class="termin-table">
+            <thead><tr><th class="name-th">Name</th>${headerCells}</tr></thead>
+            <tbody>${bodyRows}</tbody>
+            <tfoot><tr class="total-row"><td>Total</td>${totalCells}</tr></tfoot>
+          </table>
+        </div>
+      `;
+
+      item.innerHTML = pollHeaderHtml(poll, isClosed, closedLabel, totalVotes, creator, date)
+        + tableHtml
+        + pollAdminButtonsHtml(isClosed);
+
+      item.querySelectorAll('input[type="checkbox"][data-option]').forEach(cb => {
+        cb.addEventListener("change", async () => {
+          if (isClosed) return;
+          const optionIndex = parseInt(cb.dataset.option, 10);
+          if (cb.checked) {
+            const { error } = await supabaseClient
+              .from("community_poll_votes")
+              .insert({ poll_id: poll.id, user_id: currentUserId, option_index: optionIndex });
+            if (error) { alert("Fehler: " + error.message); cb.checked = false; return; }
+          } else {
+            const { error } = await supabaseClient
+              .from("community_poll_votes")
+              .delete()
+              .eq("poll_id", poll.id)
+              .eq("user_id", currentUserId)
+              .eq("option_index", optionIndex);
+            if (error) { alert("Fehler: " + error.message); cb.checked = true; return; }
+          }
+          await loadPolls();
+        });
+      });
+
+      wireAdminPollButtons(item, poll, () => {
+        return poll.options.map((opt, idx) => `${opt}: ${(allVotes || []).filter(v => v.option_index === idx).length}`).join(", ");
+      });
+
+      listEl.appendChild(item);
+    }
+
+    // ============================================================
+    // Unterlagen
+    // ============================================================
+    function setupDocuments() {
+      const typeSelect = document.getElementById("doc-type");
+      typeSelect.addEventListener("change", () => {
+        const isFile = typeSelect.value === "file";
+        document.getElementById("doc-file-field").style.display = isFile ? "block" : "none";
+        document.getElementById("doc-url-field").style.display = isFile ? "none" : "block";
+      });
+
+      document.getElementById("doc-save-btn").addEventListener("click", async () => {
+        const msgEl = document.getElementById("doc-message");
+        const category = document.getElementById("doc-category").value.trim();
+        const title = document.getElementById("doc-title").value.trim();
+        const type = typeSelect.value;
+
+        if (!category || !title) {
+          msgEl.textContent = "Bitte Kategorie und Titel ausfüllen.";
+          msgEl.className = "form-message error";
+          return;
+        }
+
+        let insertPayload = { category, title, doc_type: type, uploaded_by: currentUserId };
+
+        if (type === "link") {
+          const url = document.getElementById("doc-url").value.trim();
+          if (!url) { msgEl.textContent = "Bitte eine URL angeben."; msgEl.className = "form-message error"; return; }
+          insertPayload.url = url;
+        } else {
+          const fileInput = document.getElementById("doc-file");
+          const file = fileInput.files[0];
+          if (!file) { msgEl.textContent = "Bitte eine Datei auswählen."; msgEl.className = "form-message error"; return; }
+          msgEl.textContent = "Wird hochgeladen …";
+          msgEl.className = "form-message";
+          const safeName = file.name.replace(/[^a-zA-Z0-9.\-]/g, "_");
+          const path = `community-docs/${Date.now()}_${safeName}`;
+          const { error: uploadError } = await supabaseClient.storage.from("asana-media").upload(path, file);
+          if (uploadError) { msgEl.textContent = "Fehler beim Hochladen: " + uploadError.message; msgEl.className = "form-message error"; return; }
+          insertPayload.storage_path = path;
+        }
+
+        const { error } = await supabaseClient.from("community_documents").insert(insertPayload);
+        if (error) { msgEl.textContent = "Fehler: " + error.message; msgEl.className = "form-message error"; return; }
+
+        document.getElementById("doc-category").value = "";
+        document.getElementById("doc-title").value = "";
+        document.getElementById("doc-url").value = "";
+        document.getElementById("doc-file").value = "";
+        msgEl.textContent = "Hinzugefügt.";
+        msgEl.className = "form-message success";
+        await loadDocuments();
+      });
+    }
+
+    async function loadDocuments() {
+      const listEl = document.getElementById("doc-list");
+      const emptyEl = document.getElementById("doc-empty");
+      const { data, error } = await supabaseClient
+        .from("community_documents")
+        .select("id, category, title, doc_type, storage_path, url, created_at")
+        .order("category")
+        .order("created_at", { ascending: false });
+
+      listEl.innerHTML = "";
+      if (error) { emptyEl.style.display = "block"; emptyEl.textContent = "Fehler: " + error.message; return; }
+      if (!data || !data.length) { emptyEl.style.display = "block"; return; }
+      emptyEl.style.display = "none";
+
+      // Kategorien für das Datalist im Admin-Formular
+      const categories = [...new Set(data.map(d => d.category))];
+      const datalist = document.getElementById("doc-category-options");
+      if (datalist) datalist.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}"></option>`).join("");
+
+      let currentCategory = null;
+      data.forEach(d => {
+        if (d.category !== currentCategory) {
+          currentCategory = d.category;
+          const catTitle = document.createElement("div");
+          catTitle.className = "doc-category-title";
+          catTitle.textContent = d.category;
+          listEl.appendChild(catTitle);
+        }
+        const row = document.createElement("div");
+        row.className = "doc-row";
+        let href = d.url;
+        if (d.doc_type === "file" && d.storage_path) {
+          const { data: pub } = supabaseClient.storage.from("asana-media").getPublicUrl(d.storage_path);
+          href = pub.publicUrl;
+        }
+        row.innerHTML = `
+          <a href="${href}" target="_blank" rel="noopener">${escapeHtml(d.title)}</a>
+          ${isAdmin ? `<button type="button" class="btn-small danger" data-id="${d.id}">Löschen</button>` : ""}
+        `;
+        if (isAdmin) {
+          row.querySelector("button").addEventListener("click", async () => {
+            if (!confirm("Unterlage wirklich löschen?")) return;
+            await supabaseClient.from("community_documents").delete().eq("id", d.id);
+            await loadDocuments();
+          });
+        }
+        listEl.appendChild(row);
+      });
+    }
+
     document.getElementById("logout-btn").addEventListener("click", async () => {
       await supabaseClient.auth.signOut();
       window.location.href = "index.html";
     });
+
+    init();
   </script>
 </body>
 </html>
