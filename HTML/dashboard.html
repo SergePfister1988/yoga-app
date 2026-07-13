@@ -34,11 +34,10 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
 .header-left { display: flex; align-items: center; }
 .app-main { padding: 40px 32px; max-width: 720px; }
 .app-main h1 { font-family: var(--font-display); color: var(--color-pine-dark); }
-#dashboard-cards { display: flex; flex-direction: column; gap: 8px; }
-.card-link { display: flex; align-items: center; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 14px 18px; margin-top: 0; text-decoration: none; color: var(--color-text); }
+.card-link { display: block; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 20px 22px; margin-top: 20px; text-decoration: none; color: var(--color-text); }
 .card-link:hover { border-color: var(--color-pine); }
-.card-link .title { font-family: var(--font-display); font-size: 17px; color: var(--color-pine-dark); }
-.card-link .desc { display: none; }
+.card-link .title { font-family: var(--font-display); font-size: 18px; color: var(--color-pine-dark); margin-bottom: 4px; }
+.card-link .desc { font-size: 14px; color: var(--color-text-muted); }
 .pending-notice { background: rgba(192,143,132,0.15); border: 1px solid var(--color-sand); color: var(--color-pine-dark); padding: 16px 18px; border-radius: 4px; font-size: 14px; margin-top: 18px; line-height: 1.5; }
 .name-prompt { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 16px 18px; margin: 18px 0; }
 .name-prompt p { margin: 0 0 10px 0; font-size: 14px; color: var(--color-text-muted); }
@@ -72,8 +71,6 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
     <div class="header-left">
       <nav class="nav-links">
         <a href="dashboard.html" class="active">Dashboard</a>
-        <a href="kalender.html" id="nav-kalender" style="display:none;">Kalender</a>
-        <a href="community.html" id="nav-community" style="display:none;">Community</a>
         <a href="meine-angaben.html" id="nav-meine-angaben">Meine Angaben</a>
         <a href="selbstdeklaration.html" id="nav-selbstdeklaration" style="display:none;">Selbstdeklaration</a>
         <a href="mein-kontakt.html" id="nav-mein-kontakt" style="display:none;">Mein Kontakt</a>
@@ -143,14 +140,6 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
         <div class="desc">Deine bei deiner Therapeut:in hinterlegten Angaben einsehen und Kontaktdaten selbst pflegen.</div>
       </a>
 
-      <a href="kalender.html" class="card-link" id="card-kalender" style="display:none;">
-        <div class="title">Kalender</div>
-      </a>
-
-      <a href="community.html" class="card-link" id="card-community" style="display:none;">
-        <div class="title">Community</div>
-      </a>
-
       <a href="sequences.html" class="card-link" id="card-sequences">
         <div class="title">Sequenzen</div>
         <div class="desc">Abfolgen aus mehreren Asanas zusammenstellen und Yogi:nis zuweisen.</div>
@@ -205,11 +194,6 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
         if (gender === "mann") return "Yogi";
         return "Yogi:ni";
       }
-      if (role === "anbieter") {
-        if (gender === "frau") return "Anbieterin";
-        if (gender === "mann") return "Anbieter";
-        return "Anbieter:in";
-      }
       return role;
     }
 
@@ -238,12 +222,6 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
         const badge = document.getElementById("role-badge");
         badge.textContent = roleLabel(profile.role, profile.gender);
         badge.style.display = "inline-block";
-        if (profile.role === "anbieter") {
-          const nk = document.getElementById("nav-kalender");
-          if (nk) nk.style.display = "inline";
-          const nc = document.getElementById("nav-community");
-          if (nc) nc.style.display = "inline";
-        }
         if (profile.role === "admin") {
           const mt = document.getElementById("nav-meine-therapeuten");
           if (mt) mt.style.display = "inline";
@@ -253,12 +231,6 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
           if (mtCard) mtCard.style.display = "block";
           const dvCard = document.getElementById("card-dokumentvorlagen");
           if (dvCard) dvCard.style.display = "block";
-        }
-        if (profile.role === "therapeut" || profile.role === "anbieter") {
-          const kalCard = document.getElementById("card-kalender");
-          if (kalCard) kalCard.style.display = "block";
-          const comCard = document.getElementById("card-community");
-          if (comCard) comCard.style.display = "block";
         }
         if (profile.role === "therapeut") {
           const sd = document.getElementById("nav-selbstdeklaration");
@@ -301,26 +273,6 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
         const isActiveNow = profile.active && (!profile.active_until || new Date(profile.active_until) > new Date());
         if (!isActiveNow) {
           document.getElementById("pending-notice").style.display = "block";
-        }
-
-        if (profile.role === "anbieter") {
-          document.getElementById("card-sequences").style.display = "none";
-          document.getElementById("card-flows-db").style.display = "none";
-
-          const { data: access } = await supabaseClient
-            .from("content_access")
-            .select("content_type, granted")
-            .eq("yogi_id", currentUserId);
-
-          const granted = new Set((access || []).filter(a => a.granted).map(a => a.content_type));
-          if (!granted.has("asanas")) document.getElementById("card-asanas").style.display = "none";
-          if (!granted.has("pranayama")) document.getElementById("card-pranayama").style.display = "none";
-          if (!granted.has("mantras")) document.getElementById("card-mantras").style.display = "none";
-
-          const anbieterContainer = document.getElementById("dashboard-cards");
-          ["card-kalender", "card-community", "card-asanas", "card-pranayama", "card-mantras", "card-meine-angaben"].forEach(id => {
-            anbieterContainer.appendChild(document.getElementById(id));
-          });
         }
 
         if (profile.role === "yogi") {
