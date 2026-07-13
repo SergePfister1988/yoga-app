@@ -119,10 +119,12 @@ a { color: inherit; }
     let isReadOnly = true;
     let fieldSchema = null;
     let existingContent = {};
+    let currentUserId = null;
 
     async function init() {
       const { data: sessionData } = await supabaseClient.auth.getSession();
       if (!sessionData.session) { window.location.href = "index.html"; return; }
+      currentUserId = sessionData.session.user.id;
 
       const { data: profile } = await supabaseClient.from("profiles").select("role, gender").eq("id", sessionData.session.user.id).single();
       if (profile) {
@@ -166,6 +168,10 @@ a { color: inherit; }
       if (ownerProfile && (ownerProfile.role === "admin" || ownerProfile.role === "therapeut")) {
         document.getElementById("back-link").href = "meine-dokumente.html";
         document.getElementById("back-link").textContent = "← Zurück zu Meine Dokumente";
+        // Eigene Dokumente (Admin/Therapeut:in) sind immer bearbeitbar für die Besitzerin/den Besitzer
+        if (yogiId === currentUserId) {
+          isReadOnly = false;
+        }
       } else {
         document.getElementById("back-link").href = "client-file.html?id=" + yogiId;
       }
