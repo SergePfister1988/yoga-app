@@ -254,7 +254,7 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
           const dvCard = document.getElementById("card-dokumentvorlagen");
           if (dvCard) dvCard.style.display = "block";
         }
-        if (profile.role === "therapeut" || profile.role === "anbieter") {
+        if (profile.role === "admin" || profile.role === "therapeut" || profile.role === "anbieter") {
           const kalCard = document.getElementById("card-kalender");
           if (kalCard) kalCard.style.display = "block";
           const comCard = document.getElementById("card-community");
@@ -296,6 +296,12 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
             document.getElementById("nav-meine-yoginis").style.display = "inline";
             document.getElementById("card-my-yoginis").style.display = "block";
           }
+          // Kalender und Community ganz zu unterst anzeigen (Anbieter:in hat ihre eigene Reihenfolge weiter unten)
+          const cardsContainer = document.getElementById("dashboard-cards");
+          ["card-kalender", "card-community"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) cardsContainer.appendChild(el);
+          });
         }
 
         const isActiveNow = profile.active && (!profile.active_until || new Date(profile.active_until) > new Date());
