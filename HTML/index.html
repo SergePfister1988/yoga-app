@@ -168,7 +168,7 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
       msgEl.className = "form-message";
 
       const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + window.location.pathname.replace("index.html", "reset-password.html"),
+        redirectTo: window.location.origin + "/reset-password.html",
       });
 
       // Aus Sicherheitsgründen immer dieselbe Meldung zeigen, unabhängig davon ob die

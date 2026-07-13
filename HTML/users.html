@@ -386,7 +386,7 @@ a { color: inherit; }
 
       // E-Mail mit direktem Link zum Passwort-Setzen verschicken (statt nur Bestätigung)
       await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + window.location.pathname.replace("users.html", "reset-password.html"),
+        redirectTo: window.location.origin + "/reset-password.html",
       });
 
       msgEl.textContent = `Konto für ${email} erstellt und aktiviert. Die Person erhält eine E-Mail mit einem Link, um direkt ihr eigenes Passwort zu setzen.`;
