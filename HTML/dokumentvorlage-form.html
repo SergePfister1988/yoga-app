@@ -105,6 +105,11 @@ a { color: inherit; }
         if (gender === "mann") return "Yogi";
         return "Yogi:ni";
       }
+      if (role === "anbieter") {
+        if (gender === "frau") return "Anbieterin";
+        if (gender === "mann") return "Anbieter";
+        return "Anbieter:in";
+      }
       return role;
     }
 
