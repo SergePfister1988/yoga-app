@@ -97,20 +97,7 @@ a { color: inherit; }
     <div class="header-left">
       <nav class="nav-links">
         <a href="dashboard.html">Dashboard</a>
-        <a href="kalender.html" id="nav-kalender" style="display:none;">Kalender</a>
-        <a href="community.html" id="nav-community" style="display:none;">Community</a>
-        <a href="meine-angaben.html" id="nav-meine-angaben">Meine Angaben</a>
-        <a href="selbstdeklaration.html" id="nav-selbstdeklaration" style="display:none;">Selbstdeklaration</a>
-        <a href="mein-kontakt.html" id="nav-mein-kontakt" style="display:none;">Mein Kontakt</a>
-        <a href="meine-yoginis.html" id="nav-meine-yoginis" style="display:none;">Meine Yogi:nis</a>
-        <a href="meine-therapeuten.html" id="nav-meine-therapeuten" style="display:none;">Meine Therapeut:innen</a>
-        <a href="dokumentvorlagen.html" id="nav-dokumentvorlagen" style="display:none;">Vorlagen verwalten</a>
-        <a href="asanas.html" id="nav-asanas">Asanas</a>
-        <a href="sequences.html">Sequenzen</a>
-        <a href="flows.html" class="active" id="nav-flows">Flows</a>
-        <a href="pranayama.html" id="nav-pranayama">Pranayama</a>
-        <a href="mantras.html" id="nav-mantras">Mantras</a>
-        <a href="users.html" id="nav-users" style="display:none;">Benutzer</a>
+
       </nav>
       <span class="role-badge" id="role-badge" style="display:none;"></span>
     </div>
@@ -204,42 +191,15 @@ a { color: inherit; }
       badge.textContent = roleLabel(profile.role, profile.gender);
       badge.style.display = "inline-block";
         if (profile.role === "anbieter") {
-          const nk = document.getElementById("nav-kalender");
-          if (nk) nk.style.display = "inline";
-          const nc = document.getElementById("nav-community");
-          if (nc) nc.style.display = "inline";
-        }
-        if (profile.role === "admin") {
-          const mt = document.getElementById("nav-meine-therapeuten");
-          if (mt) mt.style.display = "inline";
-          const dv = document.getElementById("nav-dokumentvorlagen");
-          if (dv) dv.style.display = "inline";
-        }
-        if (profile.role === "therapeut") {
-          const sd = document.getElementById("nav-selbstdeklaration");
-          if (sd) sd.style.display = "inline";
-        }
-        if (profile.role === "yogi") {
-          const mk = document.getElementById("nav-mein-kontakt");
-          if (mk) mk.style.display = "inline";
-        }
-        if (profile.role !== "admin") {
-          const maLink = document.getElementById("nav-meine-angaben");
-          if (maLink) {
-            maLink.textContent = "Passwort";
-            maLink.parentElement.appendChild(maLink);
           }
+        if (profile.role === "admin") {
+          }
+        if (profile.role === "therapeut") {
+          }
+        if (profile.role === "yogi") {
+          }
+if (profile.role === "therapeut") {
         }
-        if (profile.role !== "admin") {
-          ["nav-asanas", "nav-flows", "nav-pranayama", "nav-mantras"].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = "none";
-          });
-        }
-      document.getElementById("nav-users").style.display = "inline";
-      if (profile.role === "therapeut") {
-        document.getElementById("nav-meine-yoginis").style.display = "inline";
-      }
       const { data: asanas } = await supabaseClient
         .from("asanas")
         .select("id, name_deutsch, hold_duration")
