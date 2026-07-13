@@ -79,6 +79,17 @@ a { color: inherit; }
 .poll-count { font-size: 12px; color: var(--color-text-muted); min-width: 70px; text-align: right; }
 .poll-voter-list { font-size: 12px; color: var(--color-text-muted); margin-top: 6px; }
 
+.termin-table-wrap { overflow-x: auto; margin-top: 10px; }
+.termin-table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.termin-table th, .termin-table td { border: 1px solid var(--color-border); padding: 6px 10px; text-align: center; white-space: nowrap; }
+.termin-table th { background: var(--color-bg); font-weight: 600; color: var(--color-pine-dark); font-size: 12px; }
+.termin-table td.name-cell, .termin-table th.name-th { text-align: left; font-weight: 600; }
+.termin-table td.own-row { background: rgba(219,174,164,0.12); }
+.termin-table input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; }
+.termin-table .total-row td { font-weight: 600; background: var(--color-bg); }
+.termin-slot-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: center; }
+.termin-slot-row input[type=datetime-local] { flex: 1; }
+
 .doc-category-title { font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: 0.01em; color: var(--color-sand-dark); margin: 22px 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid var(--color-sand); }
 .doc-category-title:first-child { margin-top: 0; }
 .doc-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
@@ -98,7 +109,8 @@ a { color: inherit; }
     <div class="header-left">
       <nav class="nav-links">
         <a href="dashboard.html">Dashboard</a>
-
+        <a href="kalender.html">Kalender</a>
+        <a href="community.html" class="active">Community</a>
       </nav>
       <span class="role-badge" id="role-badge" style="display:none;"></span>
     </div>
@@ -145,13 +157,25 @@ a { color: inherit; }
       <div class="card" id="admin-poll-box" style="display:none;">
         <h2>Neue Umfrage</h2>
         <div class="field">
+          <label>Umfrageart</label>
+          <select id="poll-type">
+            <option value="text">Freitext (z.B. Ja/Nein/Vielleicht)</option>
+            <option value="termin">Termin (mehrere Terminvorschläge, Doodle-artig)</option>
+          </select>
+        </div>
+        <div class="field">
           <label for="poll-question">Frage</label>
           <input type="text" id="poll-question" placeholder="z.B. Wer ist beim Bepflanzen dabei?" />
         </div>
-        <div class="field">
+        <div class="field" id="poll-text-options-field">
           <label>Antwortoptionen</label>
           <div id="poll-options-list"></div>
           <button type="button" class="btn-small" id="poll-add-option">+ Option hinzufügen</button>
+        </div>
+        <div class="field" id="poll-termin-options-field" style="display:none;">
+          <label>Terminvorschläge</label>
+          <div id="poll-termin-list"></div>
+          <button type="button" class="btn-small" id="poll-add-termin">+ Termin hinzufügen</button>
         </div>
         <div class="field">
           <label for="poll-deadline">Enddatum (optional – Umfrage schliesst automatisch)</label>
@@ -428,33 +452,68 @@ a { color: inherit; }
       container.appendChild(row);
     }
 
+    function addTerminSlotRow() {
+      const container = document.getElementById("poll-termin-list");
+      const row = document.createElement("div");
+      row.className = "termin-slot-row";
+      row.innerHTML = `<input type="datetime-local" /><button type="button" class="btn-small">✕</button>`;
+      row.querySelector("button").addEventListener("click", () => row.remove());
+      container.appendChild(row);
+    }
+
+    function formatTerminLabel(datetimeLocalValue) {
+      const d = new Date(datetimeLocalValue);
+      return d.toLocaleString("de-CH", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    }
+
     function setupPolls() {
       addPollOptionRow("Ja");
       addPollOptionRow("Nein");
+      addTerminSlotRow();
+      addTerminSlotRow();
       document.getElementById("poll-add-option").addEventListener("click", () => addPollOptionRow());
+      document.getElementById("poll-add-termin").addEventListener("click", () => addTerminSlotRow());
+
+      document.getElementById("poll-type").addEventListener("change", (e) => {
+        const isTermin = e.target.value === "termin";
+        document.getElementById("poll-text-options-field").style.display = isTermin ? "none" : "block";
+        document.getElementById("poll-termin-options-field").style.display = isTermin ? "block" : "none";
+      });
 
       document.getElementById("poll-save-btn").addEventListener("click", async () => {
         const questionInput = document.getElementById("poll-question");
         const deadlineInput = document.getElementById("poll-deadline");
         const msgEl = document.getElementById("poll-message");
+        const pollType = document.getElementById("poll-type").value;
         const question = questionInput.value.trim();
-        const options = Array.from(document.querySelectorAll("#poll-options-list input")).map(i => i.value.trim()).filter(v => v.length > 0);
         const deadline = deadlineInput.value ? new Date(deadlineInput.value).toISOString() : null;
 
+        let options;
+        if (pollType === "termin") {
+          const slotValues = Array.from(document.querySelectorAll("#poll-termin-list input[type=datetime-local]"))
+            .map(i => i.value)
+            .filter(v => v);
+          if (slotValues.length < 2) { msgEl.textContent = "Bitte mindestens zwei Terminvorschläge angeben."; msgEl.className = "form-message error"; return; }
+          options = slotValues.sort().map(formatTerminLabel);
+        } else {
+          options = Array.from(document.querySelectorAll("#poll-options-list input")).map(i => i.value.trim()).filter(v => v.length > 0);
+          if (options.length < 2) { msgEl.textContent = "Bitte mindestens zwei Antwortoptionen angeben."; msgEl.className = "form-message error"; return; }
+        }
+
         if (!question) { msgEl.textContent = "Bitte eine Frage eingeben."; msgEl.className = "form-message error"; return; }
-        if (options.length < 2) { msgEl.textContent = "Bitte mindestens zwei Antwortoptionen angeben."; msgEl.className = "form-message error"; return; }
 
         const { data: inserted, error } = await supabaseClient
           .from("community_polls")
-          .insert({ created_by: currentUserId, question, options, closed_at: deadline })
+          .insert({ created_by: currentUserId, question, options, closed_at: deadline, poll_type: pollType })
           .select("id")
           .single();
         if (error) { msgEl.textContent = "Fehler: " + error.message; msgEl.className = "form-message error"; return; }
 
         const deadlineNote = deadline ? ` (Enddatum: ${new Date(deadline).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })})` : "";
+        const typeLabel = pollType === "termin" ? "Terminumfrage" : "Umfrage";
         await supabaseClient.from("community_messages").insert({
           sender_id: currentUserId,
-          content: `📊 Neue Umfrage gestartet: "${question}"${deadlineNote}`,
+          content: `📊 Neue ${typeLabel} gestartet: "${question}"${deadlineNote}`,
           message_type: "system",
           related_poll_id: inserted.id,
         });
@@ -462,8 +521,14 @@ a { color: inherit; }
         questionInput.value = "";
         deadlineInput.value = "";
         document.getElementById("poll-options-list").innerHTML = "";
+        document.getElementById("poll-termin-list").innerHTML = "";
         addPollOptionRow("Ja");
         addPollOptionRow("Nein");
+        addTerminSlotRow();
+        addTerminSlotRow();
+        document.getElementById("poll-type").value = "text";
+        document.getElementById("poll-text-options-field").style.display = "block";
+        document.getElementById("poll-termin-options-field").style.display = "none";
         msgEl.textContent = "Umfrage gestartet.";
         msgEl.className = "form-message success";
         await loadPolls();
@@ -475,7 +540,7 @@ a { color: inherit; }
       const emptyEl = document.getElementById("poll-empty");
       const { data: polls, error } = await supabaseClient
         .from("community_polls")
-        .select("id, created_by, question, options, created_at")
+        .select("id, created_by, question, options, created_at, closed_at, poll_type")
         .order("created_at", { ascending: false });
 
       listEl.innerHTML = "";
@@ -484,21 +549,76 @@ a { color: inherit; }
       emptyEl.style.display = "none";
 
       for (const poll of polls) {
-        await renderPoll(poll, listEl);
+        if (poll.poll_type === "termin") {
+          await renderTerminPoll(poll, listEl);
+        } else {
+          await renderTextPoll(poll, listEl);
+        }
       }
     }
 
-    async function renderPoll(poll, listEl) {
-      const item = document.createElement("div");
-      item.className = "poll-item";
-      const date = new Date(poll.created_at).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric" });
-      const creator = peopleMap[poll.created_by];
+    function pollHeaderHtml(poll, isClosed, closedLabel, totalVotes, creator, date) {
+      return `
+        <h3>${escapeHtml(poll.question)}</h3>
+        <div class="item-meta">${escapeHtml(displayName(creator))} · ${date} · ${totalVotes} Stimme(n) · <strong>${closedLabel}</strong></div>
+      `;
+    }
+
+    function pollAdminButtonsHtml(isClosed) {
+      return `
+        <div style="margin-top:8px; display:flex; gap:8px;">
+          ${isAdmin && !isClosed ? `<button type="button" class="btn-small" data-action="close-poll">Umfrage beenden</button>` : ""}
+          ${isAdmin ? `<button type="button" class="btn-small danger" data-action="delete-poll">Umfrage löschen</button>` : ""}
+        </div>
+      `;
+    }
+
+    function wireAdminPollButtons(item, poll, resultTextFn) {
+      if (!isAdmin) return;
+      const closeBtn = item.querySelector('[data-action="close-poll"]');
+      if (closeBtn) {
+        closeBtn.addEventListener("click", async () => {
+          if (!confirm("Umfrage jetzt beenden? Es kann danach nicht mehr abgestimmt werden.")) return;
+          const nowIso = new Date().toISOString();
+          const { error } = await supabaseClient.from("community_polls").update({ closed_at: nowIso }).eq("id", poll.id);
+          if (error) { alert("Fehler: " + error.message); return; }
+
+          await supabaseClient.from("community_messages").insert({
+            sender_id: currentUserId,
+            content: `📊 Umfrage beendet: "${poll.question}" — Ergebnis: ${resultTextFn()}`,
+            message_type: "system",
+            related_poll_id: poll.id,
+          });
+
+          await loadPolls();
+        });
+      }
+      const deleteBtn = item.querySelector('[data-action="delete-poll"]');
+      if (deleteBtn) {
+        deleteBtn.addEventListener("click", async () => {
+          if (!confirm("Umfrage wirklich löschen?")) return;
+          await supabaseClient.from("community_polls").delete().eq("id", poll.id);
+          await loadPolls();
+        });
+      }
+    }
+
+    function pollStatus(poll) {
       const isClosed = !!(poll.closed_at && new Date(poll.closed_at) <= new Date());
       const closedLabel = isClosed
         ? `Beendet ${new Date(poll.closed_at).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}`
         : (poll.closed_at ? `Endet ${new Date(poll.closed_at).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}` : "Offen");
+      return { isClosed, closedLabel };
+    }
 
-      // Eigene Stimme holen
+    // ---- Freitext-Umfrage (Einzelauswahl, Admin sieht Namen, andere nur Zahlen) ----
+    async function renderTextPoll(poll, listEl) {
+      const item = document.createElement("div");
+      item.className = "poll-item";
+      const date = new Date(poll.created_at).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric" });
+      const creator = peopleMap[poll.created_by];
+      const { isClosed, closedLabel } = pollStatus(poll);
+
       const { data: myVoteRows } = await supabaseClient
         .from("community_poll_votes")
         .select("option_index")
@@ -541,54 +661,113 @@ a { color: inherit; }
         `;
       }).join("");
 
-      item.innerHTML = `
-        <h3>${escapeHtml(poll.question)}</h3>
-        <div class="item-meta">${escapeHtml(displayName(creator))} · ${date} · ${totalVotes} Stimme(n) · <strong>${closedLabel}</strong></div>
-        ${optionsHtml}
-        <div style="margin-top:8px; display:flex; gap:8px;">
-          ${isAdmin && !isClosed ? `<button type="button" class="btn-small" data-action="close-poll">Umfrage beenden</button>` : ""}
-          ${isAdmin ? `<button type="button" class="btn-small danger" data-action="delete-poll">Umfrage löschen</button>` : ""}
-        </div>
-      `;
+      item.innerHTML = pollHeaderHtml(poll, isClosed, closedLabel, totalVotes, creator, date)
+        + optionsHtml
+        + pollAdminButtonsHtml(isClosed);
 
       item.querySelectorAll(`input[name="poll-${poll.id}"]`).forEach(radio => {
         radio.addEventListener("change", async () => {
           if (isClosed) return;
           const optionIndex = parseInt(radio.value, 10);
+          // Einzelauswahl: zuerst evtl. vorhandene eigene Stimme(n) entfernen, dann neu setzen
+          await supabaseClient.from("community_poll_votes").delete().eq("poll_id", poll.id).eq("user_id", currentUserId);
           const { error } = await supabaseClient
             .from("community_poll_votes")
-            .upsert({ poll_id: poll.id, user_id: currentUserId, option_index: optionIndex }, { onConflict: "poll_id,user_id" });
+            .insert({ poll_id: poll.id, user_id: currentUserId, option_index: optionIndex });
           if (error) { alert("Fehler: " + error.message); return; }
           await loadPolls();
         });
       });
 
-      if (isAdmin) {
-        const closeBtn = item.querySelector('[data-action="close-poll"]');
-        if (closeBtn) {
-          closeBtn.addEventListener("click", async () => {
-            if (!confirm("Umfrage jetzt beenden? Es kann danach nicht mehr abgestimmt werden.")) return;
-            const nowIso = new Date().toISOString();
-            const { error } = await supabaseClient.from("community_polls").update({ closed_at: nowIso }).eq("id", poll.id);
-            if (error) { alert("Fehler: " + error.message); return; }
+      wireAdminPollButtons(item, poll, () => poll.options.map((opt, idx) => `${opt}: ${totals[idx] || 0}`).join(", "));
 
-            const resultText = poll.options.map((opt, idx) => `${opt}: ${totals[idx] || 0}`).join(", ");
-            await supabaseClient.from("community_messages").insert({
-              sender_id: currentUserId,
-              content: `📊 Umfrage beendet: "${poll.question}" — Ergebnis: ${resultText}`,
-              message_type: "system",
-              related_poll_id: poll.id,
-            });
+      listEl.appendChild(item);
+    }
 
-            await loadPolls();
-          });
-        }
-        item.querySelector('[data-action="delete-poll"]').addEventListener("click", async () => {
-          if (!confirm("Umfrage wirklich löschen?")) return;
-          await supabaseClient.from("community_polls").delete().eq("id", poll.id);
+    // ---- Terminumfrage (Mehrfachauswahl, volle Tabelle für alle – Doodle-Stil) ----
+    async function renderTerminPoll(poll, listEl) {
+      const item = document.createElement("div");
+      item.className = "poll-item";
+      const date = new Date(poll.created_at).toLocaleString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric" });
+      const creator = peopleMap[poll.created_by];
+      const { isClosed, closedLabel } = pollStatus(poll);
+
+      const { data: allVotes } = await supabaseClient
+        .from("community_poll_votes")
+        .select("user_id, option_index")
+        .eq("poll_id", poll.id);
+
+      const votesByUser = {};
+      (allVotes || []).forEach(v => {
+        if (!votesByUser[v.user_id]) votesByUser[v.user_id] = new Set();
+        votesByUser[v.user_id].add(v.option_index);
+      });
+
+      // Zeilen: alle, die schon abgestimmt haben, plus die aktuelle Person (damit sie abstimmen kann)
+      const rowUserIds = Object.keys(votesByUser);
+      if (!rowUserIds.includes(currentUserId)) rowUserIds.push(currentUserId);
+      rowUserIds.sort((a, b) => displayName(peopleMap[a]).localeCompare(displayName(peopleMap[b]), "de-CH"));
+
+      const totalVotes = (allVotes || []).length;
+
+      const headerCells = poll.options.map(opt => `<th>${escapeHtml(opt)}</th>`).join("");
+      const bodyRows = rowUserIds.map(uid => {
+        const isOwn = uid === currentUserId;
+        const mySet = votesByUser[uid] || new Set();
+        const cells = poll.options.map((opt, idx) => {
+          const checked = mySet.has(idx);
+          if (isOwn) {
+            return `<td class="own-row"><input type="checkbox" data-option="${idx}" ${checked ? "checked" : ""} ${isClosed ? "disabled" : ""} /></td>`;
+          }
+          return `<td>${checked ? "✓" : ""}</td>`;
+        }).join("");
+        return `<tr>${isOwn ? `<td class="name-cell own-row">${escapeHtml(displayName(peopleMap[uid]))} (Du)</td>` : `<td class="name-cell">${escapeHtml(displayName(peopleMap[uid]))}</td>`}${cells}</tr>`;
+      }).join("");
+
+      const totalCells = poll.options.map((opt, idx) => {
+        const count = (allVotes || []).filter(v => v.option_index === idx).length;
+        return `<td>${count}</td>`;
+      }).join("");
+
+      const tableHtml = `
+        <div class="termin-table-wrap">
+          <table class="termin-table">
+            <thead><tr><th class="name-th">Name</th>${headerCells}</tr></thead>
+            <tbody>${bodyRows}</tbody>
+            <tfoot><tr class="total-row"><td>Total</td>${totalCells}</tr></tfoot>
+          </table>
+        </div>
+      `;
+
+      item.innerHTML = pollHeaderHtml(poll, isClosed, closedLabel, totalVotes, creator, date)
+        + tableHtml
+        + pollAdminButtonsHtml(isClosed);
+
+      item.querySelectorAll('input[type="checkbox"][data-option]').forEach(cb => {
+        cb.addEventListener("change", async () => {
+          if (isClosed) return;
+          const optionIndex = parseInt(cb.dataset.option, 10);
+          if (cb.checked) {
+            const { error } = await supabaseClient
+              .from("community_poll_votes")
+              .insert({ poll_id: poll.id, user_id: currentUserId, option_index: optionIndex });
+            if (error) { alert("Fehler: " + error.message); cb.checked = false; return; }
+          } else {
+            const { error } = await supabaseClient
+              .from("community_poll_votes")
+              .delete()
+              .eq("poll_id", poll.id)
+              .eq("user_id", currentUserId)
+              .eq("option_index", optionIndex);
+            if (error) { alert("Fehler: " + error.message); cb.checked = true; return; }
+          }
           await loadPolls();
         });
-      }
+      });
+
+      wireAdminPollButtons(item, poll, () => {
+        return poll.options.map((opt, idx) => `${opt}: ${(allVotes || []).filter(v => v.option_index === idx).length}`).join(", ");
+      });
 
       listEl.appendChild(item);
     }
