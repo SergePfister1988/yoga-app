@@ -116,6 +116,11 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
         <div class="desc">Deine zugewiesenen Yogi:nis: Akte, Freigaben und zugewiesene Sequenzen auf einen Blick.</div>
       </a>
 
+      <a href="meine-dokumente.html" class="card-link" id="card-meine-dokumente" style="display:none;">
+        <div class="title">Dokumente</div>
+        <div class="desc">Eigene Dokumente auf Basis der Vorlagen erstellen und verwalten.</div>
+      </a>
+
       <a href="meine-therapeuten.html" class="card-link" id="card-meine-therapeuten" style="display:none;">
         <div class="title">Meine Therapeut:innen</div>
         <div class="desc">Übersicht aller Therapeut:innen mit Status und betreuten Yogi:nis.</div>
@@ -238,6 +243,10 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
           const dvCard = document.getElementById("card-dokumentvorlagen");
           if (dvCard) dvCard.style.display = "block";
         }
+        if (profile.role === "admin" || profile.role === "therapeut") {
+          const mdCard = document.getElementById("card-meine-dokumente");
+          if (mdCard) mdCard.style.display = "block";
+        }
         if (profile.role === "admin" || profile.role === "therapeut" || profile.role === "anbieter") {
           const kalCard = document.getElementById("card-kalender");
           if (kalCard) kalCard.style.display = "block";
@@ -267,7 +276,7 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
           if (profile.role === "therapeut") {
             // Feste Kartenreihenfolge für Therapeut:in
             [
-              "card-selbstdeklaration", "card-my-yoginis", "card-kalender", "card-community",
+              "card-selbstdeklaration", "card-my-yoginis", "card-meine-dokumente", "card-kalender", "card-community",
               "card-sequences", "card-flows-db", "card-asanas", "card-pranayama", "card-mantras",
               "card-meine-angaben",
             ].forEach(id => {

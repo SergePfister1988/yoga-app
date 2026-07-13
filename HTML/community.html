@@ -109,7 +109,6 @@ a { color: inherit; }
     <div class="header-left">
       <nav class="nav-links">
         <a href="dashboard.html">Dashboard</a>
-        <a href="users.html" id="nav-users" style="display:none;">Benutzer</a>
       </nav>
       <span class="role-badge" id="role-badge" style="display:none;"></span>
     </div>
@@ -216,8 +215,12 @@ a { color: inherit; }
         <div class="field" id="doc-file-field" style="display:none;">
           <label for="doc-file">Datei</label>
           <input type="file" id="doc-file" />
+          <p id="doc-file-hint" style="display:none; font-size:12px; color: var(--color-text-muted); margin: 4px 0 0 0;">Es ist bereits eine Datei hinterlegt. Nur hochladen, wenn du sie ersetzen möchtest – sonst leer lassen.</p>
         </div>
-        <button class="btn-primary" id="doc-save-btn">Hinzufügen</button>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn-primary" id="doc-save-btn">Hinzufügen</button>
+          <button type="button" class="btn-secondary" id="doc-cancel-edit-btn" style="display:none;">Abbrechen</button>
+        </div>
         <p class="form-message" id="doc-message"></p>
       </div>
       <div class="card">
@@ -286,10 +289,6 @@ a { color: inherit; }
       badge.textContent = roleLabel(profile.role, profile.gender);
       badge.style.display = "inline-block";
 
-        if (profile.role === "admin") {
-          const nu = document.getElementById("nav-users");
-          if (nu) nu.style.display = "inline";
-        }
       if (isAdmin) {
         document.getElementById("admin-poll-box").style.display = "block";
         document.getElementById("admin-doc-box").style.display = "block";
@@ -778,6 +777,23 @@ a { color: inherit; }
     // ============================================================
     // Unterlagen
     // ============================================================
+    let editingDocId = null;
+
+    function resetDocForm() {
+      editingDocId = null;
+      document.getElementById("doc-category").value = "";
+      document.getElementById("doc-title").value = "";
+      document.getElementById("doc-url").value = "";
+      document.getElementById("doc-file").value = "";
+      document.getElementById("doc-type").value = "link";
+      document.getElementById("doc-file-field").style.display = "none";
+      document.getElementById("doc-url-field").style.display = "block";
+      document.getElementById("doc-file-hint").style.display = "none";
+      document.getElementById("doc-save-btn").textContent = "Hinzufügen";
+      document.getElementById("doc-cancel-edit-btn").style.display = "none";
+      document.getElementById("admin-doc-box").querySelector("h2").textContent = "Neue Unterlage";
+    }
+
     function setupDocuments() {
       const typeSelect = document.getElementById("doc-type");
       typeSelect.addEventListener("change", () => {
@@ -785,6 +801,8 @@ a { color: inherit; }
         document.getElementById("doc-file-field").style.display = isFile ? "block" : "none";
         document.getElementById("doc-url-field").style.display = isFile ? "none" : "block";
       });
+
+      document.getElementById("doc-cancel-edit-btn").addEventListener("click", () => resetDocForm());
 
       document.getElementById("doc-save-btn").addEventListener("click", async () => {
         const msgEl = document.getElementById("doc-message");
@@ -798,36 +816,84 @@ a { color: inherit; }
           return;
         }
 
-        let insertPayload = { category, title, doc_type: type, uploaded_by: currentUserId };
+        let payload = { category, title, doc_type: type };
+        let oldStoragePathToDelete = null;
 
         if (type === "link") {
           const url = document.getElementById("doc-url").value.trim();
           if (!url) { msgEl.textContent = "Bitte eine URL angeben."; msgEl.className = "form-message error"; return; }
-          insertPayload.url = url;
+          payload.url = url;
+          payload.storage_path = null;
+          if (editingDocId && editingDoc && editingDoc.doc_type === "file" && editingDoc.storage_path) {
+            oldStoragePathToDelete = editingDoc.storage_path;
+          }
         } else {
           const fileInput = document.getElementById("doc-file");
           const file = fileInput.files[0];
-          if (!file) { msgEl.textContent = "Bitte eine Datei auswählen."; msgEl.className = "form-message error"; return; }
-          msgEl.textContent = "Wird hochgeladen …";
-          msgEl.className = "form-message";
-          const safeName = file.name.replace(/[^a-zA-Z0-9.\-]/g, "_");
-          const path = `community-docs/${Date.now()}_${safeName}`;
-          const { error: uploadError } = await supabaseClient.storage.from("asana-media").upload(path, file);
-          if (uploadError) { msgEl.textContent = "Fehler beim Hochladen: " + uploadError.message; msgEl.className = "form-message error"; return; }
-          insertPayload.storage_path = path;
+          if (!file) {
+            if (editingDocId && editingDoc && editingDoc.doc_type === "file") {
+              // Keine neue Datei gewählt: bestehende Datei beibehalten
+              payload.storage_path = editingDoc.storage_path;
+            } else {
+              msgEl.textContent = "Bitte eine Datei auswählen.";
+              msgEl.className = "form-message error";
+              return;
+            }
+          } else {
+            msgEl.textContent = "Wird hochgeladen …";
+            msgEl.className = "form-message";
+            const safeName = file.name.replace(/[^a-zA-Z0-9.\-]/g, "_");
+            const path = `community-docs/${Date.now()}_${safeName}`;
+            const { error: uploadError } = await supabaseClient.storage.from("asana-media").upload(path, file);
+            if (uploadError) { msgEl.textContent = "Fehler beim Hochladen: " + uploadError.message; msgEl.className = "form-message error"; return; }
+            payload.storage_path = path;
+            if (editingDocId && editingDoc && editingDoc.doc_type === "file" && editingDoc.storage_path) {
+              oldStoragePathToDelete = editingDoc.storage_path;
+            }
+          }
+          payload.url = null;
         }
 
-        const { error } = await supabaseClient.from("community_documents").insert(insertPayload);
+        let error;
+        if (editingDocId) {
+          ({ error } = await supabaseClient.from("community_documents").update(payload).eq("id", editingDocId));
+        } else {
+          payload.uploaded_by = currentUserId;
+          ({ error } = await supabaseClient.from("community_documents").insert(payload));
+        }
+
         if (error) { msgEl.textContent = "Fehler: " + error.message; msgEl.className = "form-message error"; return; }
 
-        document.getElementById("doc-category").value = "";
-        document.getElementById("doc-title").value = "";
-        document.getElementById("doc-url").value = "";
-        document.getElementById("doc-file").value = "";
-        msgEl.textContent = "Hinzugefügt.";
+        if (oldStoragePathToDelete) {
+          await supabaseClient.storage.from("asana-media").remove([oldStoragePathToDelete]);
+        }
+
+        msgEl.textContent = editingDocId ? "Aktualisiert." : "Hinzugefügt.";
         msgEl.className = "form-message success";
+        resetDocForm();
         await loadDocuments();
       });
+    }
+
+    let editingDoc = null;
+    let allDocsCache = [];
+
+    function startEditDoc(doc) {
+      editingDocId = doc.id;
+      editingDoc = doc;
+      document.getElementById("doc-category").value = doc.category;
+      document.getElementById("doc-title").value = doc.title;
+      document.getElementById("doc-type").value = doc.doc_type;
+      const isFile = doc.doc_type === "file";
+      document.getElementById("doc-file-field").style.display = isFile ? "block" : "none";
+      document.getElementById("doc-url-field").style.display = isFile ? "none" : "block";
+      document.getElementById("doc-url").value = doc.url || "";
+      document.getElementById("doc-file").value = "";
+      document.getElementById("doc-file-hint").style.display = isFile ? "block" : "none";
+      document.getElementById("doc-save-btn").textContent = "Aktualisieren";
+      document.getElementById("doc-cancel-edit-btn").style.display = "inline-block";
+      document.getElementById("admin-doc-box").querySelector("h2").textContent = "Unterlage bearbeiten";
+      document.getElementById("admin-doc-box").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     async function loadDocuments() {
@@ -843,6 +909,7 @@ a { color: inherit; }
       if (error) { emptyEl.style.display = "block"; emptyEl.textContent = "Fehler: " + error.message; return; }
       if (!data || !data.length) { emptyEl.style.display = "block"; return; }
       emptyEl.style.display = "none";
+      allDocsCache = data;
 
       // Kategorien für das Datalist im Admin-Formular
       const categories = [...new Set(data.map(d => d.category))];
@@ -867,12 +934,17 @@ a { color: inherit; }
         }
         row.innerHTML = `
           <a href="${href}" target="_blank" rel="noopener">${escapeHtml(d.title)}</a>
-          ${isAdmin ? `<button type="button" class="btn-small danger" data-id="${d.id}">Löschen</button>` : ""}
+          ${isAdmin ? `<span style="display:flex; gap:6px;"><button type="button" class="btn-small" data-action="edit">Bearbeiten</button><button type="button" class="btn-small danger" data-action="delete">Löschen</button></span>` : ""}
         `;
         if (isAdmin) {
-          row.querySelector("button").addEventListener("click", async () => {
+          row.querySelector('[data-action="edit"]').addEventListener("click", () => startEditDoc(d));
+          row.querySelector('[data-action="delete"]').addEventListener("click", async () => {
             if (!confirm("Unterlage wirklich löschen?")) return;
             await supabaseClient.from("community_documents").delete().eq("id", d.id);
+            if (d.doc_type === "file" && d.storage_path) {
+              await supabaseClient.storage.from("asana-media").remove([d.storage_path]);
+            }
+            if (editingDocId === d.id) resetDocForm();
             await loadDocuments();
           });
         }
