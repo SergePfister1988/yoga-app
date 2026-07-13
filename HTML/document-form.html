@@ -156,7 +156,20 @@ a { color: inherit; }
 
       yogiId = doc.yogi_id;
       existingContent = doc.content || {};
-      document.getElementById("back-link").href = "client-file.html?id=" + yogiId;
+
+      const { data: ownerProfile } = await supabaseClient
+        .from("profiles")
+        .select("role")
+        .eq("id", yogiId)
+        .maybeSingle();
+
+      if (ownerProfile && (ownerProfile.role === "admin" || ownerProfile.role === "therapeut")) {
+        document.getElementById("back-link").href = "meine-dokumente.html";
+        document.getElementById("back-link").textContent = "← Zurück zu Meine Dokumente";
+      } else {
+        document.getElementById("back-link").href = "client-file.html?id=" + yogiId;
+      }
+
       document.getElementById("page-title").textContent = doc.title;
       document.getElementById("doc-title").value = doc.title || "";
 
