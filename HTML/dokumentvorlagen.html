@@ -129,9 +129,12 @@ a { color: inherit; text-decoration: none; }
       return div.innerHTML;
     }
 
+    let currentAdminId = null;
+
     async function init() {
       const { data: sessionData } = await supabaseClient.auth.getSession();
       if (!sessionData.session) { window.location.href = "index.html"; return; }
+      currentAdminId = sessionData.session.user.id;
 
       const { data: profile } = await supabaseClient.from("profiles").select("role, gender").eq("id", sessionData.session.user.id).single();
       if (!profile || profile.role !== "admin") {
@@ -199,9 +202,20 @@ a { color: inherit; text-decoration: none; }
           </div>
           <div class="template-actions">
             <a href="layout-template-form.html?id=${t.id}"><button class="btn-secondary">Bearbeiten</button></a>
+            <button class="btn-secondary" data-duplicate="${t.id}">Duplizieren</button>
             <button class="btn-danger" data-delete="${t.id}">Löschen</button>
           </div>
         `;
+        card.querySelector("[data-duplicate]").addEventListener("click", async () => {
+          const { error } = await supabaseClient.from("layout_templates").insert({
+            name: t.name + " (Kopie)",
+            category: t.category,
+            elements: t.elements,
+            created_by: currentAdminId,
+          });
+          if (error) { alert("Fehler: " + error.message); return; }
+          await loadLayoutTemplates();
+        });
         card.querySelector("[data-delete]").addEventListener("click", async () => {
           if (!confirm(`Layout-Vorlage "${t.name}" wirklich löschen?`)) return;
           const { error } = await supabaseClient.from("layout_templates").delete().eq("id", t.id);
@@ -245,9 +259,26 @@ a { color: inherit; text-decoration: none; }
           </div>
           <div class="template-actions">
             <a href="dokumentvorlage-form.html?id=${t.id}"><button class="btn-secondary">Bearbeiten</button></a>
+            <button class="btn-secondary" data-duplicate="${t.id}">Duplizieren</button>
             <button class="btn-danger" data-delete="${t.id}">Löschen</button>
           </div>
         `;
+        card.querySelector("[data-duplicate]").addEventListener("click", async () => {
+          const { data: maxRow } = await supabaseClient
+            .from("document_templates")
+            .select("sort_order")
+            .order("sort_order", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          const nextSortOrder = (maxRow && typeof maxRow.sort_order === "number") ? maxRow.sort_order + 1 : 0;
+          const { error } = await supabaseClient.from("document_templates").insert({
+            name: t.name + " (Kopie)",
+            fields: t.fields,
+            sort_order: nextSortOrder,
+          });
+          if (error) { alert("Fehler: " + error.message); return; }
+          await loadTemplates();
+        });
         card.querySelector("[data-delete]").addEventListener("click", async () => {
           if (!confirm(`Vorlage "${t.name}" wirklich löschen? Bereits erstellte Dokumente mit dieser Vorlage bleiben bestehen, verlieren aber den Vorlagen-Bezug.`)) return;
           const { error } = await supabaseClient.from("document_templates").delete().eq("id", t.id);
