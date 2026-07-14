@@ -111,6 +111,21 @@ a { color: inherit; }
     </div>
 
     <div class="card">
+      <h2>Buchhaltung</h2>
+      <div class="field">
+        <label for="invoice-prefix">Kürzel für Rechnungen</label>
+        <input type="text" id="invoice-prefix" placeholder="z.B. SP" maxlength="8" />
+      </div>
+      <div class="field">
+        <label for="expense-prefix">Kürzel für Ausgaben/Belege</label>
+        <input type="text" id="expense-prefix" placeholder="z.B. SP-A" maxlength="8" />
+      </div>
+      <p style="font-size:13px; color: var(--color-text-muted); margin: -6px 0 0 0;">
+        Damit erhält jede Rechnung bzw. jeder Beleg automatisch eine eigene, fortlaufende Nummer (z.B. SP-2026-0001) – unabhängig von anderen Admins/Therapeut:innen.
+      </p>
+    </div>
+
+    <div class="card">
       <h2>Meine Kanäle</h2>
       <div id="channels-list"></div>
       <button type="button" class="btn-small" id="add-channel">+ Kanal hinzufügen</button>
@@ -225,12 +240,14 @@ a { color: inherit; }
 
       const { data: profileRow } = await supabaseClient
         .from("profiles")
-        .select("show_phone_in_community, show_email_in_community")
+        .select("show_phone_in_community, show_email_in_community, invoice_prefix, expense_prefix")
         .eq("id", currentUserId)
         .single();
       if (profileRow) {
         document.getElementById("show-phone-community").checked = !!profileRow.show_phone_in_community;
         document.getElementById("show-email-community").checked = !!profileRow.show_email_in_community;
+        document.getElementById("invoice-prefix").value = profileRow.invoice_prefix || "";
+        document.getElementById("expense-prefix").value = profileRow.expense_prefix || "";
       }
 
       const { data: channels } = await supabaseClient
@@ -355,6 +372,8 @@ a { color: inherit; }
         .update({
           show_phone_in_community: document.getElementById("show-phone-community").checked,
           show_email_in_community: document.getElementById("show-email-community").checked,
+          invoice_prefix: document.getElementById("invoice-prefix").value.trim() || null,
+          expense_prefix: document.getElementById("expense-prefix").value.trim() || null,
         })
         .eq("id", currentUserId);
 

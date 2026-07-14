@@ -105,6 +105,25 @@ a { color: inherit; }
       <p class="form-message" id="contact-message"></p>
     </div>
 
+    <div class="card" id="accounting-card" style="display:none;">
+      <h2>Buchhaltung</h2>
+      <div class="two-col" style="display:flex; gap:16px;">
+        <div class="field" style="flex:1;">
+          <label for="invoice-prefix">Kürzel für Rechnungen</label>
+          <input type="text" id="invoice-prefix" placeholder="z.B. SP" maxlength="8" />
+        </div>
+        <div class="field" style="flex:1;">
+          <label for="expense-prefix">Kürzel für Ausgaben/Belege</label>
+          <input type="text" id="expense-prefix" placeholder="z.B. SP-A" maxlength="8" />
+        </div>
+      </div>
+      <p style="font-size:13px; color: var(--color-text-muted); margin: -6px 0 10px 0;">
+        Damit erhält jede Rechnung bzw. jeder Beleg automatisch eine eigene, fortlaufende Nummer (z.B. SP-2026-0001) – unabhängig von anderen Admins/Therapeut:innen.
+      </p>
+      <button class="btn-primary" id="save-accounting-btn">Buchhaltung speichern</button>
+      <p class="form-message" id="accounting-message"></p>
+    </div>
+
     <div class="card">
       <h2>Passwort ändern</h2>
       <div class="field">
@@ -183,19 +202,20 @@ a { color: inherit; }
           }
         }
 
-        if (profile.role === "anbieter") {
-          }
         if (profile.role === "admin") {
+          document.getElementById("accounting-card").style.display = "block";
+          const { data: acc } = await supabaseClient
+            .from("profiles")
+            .select("invoice_prefix, expense_prefix")
+            .eq("id", sessionData.session.user.id)
+            .single();
+          if (acc) {
+            document.getElementById("invoice-prefix").value = acc.invoice_prefix || "";
+            document.getElementById("expense-prefix").value = acc.expense_prefix || "";
           }
-        if (profile.role === "therapeut") {
-          }
-        if (profile.role === "yogi") {
-          }
-if (profile.role === "admin" || profile.role === "therapeut") {
-          }
-        if (profile.role === "therapeut") {
-          }
-      }
+        }
+
+}
     }
 
     document.getElementById("save-contact-btn").addEventListener("click", async () => {
@@ -212,6 +232,33 @@ if (profile.role === "admin" || profile.role === "therapeut") {
         phone: document.getElementById("contact-phone").value.trim() || null,
         show_phone_in_community: document.getElementById("show-phone-community").checked,
         show_email_in_community: document.getElementById("show-email-community").checked,
+      };
+
+      const { error } = await supabaseClient.from("profiles").update(payload).eq("id", sessionData.session.user.id);
+
+      if (error) {
+        messageEl.textContent = "Fehler: " + error.message;
+        messageEl.className = "form-message error";
+        saveBtn.disabled = false;
+        return;
+      }
+
+      messageEl.textContent = "Gespeichert.";
+      messageEl.className = "form-message success";
+      saveBtn.disabled = false;
+    });
+
+    document.getElementById("save-accounting-btn").addEventListener("click", async () => {
+      const messageEl = document.getElementById("accounting-message");
+      const saveBtn = document.getElementById("save-accounting-btn");
+      saveBtn.disabled = true;
+      messageEl.textContent = "Wird gespeichert …";
+      messageEl.className = "form-message";
+
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      const payload = {
+        invoice_prefix: document.getElementById("invoice-prefix").value.trim() || null,
+        expense_prefix: document.getElementById("expense-prefix").value.trim() || null,
       };
 
       const { error } = await supabaseClient.from("profiles").update(payload).eq("id", sessionData.session.user.id);
