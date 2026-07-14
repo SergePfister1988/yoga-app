@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Belege – Yoga-App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --color-bg: #FDFCFB; --color-surface: #FFFFFF; --color-pine: #572E2A; --color-pine-dark: #3E211D;
+  --color-sand: #DBAEA4; --color-sand-dark: #C08F84; --color-text: #1E2622; --color-text-muted: #5B6660;
+  --color-border: #DBDFD5; --color-error: #A6483A;
+  --font-display: "Cormorant Garamond", Georgia, serif; --font-script: "Alex Brush", cursive; --font-body: "Work Sans", "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-body); background-color: var(--color-bg); color: var(--color-text); min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+.app-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+.nav-links { display: flex; gap: 20px; margin-left: 32px; flex-wrap: wrap; }
+.nav-links a { font-size: 14px; color: var(--color-text-muted); font-weight: 600; }
+.nav-links a.active, .nav-links a:hover { color: var(--color-pine); }
+.header-left { display: flex; align-items: center; flex-wrap: wrap; }
+.role-badge { display: inline-block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; background: var(--color-sand); color: #fff; margin-left: 10px; }
+.btn-primary { padding: 11px 20px; background: var(--color-sand); color: #fff; border: none; border-radius: 3px; font-size: 15px; font-family: var(--font-body); font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--color-sand-dark); }
+.btn-primary:disabled { opacity: 0.6; cursor: default; }
+.btn-secondary { padding: 8px 16px; background: transparent; color: var(--color-pine-dark); border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); cursor: pointer; }
+.btn-secondary:hover { border-color: var(--color-pine); }
+.btn-danger { padding: 6px 12px; background: transparent; color: var(--color-error); border: 1px solid var(--color-error); border-radius: 3px; font-size: 13px; font-family: var(--font-body); cursor: pointer; }
+.app-main { padding: 32px; max-width: 760px; margin: 0 auto; }
+.app-main h1 { font-family: var(--font-display); color: var(--color-pine-dark); margin-top: 8px; margin-bottom: 20px; }
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 22px 24px; margin-bottom: 18px; }
+.card h2 { font-family: var(--font-display); font-size: 16px; color: var(--color-pine-dark); margin: 0 0 14px 0; }
+.field { margin-bottom: 16px; }
+.field:last-child { margin-bottom: 0; }
+.field label { display: block; font-size: 13px; color: var(--color-text-muted); margin-bottom: 5px; }
+.field input, .field select, .field textarea {
+  width: 100%; padding: 10px 11px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); background: var(--color-bg);
+}
+.field textarea { resize: vertical; min-height: 60px; }
+.two-col { display: flex; gap: 16px; }
+.two-col .field { flex: 1; }
+.form-message { font-size: 13px; margin-top: 10px; }
+.form-message.error { color: var(--color-error); }
+.form-message.success { color: var(--color-pine); }
+.empty-state { color: var(--color-text-muted); font-size: 14px; text-align: center; padding: 20px 0; }
+.receipt-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border-bottom: 1px solid var(--color-border); padding: 12px 0; }
+.receipt-row:last-child { border-bottom: none; }
+.receipt-main { flex: 1; min-width: 0; }
+.receipt-amount { font-weight: 600; color: var(--color-pine-dark); }
+.receipt-meta { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; }
+.receipt-note { font-size: 13px; margin-top: 4px; }
+.receipt-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 3px; border: 1px solid var(--color-border); flex-shrink: 0; cursor: pointer; }
+.filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-bar select { padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 13px; font-family: var(--font-body); background: var(--color-surface); }
+.totals-bar { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; color: var(--color-pine-dark); padding-top: 10px; margin-top: 6px; border-top: 1px solid var(--color-border); }
+.photo-preview { max-width: 160px; max-height: 160px; border-radius: 3px; border: 1px solid var(--color-border); margin-top: 8px; display: none; }
+@media (max-width: 640px) {
+  .app-header { flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+  .nav-links { margin-left: 0; gap: 14px; }
+  .app-main { padding: 20px 16px; }
+  .two-col { flex-direction: column; gap: 0; }
+  .btn-primary { width: 100%; padding: 14px; font-size: 16px; }
+}
+.brand-banner { background: linear-gradient(135deg, #C08F84 0%, #E3C4BC 55%, #EBD3CC 100%); display: flex; justify-content: center; align-items: center; padding: 10px 20px; }
+.brand-lockup { display: inline-flex; flex-direction: column; align-items: flex-end; text-decoration: none; line-height: 1; }
+.brand-script { font-family: var(--font-script); font-weight: 400; font-size: 44px; color: var(--color-pine-dark); }
+.brand-serif { font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--color-pine-dark); margin-top: -6px; letter-spacing: 0.01em; }
+@media (max-width: 640px) { .brand-banner { padding: 8px 16px; } .brand-script { font-size: 32px; } .brand-serif { font-size: 14px; } }
+  </style>
+</head>
+<body>
+  <div class="brand-banner"><a href="dashboard.html" class="brand-lockup"><span class="brand-script">Pandora</span><span class="brand-serif">Community Bern</span></a></div>
+  <header class="app-header">
+    <div class="header-left">
+      <nav class="nav-links">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="users.html" id="nav-users" style="display:none;">Benutzer</a>
+      </nav>
+      <span class="role-badge" id="role-badge" style="display:none;"></span>
+    </div>
+    <button class="btn-secondary" id="logout-btn">Ausloggen</button>
+  </header>
+
+  <main class="app-main">
+    <a href="dashboard.html" class="btn-secondary" style="margin-bottom: 10px;">← Zurück zum Dashboard</a>
+    <h1>Belege</h1>
+
+    <div class="card">
+      <h2 id="form-heading">Neuer Beleg</h2>
+      <div class="two-col">
+        <div class="field">
+          <label for="receipt-date">Datum</label>
+          <input type="date" id="receipt-date" />
+        </div>
+        <div class="field">
+          <label for="receipt-amount">Betrag (CHF)</label>
+          <input type="number" id="receipt-amount" step="0.01" min="0" placeholder="0.00" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="receipt-company">Firma / Empfänger</label>
+        <input type="text" id="receipt-company" placeholder="z.B. Loeb, Twint, Sannwald Beat …" />
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label for="receipt-category">Kategorie</label>
+          <select id="receipt-category">
+            <option value="uebrige_unkosten">Übrige Geschäftsunkosten</option>
+            <option value="autokosten">Autokosten</option>
+            <option value="ausbildung">Ausbildungskosten</option>
+            <option value="ausgleichskasse">Ausgleichskasse (AHV)</option>
+            <option value="miete_wohnung">Mietkostenanteil Wohnung</option>
+            <option value="personalaufwand">Personalaufwand</option>
+            <option value="ahv_bvg">AHV/BVG-Beiträge</option>
+            <option value="abschreibungen">Abschreibungen</option>
+            <option value="warenverkauf">Warenverkauf-Ausgaben</option>
+            <option value="sonstiges">Sonstiges</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="receipt-payment">Bezahlt über</label>
+          <select id="receipt-payment">
+            <option value="bank">Bank</option>
+            <option value="kasse">Kasse (bar)</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="receipt-note">Notiz / Zweck</label>
+        <textarea id="receipt-note" placeholder="z.B. Büromaterial, Transaktionsgebühr …"></textarea>
+      </div>
+      <div class="field">
+        <label for="receipt-photo">Foto des Belegs (optional)</label>
+        <input type="file" id="receipt-photo" accept="image/*" capture="environment" />
+        <img id="photo-preview" class="photo-preview" />
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-primary" id="save-receipt-btn">Beleg speichern</button>
+        <button class="btn-secondary" id="cancel-edit-btn" type="button" style="display:none;">Abbrechen</button>
+      </div>
+      <p class="form-message" id="receipt-message"></p>
+    </div>
+
+    <div class="card">
+      <h2>Erfasste Belege</h2>
+      <div class="filter-bar">
+        <select id="filter-category">
+          <option value="">Alle Kategorien</option>
+          <option value="uebrige_unkosten">Übrige Geschäftsunkosten</option>
+          <option value="autokosten">Autokosten</option>
+          <option value="ausbildung">Ausbildungskosten</option>
+          <option value="ausgleichskasse">Ausgleichskasse (AHV)</option>
+          <option value="miete_wohnung">Mietkostenanteil Wohnung</option>
+          <option value="personalaufwand">Personalaufwand</option>
+          <option value="ahv_bvg">AHV/BVG-Beiträge</option>
+          <option value="abschreibungen">Abschreibungen</option>
+          <option value="warenverkauf">Warenverkauf-Ausgaben</option>
+          <option value="sonstiges">Sonstiges</option>
+        </select>
+        <select id="filter-month">
+          <option value="">Ganzes Jahr</option>
+          <option value="01">Januar</option><option value="02">Februar</option><option value="03">März</option>
+          <option value="04">April</option><option value="05">Mai</option><option value="06">Juni</option>
+          <option value="07">Juli</option><option value="08">August</option><option value="09">September</option>
+          <option value="10">Oktober</option><option value="11">November</option><option value="12">Dezember</option>
+        </select>
+      </div>
+      <div id="receipt-list"></div>
+      <p class="empty-state" id="receipt-empty" style="display:none;">Noch keine Belege erfasst.</p>
+      <div class="totals-bar">
+        <span>Total (gefiltert)</span>
+        <span id="total-amount">CHF 0.00</span>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://yqklyumvybthkzlbsspj.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable__DLVShYfXjf0C27LLK1zbg_5vpFcxJy";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const CATEGORY_LABELS = {
+      uebrige_unkosten: "Übrige Geschäftsunkosten",
+      autokosten: "Autokosten",
+      ausbildung: "Ausbildungskosten",
+      ausgleichskasse: "Ausgleichskasse (AHV)",
+      miete_wohnung: "Mietkostenanteil Wohnung",
+      personalaufwand: "Personalaufwand",
+      ahv_bvg: "AHV/BVG-Beiträge",
+      abschreibungen: "Abschreibungen",
+      warenverkauf: "Warenverkauf-Ausgaben",
+      sonstiges: "Sonstiges",
+    };
+
+    function roleLabel(role, gender) {
+      if (role === "admin") return "Admin";
+      if (role === "therapeut") return gender === "frau" ? "Therapeutin" : gender === "mann" ? "Therapeut" : "Therapeut:in";
+      return role;
+    }
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str || "";
+      return div.innerHTML;
+    }
+    function formatCHF(n) {
+      return "CHF " + Number(n || 0).toLocaleString("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    let currentUserId = null;
+    let editingId = null;
+    let allReceipts = [];
+
+    async function init() {
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      if (!sessionData.session) { window.location.href = "index.html"; return; }
+      currentUserId = sessionData.session.user.id;
+
+      const { data: profile } = await supabaseClient.from("profiles").select("role, gender").eq("id", currentUserId).single();
+      if (!profile || (profile.role !== "admin" && profile.role !== "therapeut")) {
+        alert("Diese Seite ist nur für Admin und Therapeut:in verfügbar.");
+        window.location.href = "dashboard.html";
+        return;
+      }
+      const badge = document.getElementById("role-badge");
+      badge.textContent = roleLabel(profile.role, profile.gender);
+      badge.style.display = "inline-block";
+      if (profile.role === "admin") {
+        const nu = document.getElementById("nav-users");
+        if (nu) nu.style.display = "inline";
+      }
+
+      document.getElementById("receipt-date").valueAsDate = new Date();
+
+      setupForm();
+      setupFilters();
+      await loadReceipts();
+    }
+
+    function setupForm() {
+      document.getElementById("receipt-photo").addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        const preview = document.getElementById("photo-preview");
+        if (!file) { preview.style.display = "none"; return; }
+        const reader = new FileReader();
+        reader.onload = (ev) => { preview.src = ev.target.result; preview.style.display = "block"; };
+        reader.readAsDataURL(file);
+      });
+
+      document.getElementById("cancel-edit-btn").addEventListener("click", resetForm);
+      document.getElementById("save-receipt-btn").addEventListener("click", saveReceipt);
+    }
+
+    function resetForm() {
+      editingId = null;
+      document.getElementById("form-heading").textContent = "Neuer Beleg";
+      document.getElementById("receipt-date").valueAsDate = new Date();
+      document.getElementById("receipt-amount").value = "";
+      document.getElementById("receipt-company").value = "";
+      document.getElementById("receipt-category").value = "uebrige_unkosten";
+      document.getElementById("receipt-payment").value = "bank";
+      document.getElementById("receipt-note").value = "";
+      document.getElementById("receipt-photo").value = "";
+      document.getElementById("photo-preview").style.display = "none";
+      document.getElementById("save-receipt-btn").textContent = "Beleg speichern";
+      document.getElementById("cancel-edit-btn").style.display = "none";
+    }
+
+    async function saveReceipt() {
+      const msgEl = document.getElementById("receipt-message");
+      const amount = parseFloat(document.getElementById("receipt-amount").value);
+      const date = document.getElementById("receipt-date").value;
+
+      if (!date || isNaN(amount) || amount <= 0) {
+        msgEl.textContent = "Bitte Datum und einen gültigen Betrag angeben.";
+        msgEl.className = "form-message error";
+        return;
+      }
+
+      const payload = {
+        receipt_date: date,
+        amount,
+        company: document.getElementById("receipt-company").value.trim() || null,
+        category: document.getElementById("receipt-category").value,
+        payment_method: document.getElementById("receipt-payment").value,
+        note: document.getElementById("receipt-note").value.trim() || null,
+        updated_at: new Date().toISOString(),
+      };
+
+      const file = document.getElementById("receipt-photo").files[0];
+      if (file) {
+        msgEl.textContent = "Foto wird hochgeladen …";
+        msgEl.className = "form-message";
+        const safeName = file.name.replace(/[^a-zA-Z0-9.\-]/g, "_");
+        const path = `belege/${currentUserId}/${Date.now()}_${safeName}`;
+        const { error: uploadError } = await supabaseClient.storage.from("asana-media").upload(path, file);
+        if (uploadError) {
+          msgEl.textContent = "Fehler beim Hochladen: " + uploadError.message;
+          msgEl.className = "form-message error";
+          return;
+        }
+        payload.photo_path = path;
+      }
+
+      let error;
+      if (editingId) {
+        ({ error } = await supabaseClient.from("expense_receipts").update(payload).eq("id", editingId));
+      } else {
+        payload.user_id = currentUserId;
+        ({ error } = await supabaseClient.from("expense_receipts").insert(payload));
+      }
+
+      if (error) {
+        msgEl.textContent = "Fehler: " + error.message;
+        msgEl.className = "form-message error";
+        return;
+      }
+
+      msgEl.textContent = "Gespeichert.";
+      msgEl.className = "form-message success";
+      resetForm();
+      await loadReceipts();
+    }
+
+    function setupFilters() {
+      document.getElementById("filter-category").addEventListener("change", renderReceipts);
+      document.getElementById("filter-month").addEventListener("change", renderReceipts);
+    }
+
+    async function loadReceipts() {
+      const { data, error } = await supabaseClient
+        .from("expense_receipts")
+        .select("id, receipt_date, company, category, amount, payment_method, note, photo_path")
+        .eq("user_id", currentUserId)
+        .order("receipt_date", { ascending: false });
+
+      if (error) {
+        document.getElementById("receipt-empty").style.display = "block";
+        document.getElementById("receipt-empty").textContent = "Fehler beim Laden: " + error.message;
+        return;
+      }
+      allReceipts = data || [];
+      renderReceipts();
+    }
+
+    function renderReceipts() {
+      const listEl = document.getElementById("receipt-list");
+      const emptyEl = document.getElementById("receipt-empty");
+      const catFilter = document.getElementById("filter-category").value;
+      const monthFilter = document.getElementById("filter-month").value;
+
+      let filtered = allReceipts;
+      if (catFilter) filtered = filtered.filter(r => r.category === catFilter);
+      if (monthFilter) filtered = filtered.filter(r => r.receipt_date && r.receipt_date.slice(5, 7) === monthFilter);
+
+      listEl.innerHTML = "";
+      if (!filtered.length) {
+        emptyEl.style.display = "block";
+        emptyEl.textContent = "Keine Belege gefunden.";
+      } else {
+        emptyEl.style.display = "none";
+        filtered.forEach(r => {
+          const row = document.createElement("div");
+          row.className = "receipt-row";
+          const dateStr = new Date(r.receipt_date).toLocaleDateString("de-CH");
+          let thumbHtml = "";
+          if (r.photo_path) {
+            const { data: pub } = supabaseClient.storage.from("asana-media").getPublicUrl(r.photo_path);
+            thumbHtml = `<img class="receipt-thumb" src="${pub.publicUrl}" onclick="window.open('${pub.publicUrl}', '_blank')" />`;
+          }
+          row.innerHTML = `
+            ${thumbHtml}
+            <div class="receipt-main">
+              <div><span class="receipt-amount">${formatCHF(r.amount)}</span> · ${escapeHtml(CATEGORY_LABELS[r.category] || r.category)}</div>
+              <div class="receipt-meta">${dateStr} · ${escapeHtml(r.company || "–")} · ${r.payment_method === "kasse" ? "Kasse" : "Bank"}</div>
+              ${r.note ? `<div class="receipt-note">${escapeHtml(r.note)}</div>` : ""}
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <button type="button" class="btn-secondary" style="padding:5px 10px; font-size:12px;" data-action="edit">Bearbeiten</button>
+              <button type="button" class="btn-danger" data-action="delete">Löschen</button>
+            </div>
+          `;
+          row.querySelector('[data-action="edit"]').addEventListener("click", () => startEdit(r));
+          row.querySelector('[data-action="delete"]').addEventListener("click", () => deleteReceipt(r));
+          listEl.appendChild(row);
+        });
+      }
+
+      const total = filtered.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+      document.getElementById("total-amount").textContent = formatCHF(total);
+    }
+
+    function startEdit(r) {
+      editingId = r.id;
+      document.getElementById("form-heading").textContent = "Beleg bearbeiten";
+      document.getElementById("receipt-date").value = r.receipt_date;
+      document.getElementById("receipt-amount").value = r.amount;
+      document.getElementById("receipt-company").value = r.company || "";
+      document.getElementById("receipt-category").value = r.category;
+      document.getElementById("receipt-payment").value = r.payment_method;
+      document.getElementById("receipt-note").value = r.note || "";
+      document.getElementById("receipt-photo").value = "";
+      const preview = document.getElementById("photo-preview");
+      if (r.photo_path) {
+        const { data: pub } = supabaseClient.storage.from("asana-media").getPublicUrl(r.photo_path);
+        preview.src = pub.publicUrl;
+        preview.style.display = "block";
+      } else {
+        preview.style.display = "none";
+      }
+      document.getElementById("save-receipt-btn").textContent = "Änderungen speichern";
+      document.getElementById("cancel-edit-btn").style.display = "inline-block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function deleteReceipt(r) {
+      if (!confirm(`Beleg über ${formatCHF(r.amount)} wirklich löschen?`)) return;
+      const { error } = await supabaseClient.from("expense_receipts").delete().eq("id", r.id);
+      if (error) { alert("Fehler: " + error.message); return; }
+      if (editingId === r.id) resetForm();
+      await loadReceipts();
+    }
+
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+      window.location.href = "index.html";
+    });
+
+    init();
+  </script>
+</body>
+</html>

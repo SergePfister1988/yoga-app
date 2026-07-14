@@ -121,6 +121,11 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
         <div class="desc">Eigene Dokumente auf Basis der Vorlagen erstellen und verwalten.</div>
       </a>
 
+      <a href="belege.html" class="card-link" id="card-belege" style="display:none;">
+        <div class="title">Belege</div>
+        <div class="desc">Ausgaben erfassen: Foto, Betrag, Firma und Kategorie – für die Buchhaltung.</div>
+      </a>
+
       <a href="meine-therapeuten.html" class="card-link" id="card-meine-therapeuten" style="display:none;">
         <div class="title">Meine Therapeut:innen</div>
         <div class="desc">Übersicht aller Therapeut:innen mit Status und betreuten Yogi:nis.</div>
@@ -246,6 +251,8 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
         if (profile.role === "admin" || profile.role === "therapeut") {
           const mdCard = document.getElementById("card-meine-dokumente");
           if (mdCard) mdCard.style.display = "block";
+          const belegeCard = document.getElementById("card-belege");
+          if (belegeCard) belegeCard.style.display = "block";
         }
         if (profile.role === "admin" || profile.role === "therapeut" || profile.role === "anbieter") {
           const kalCard = document.getElementById("card-kalender");
@@ -276,7 +283,7 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
           if (profile.role === "therapeut") {
             // Feste Kartenreihenfolge für Therapeut:in
             [
-              "card-selbstdeklaration", "card-my-yoginis", "card-meine-dokumente", "card-kalender", "card-community",
+              "card-selbstdeklaration", "card-my-yoginis", "card-meine-dokumente", "card-belege", "card-kalender", "card-community",
               "card-sequences", "card-flows-db", "card-asanas", "card-pranayama", "card-mantras",
               "card-meine-angaben",
             ].forEach(id => {
