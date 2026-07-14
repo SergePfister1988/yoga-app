@@ -126,11 +126,13 @@ a { color: inherit; text-decoration: none; }
 
       document.getElementById("back-link").href = yogiId ? ("client-file.html?id=" + yogiId) : "meine-dokumente.html";
 
+      let isCancelled = false;
+
       if (documentId) {
         // Bestehendes Dokument laden
         const { data: doc, error } = await supabaseClient
           .from("layout_documents")
-          .select("title, template_id, yogi_id, field_values, invoice_number")
+          .select("title, template_id, yogi_id, field_values, invoice_number, status")
           .eq("id", documentId)
           .single();
         if (error || !doc) {
@@ -143,6 +145,7 @@ a { color: inherit; text-decoration: none; }
         yogiId = doc.yogi_id;
         fieldValues = doc.field_values || {};
         invoiceNumber = doc.invoice_number;
+        isCancelled = doc.status === "cancelled";
         document.getElementById("back-link").href = yogiId ? ("client-file.html?id=" + yogiId) : "meine-dokumente.html";
       }
 
@@ -183,7 +186,18 @@ a { color: inherit; text-decoration: none; }
       }
 
       renderCanvas();
-      document.getElementById("save-btn").addEventListener("click", saveDocument);
+      if (isCancelled) {
+        document.getElementById("save-btn").disabled = true;
+        document.getElementById("save-btn").textContent = "Storniert (nicht bearbeitbar)";
+        document.querySelectorAll("#canvas input, #canvas textarea, #canvas select, #canvas button").forEach(el => { el.disabled = true; });
+        document.getElementById("doc-title").disabled = true;
+        const banner = document.createElement("p");
+        banner.textContent = "Diese Rechnung ist storniert und kann nicht mehr bearbeitet werden. Der PDF-Export bleibt weiterhin möglich.";
+        banner.style.cssText = "background:#F7E7E4; color:var(--color-error); padding:8px 14px; border-radius:3px; font-size:13px; margin:0;";
+        document.querySelector(".top-bar").insertAdjacentElement("afterend", banner);
+      } else {
+        document.getElementById("save-btn").addEventListener("click", saveDocument);
+      }
       document.getElementById("pdf-btn").addEventListener("click", exportPdf);
     }
 
