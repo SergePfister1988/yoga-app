@@ -86,7 +86,34 @@ a { color: inherit; }
       </div>
       <p class="form-message" id="documents-message" style="margin-top:10px;"></p>
     </div>
+
+    <div class="card" id="layout-documents-card">
+      <h2>Layout-Dokumente <span style="font-size:12px; font-weight:400; color: var(--color-text-muted);">(Rechnungen, Briefe etc.)</span></h2>
+      <div class="field">
+        <select id="layout-documents-select" size="8" style="width:100%; padding:6px; font-family: var(--font-body); font-size:14px;"></select>
+      </div>
+      <p style="font-size:12px; color: var(--color-text-muted); margin-top:-8px; margin-bottom:14px;">Doppelklick auf ein Dokument öffnet es.</p>
+      <div class="action-row" style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn-secondary" id="ldoc-create-btn" type="button">Erstellen</button>
+        <button class="btn-secondary" id="ldoc-edit-btn" type="button" disabled>Bearbeiten</button>
+        <button class="btn-secondary" id="ldoc-delete-btn" type="button" disabled style="border-color: var(--color-error); color: var(--color-error);">Löschen</button>
+      </div>
+      <p class="form-message" id="layout-documents-message" style="margin-top:10px;"></p>
+    </div>
   </main>
+
+  <div id="layout-template-modal" style="display:none; position:fixed; inset:0; background:rgba(30,38,34,0.4); align-items:center; justify-content:center; z-index:100;">
+    <div style="background:var(--color-surface); border-radius:4px; padding:24px; width:100%; max-width:380px;">
+      <h2 style="font-family: var(--font-display); font-size:18px; color: var(--color-pine-dark); margin-top:0;">Layout-Vorlage wählen</h2>
+      <div class="field">
+        <select id="layout-template-select" style="width:100%; padding:9px 10px; border:1px solid var(--color-border); border-radius:3px; font-family: var(--font-body); font-size:14px;"></select>
+      </div>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:16px;">
+        <button class="btn-secondary" id="layout-template-cancel-btn" type="button">Abbrechen</button>
+        <button class="btn-primary" id="layout-template-confirm-btn" type="button">Weiter</button>
+      </div>
+    </div>
+  </div>
 
   <div id="template-modal" style="display:none; position:fixed; inset:0; background:rgba(30,38,34,0.4); align-items:center; justify-content:center; z-index:100;">
     <div style="background:var(--color-surface); border-radius:4px; padding:24px; width:100%; max-width:380px;">
@@ -151,6 +178,8 @@ a { color: inherit; }
       }
 
       await loadDocuments();
+      await loadLayoutDocuments();
+      setupLayoutDocuments();
     }
 
     let allDocuments = [];
@@ -194,6 +223,103 @@ a { color: inherit; }
       document.getElementById("doc-edit-btn").disabled = !hasSelection;
       document.getElementById("doc-delete-btn").disabled = !hasSelection;
       document.getElementById("doc-pdf-btn").disabled = !hasSelection;
+    }
+
+    // ------------------------------------------------------------
+    // Layout-Dokumente (Rechnungen, Briefe etc.)
+    // ------------------------------------------------------------
+    let allLayoutDocuments = [];
+
+    async function loadLayoutDocuments() {
+      const { data, error } = await supabaseClient
+        .from("layout_documents")
+        .select("id, title, invoice_number, updated_at")
+        .eq("created_by", currentUserId)
+        .order("updated_at", { ascending: false });
+
+      const selectEl = document.getElementById("layout-documents-select");
+      selectEl.innerHTML = "";
+
+      if (error) {
+        document.getElementById("layout-documents-message").textContent = "Fehler beim Laden: " + error.message;
+        document.getElementById("layout-documents-message").className = "form-message error";
+        return;
+      }
+
+      allLayoutDocuments = data || [];
+      if (!allLayoutDocuments.length) {
+        const opt = document.createElement("option");
+        opt.textContent = "Noch keine Layout-Dokumente vorhanden.";
+        opt.disabled = true;
+        selectEl.appendChild(opt);
+      } else {
+        allLayoutDocuments.forEach(doc => {
+          const opt = document.createElement("option");
+          opt.value = doc.id;
+          const d = new Date(doc.updated_at);
+          const numPart = doc.invoice_number ? ` – ${doc.invoice_number}` : "";
+          opt.textContent = `${doc.title}${numPart} (${d.toLocaleDateString("de-CH")})`;
+          selectEl.appendChild(opt);
+        });
+      }
+      updateLayoutDocumentButtons();
+    }
+
+    function updateLayoutDocumentButtons() {
+      const hasSelection = !!document.getElementById("layout-documents-select").value;
+      document.getElementById("ldoc-edit-btn").disabled = !hasSelection;
+      document.getElementById("ldoc-delete-btn").disabled = !hasSelection;
+    }
+
+    function setupLayoutDocuments() {
+      document.getElementById("layout-documents-select").addEventListener("change", updateLayoutDocumentButtons);
+      document.getElementById("layout-documents-select").addEventListener("dblclick", () => {
+        const id = document.getElementById("layout-documents-select").value;
+        if (id) window.location.href = "layout-document-form.html?id=" + id;
+      });
+      document.getElementById("ldoc-edit-btn").addEventListener("click", () => {
+        const id = document.getElementById("layout-documents-select").value;
+        if (id) window.location.href = "layout-document-form.html?id=" + id;
+      });
+      document.getElementById("ldoc-delete-btn").addEventListener("click", async () => {
+        const id = document.getElementById("layout-documents-select").value;
+        if (!id) return;
+        const doc = allLayoutDocuments.find(d => d.id === id);
+        if (!confirm(`"${doc ? doc.title : "Dokument"}" wirklich löschen?`)) return;
+        const { error } = await supabaseClient.from("layout_documents").delete().eq("id", id);
+        if (error) { alert("Fehler: " + error.message); return; }
+        await loadLayoutDocuments();
+      });
+
+      document.getElementById("ldoc-create-btn").addEventListener("click", async () => {
+        const templateSelect = document.getElementById("layout-template-select");
+        templateSelect.innerHTML = "";
+        const { data: templates, error } = await supabaseClient
+          .from("layout_templates")
+          .select("id, name, category")
+          .order("name");
+        if (error || !templates || !templates.length) {
+          alert("Keine Layout-Vorlagen verfügbar. Lege zuerst eine unter 'Vorlagen verwalten' an.");
+          return;
+        }
+        templates.forEach(t => {
+          const opt = document.createElement("option");
+          opt.value = t.id;
+          opt.textContent = t.name;
+          templateSelect.appendChild(opt);
+        });
+        document.getElementById("layout-template-modal").style.display = "flex";
+      });
+
+      document.getElementById("layout-template-cancel-btn").addEventListener("click", () => {
+        document.getElementById("layout-template-modal").style.display = "none";
+      });
+
+      document.getElementById("layout-template-confirm-btn").addEventListener("click", () => {
+        const templateId = document.getElementById("layout-template-select").value;
+        if (!templateId) return;
+        window.location.href = "layout-document-form.html?templateId=" + templateId;
+      });
     }
 
     document.getElementById("documents-select").addEventListener("change", updateDocumentButtons);
