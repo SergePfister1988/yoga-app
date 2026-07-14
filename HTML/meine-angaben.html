@@ -122,16 +122,6 @@ a { color: inherit; }
       </p>
       <button class="btn-primary" id="save-accounting-btn">Buchhaltung speichern</button>
       <p class="form-message" id="accounting-message"></p>
-
-      <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--color-border);">
-        <label>Nächste Rechnungsnummer</label>
-        <p style="font-size:14px; margin:4px 0 10px 0;" id="next-invoice-number-display">–</p>
-        <button class="btn-secondary" id="reset-counter-btn" type="button">Zähler zurücksetzen</button>
-        <p style="font-size:12px; color: var(--color-text-muted); margin:6px 0 0 0;">
-          Setzt die nächste Rechnungsnummer manuell auf einen von dir gewählten Wert – z.B. nützlich beim Jahreswechsel oder zum Aufräumen nach Testrechnungen.
-        </p>
-        <p class="form-message" id="counter-message"></p>
-      </div>
     </div>
 
     <div class="card">
@@ -223,10 +213,9 @@ a { color: inherit; }
             document.getElementById("invoice-prefix").value = acc.invoice_prefix || "";
             document.getElementById("expense-prefix").value = acc.expense_prefix || "";
           }
-          await loadCounterDisplay(sessionData.session.user.id);
         }
 
-}
+      }
     }
 
     document.getElementById("save-contact-btn").addEventListener("click", async () => {
@@ -284,39 +273,6 @@ a { color: inherit; }
       messageEl.textContent = "Gespeichert.";
       messageEl.className = "form-message success";
       saveBtn.disabled = false;
-    });
-
-    async function loadCounterDisplay(userId) {
-      const { data: counter } = await supabaseClient
-        .from("invoice_counters")
-        .select("next_number")
-        .eq("user_id", userId)
-        .maybeSingle();
-      document.getElementById("next-invoice-number-display").textContent = counter ? counter.next_number : "1 (noch keine Rechnung erstellt)";
-    }
-
-    document.getElementById("reset-counter-btn").addEventListener("click", async () => {
-      const messageEl = document.getElementById("counter-message");
-      const input = prompt("Nächste Rechnungsnummer (nur die Zahl, z.B. 1 für den Neustart):", "1");
-      if (input === null) return;
-      const newValue = parseInt(input, 10);
-      if (isNaN(newValue) || newValue < 1) {
-        messageEl.textContent = "Bitte eine gültige Zahl (mind. 1) eingeben.";
-        messageEl.className = "form-message error";
-        return;
-      }
-      const { data: sessionData } = await supabaseClient.auth.getSession();
-      const { error: counterError } = await supabaseClient
-        .from("invoice_counters")
-        .upsert({ user_id: sessionData.session.user.id, next_number: newValue }, { onConflict: "user_id" });
-      if (counterError) {
-        messageEl.textContent = "Fehler: " + counterError.message;
-        messageEl.className = "form-message error";
-        return;
-      }
-      messageEl.textContent = "Zähler aktualisiert.";
-      messageEl.className = "form-message success";
-      await loadCounterDisplay(sessionData.session.user.id);
     });
 
     document.getElementById("save-password-btn").addEventListener("click", async () => {

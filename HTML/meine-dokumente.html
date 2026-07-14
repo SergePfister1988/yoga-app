@@ -233,7 +233,7 @@ a { color: inherit; }
     async function loadLayoutDocuments() {
       const { data, error } = await supabaseClient
         .from("layout_documents")
-        .select("id, title, invoice_number, status, updated_at")
+        .select("id, title, invoice_number, updated_at")
         .eq("created_by", currentUserId)
         .order("updated_at", { ascending: false });
 
@@ -258,8 +258,7 @@ a { color: inherit; }
           opt.value = doc.id;
           const d = new Date(doc.updated_at);
           const numPart = doc.invoice_number ? ` – ${doc.invoice_number}` : "";
-          const cancelledPart = doc.status === "cancelled" ? " (storniert)" : "";
-          opt.textContent = `${doc.title}${numPart} (${d.toLocaleDateString("de-CH")})${cancelledPart}`;
+          opt.textContent = `${doc.title}${numPart} (${d.toLocaleDateString("de-CH")})`;
           selectEl.appendChild(opt);
         });
       }
@@ -267,17 +266,9 @@ a { color: inherit; }
     }
 
     function updateLayoutDocumentButtons() {
-      const id = document.getElementById("layout-documents-select").value;
-      const doc = allLayoutDocuments.find(d => d.id === id);
-      const hasSelection = !!id;
+      const hasSelection = !!document.getElementById("layout-documents-select").value;
       document.getElementById("ldoc-edit-btn").disabled = !hasSelection;
-      const delBtn = document.getElementById("ldoc-delete-btn");
-      delBtn.disabled = !hasSelection || (doc && doc.status === "cancelled");
-      if (doc && doc.invoice_number) {
-        delBtn.textContent = "Stornieren";
-      } else {
-        delBtn.textContent = "Löschen";
-      }
+      document.getElementById("ldoc-delete-btn").disabled = !hasSelection;
     }
 
     function setupLayoutDocuments() {
@@ -294,20 +285,10 @@ a { color: inherit; }
         const id = document.getElementById("layout-documents-select").value;
         if (!id) return;
         const doc = allLayoutDocuments.find(d => d.id === id);
-
-        if (doc && doc.invoice_number) {
-          // Rechnung: stornieren statt löschen, damit die Nummer verbraucht bleibt
-          if (!confirm(`Rechnung "${doc.title}" (${doc.invoice_number}) wirklich stornieren? Sie bleibt einsehbar, kann aber nicht mehr bearbeitet werden.`)) return;
-          const { error } = await supabaseClient
-            .from("layout_documents")
-            .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
-            .eq("id", id);
-          if (error) { alert("Fehler: " + error.message); return; }
-        } else {
-          if (!confirm(`"${doc ? doc.title : "Dokument"}" wirklich löschen?`)) return;
-          const { error } = await supabaseClient.from("layout_documents").delete().eq("id", id);
-          if (error) { alert("Fehler: " + error.message); return; }
-        }
+        const label = doc && doc.invoice_number ? `Rechnung "${doc.title}" (${doc.invoice_number})` : `"${doc ? doc.title : "Dokument"}"`;
+        if (!confirm(`${label} wirklich löschen? Der Name/die Rechnungsnummer wird danach wieder frei.`)) return;
+        const { error } = await supabaseClient.from("layout_documents").delete().eq("id", id);
+        if (error) { alert("Fehler: " + error.message); return; }
         await loadLayoutDocuments();
       });
 

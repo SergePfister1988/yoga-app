@@ -107,6 +107,27 @@ a { color: inherit; text-decoration: none; }
     let elements = [];
     let fieldValues = {}; // { elementId: value }
     let invoiceNumber = null;
+    let invoiceNumberInputEl = null;
+
+    async function suggestNextInvoiceNumber() {
+      const { data: myProfile } = await supabaseClient.from("profiles").select("invoice_prefix").eq("id", currentUserId).single();
+      const prefix = (myProfile && myProfile.invoice_prefix) || "RE";
+      const year = new Date().getFullYear();
+      const searchPrefix = `${prefix}-${year}-`;
+
+      const { data: existing } = await supabaseClient
+        .from("layout_documents")
+        .select("invoice_number")
+        .like("invoice_number", searchPrefix + "%");
+
+      let maxNum = 0;
+      (existing || []).forEach(row => {
+        const match = row.invoice_number && row.invoice_number.match(/(\d+)$/);
+        if (match) maxNum = Math.max(maxNum, parseInt(match[1], 10));
+      });
+
+      return `${searchPrefix}${String(maxNum + 1).padStart(4, "0")}`;
+    }
 
     async function init() {
       const { data: sessionData } = await supabaseClient.auth.getSession();
@@ -126,13 +147,11 @@ a { color: inherit; text-decoration: none; }
 
       document.getElementById("back-link").href = yogiId ? ("client-file.html?id=" + yogiId) : "meine-dokumente.html";
 
-      let isCancelled = false;
-
       if (documentId) {
         // Bestehendes Dokument laden
         const { data: doc, error } = await supabaseClient
           .from("layout_documents")
-          .select("title, template_id, yogi_id, field_values, invoice_number, status")
+          .select("title, template_id, yogi_id, field_values, invoice_number")
           .eq("id", documentId)
           .single();
         if (error || !doc) {
@@ -145,7 +164,6 @@ a { color: inherit; text-decoration: none; }
         yogiId = doc.yogi_id;
         fieldValues = doc.field_values || {};
         invoiceNumber = doc.invoice_number;
-        isCancelled = doc.status === "cancelled";
         document.getElementById("back-link").href = yogiId ? ("client-file.html?id=" + yogiId) : "meine-dokumente.html";
       }
 
@@ -166,8 +184,14 @@ a { color: inherit; text-decoration: none; }
         return;
       }
       elements = tpl.elements || [];
+      const invoiceEl = elements.find(e => e.type === "field-invoice-number");
+
       if (!documentId && !document.getElementById("doc-title").value) {
-        document.getElementById("doc-title").value = tpl.name;
+        if (invoiceEl) {
+          document.getElementById("doc-title").value = await suggestNextInvoiceNumber();
+        } else {
+          document.getElementById("doc-title").value = tpl.name;
+        }
       }
 
       // Adresse automatisch aus der Yogi:ni-Akte übernehmen (nur bei neuem Dokument, wenn noch nichts gesetzt)
@@ -186,18 +210,10 @@ a { color: inherit; text-decoration: none; }
       }
 
       renderCanvas();
-      if (isCancelled) {
-        document.getElementById("save-btn").disabled = true;
-        document.getElementById("save-btn").textContent = "Storniert (nicht bearbeitbar)";
-        document.querySelectorAll("#canvas input, #canvas textarea, #canvas select, #canvas button").forEach(el => { el.disabled = true; });
-        document.getElementById("doc-title").disabled = true;
-        const banner = document.createElement("p");
-        banner.textContent = "Diese Rechnung ist storniert und kann nicht mehr bearbeitet werden. Der PDF-Export bleibt weiterhin möglich.";
-        banner.style.cssText = "background:#F7E7E4; color:var(--color-error); padding:8px 14px; border-radius:3px; font-size:13px; margin:0;";
-        document.querySelector(".top-bar").insertAdjacentElement("afterend", banner);
-      } else {
-        document.getElementById("save-btn").addEventListener("click", saveDocument);
-      }
+      document.getElementById("doc-title").addEventListener("input", (e) => {
+        if (invoiceNumberInputEl) invoiceNumberInputEl.value = e.target.value;
+      });
+      document.getElementById("save-btn").addEventListener("click", saveDocument);
       document.getElementById("pdf-btn").addEventListener("click", exportPdf);
     }
 
@@ -296,7 +312,8 @@ a { color: inherit; text-decoration: none; }
         input.style.background = "var(--color-bg)";
         input.style.color = "var(--color-pine-dark)";
         input.style.fontWeight = "700";
-        input.value = value || invoiceNumber || "(wird beim Speichern vergeben)";
+        input.value = document.getElementById("doc-title").value || "";
+        invoiceNumberInputEl = input;
         return input;
       }
 
@@ -427,23 +444,9 @@ a { color: inherit; text-decoration: none; }
       }
 
       const invoiceEl = elements.find(e => e.type === "field-invoice-number");
-      if (invoiceEl && !invoiceNumber) {
-        const { data: myProfile } = await supabaseClient.from("profiles").select("invoice_prefix").eq("id", currentUserId).single();
-        if (!myProfile || !myProfile.invoice_prefix) {
-          msgEl.textContent = "Bitte zuerst dein Kürzel für Rechnungen unter 'Meine Angaben' bzw. 'Selbstdeklaration' festlegen.";
-          msgEl.style.color = "var(--color-error)";
-          return;
-        }
-        const { data: nextNum, error: numError } = await supabaseClient.rpc("next_invoice_number");
-        if (numError) {
-          msgEl.textContent = "Fehler beim Vergeben der Rechnungsnummer: " + numError.message;
-          msgEl.style.color = "var(--color-error)";
-          return;
-        }
-        const year = new Date().getFullYear();
-        invoiceNumber = `${myProfile.invoice_prefix}-${year}-${String(nextNum).padStart(4, "0")}`;
+      if (invoiceEl) {
+        invoiceNumber = title;
         fieldValues[invoiceEl.id] = invoiceNumber;
-        renderCanvas(); // Anzeige aktualisieren
       }
 
       const payload = {
@@ -451,7 +454,7 @@ a { color: inherit; text-decoration: none; }
         template_id: templateId,
         yogi_id: yogiId,
         field_values: fieldValues,
-        invoice_number: invoiceNumber,
+        invoice_number: invoiceEl ? invoiceNumber : null,
         updated_at: new Date().toISOString(),
       };
 
@@ -466,7 +469,11 @@ a { color: inherit; text-decoration: none; }
       }
 
       if (error) {
-        msgEl.textContent = "Fehler: " + error.message;
+        if (error.code === "23505" || (error.message && error.message.toLowerCase().includes("duplicate"))) {
+          msgEl.textContent = `Der Name "${title}" ist bereits vergeben. Bitte einen anderen Dokumentnamen/Rechnungsnummer wählen.`;
+        } else {
+          msgEl.textContent = "Fehler: " + error.message;
+        }
         msgEl.style.color = "var(--color-error)";
         return;
       }
