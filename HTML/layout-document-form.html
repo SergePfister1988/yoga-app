@@ -600,18 +600,36 @@ a { color: inherit; text-decoration: none; }
       const totalWeight = (el.columnWidths || el.columns.map(() => 1)).reduce((a, b) => a + b, 0);
       const colWidths = el.columns.map((c, i) => (((el.columnWidths && el.columnWidths[i]) || 1) / totalWeight) * el.w);
       const colX = i => x + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
-      const headerH = el.headerRowHeight || 8;
+      const colAlign = i => (el.columnAligns && el.columnAligns[i]) || "left";
+      const cellAnchorX = i => {
+        const align = colAlign(i);
+        if (align === "center") return colX(i) + colWidths[i] / 2;
+        if (align === "right") return colX(i) + colWidths[i] - 1.5;
+        return colX(i) + 1.5;
+      };
+
+      pdf.setFontSize(9);
+      const lineHeightMm = 9 * 0.353 * 1.15;
+      const cellPaddingV = 2;
+
+      // Kopfzeilen-Text vorab umbrechen, damit die Zeilenanzahl bekannt ist (für Höhe + vertikale Zentrierung)
+      const headerLinesPerCol = el.columns.map((c, i) => pdf.splitTextToSize(String(c), Math.max(colWidths[i] - 3, 8)));
+      const headerMaxLines = Math.max(1, ...headerLinesPerCol.map(l => l.length));
+      const headerH = Math.max(el.headerRowHeight || 8, headerMaxLines * lineHeightMm + cellPaddingV * 2);
       const rowH = el.rowHeight || 7;
       let curY = y;
 
-      pdf.setFontSize(9);
       const [hr, hg, hb] = hexToRgb(el.headerBgColor || "#F5EEE9");
       pdf.setFillColor(hr, hg, hb);
       pdf.rect(x, curY, el.w, headerH, "F");
       const [htr, htg, htb] = hexToRgb(el.headerTextColor || "#3E211D");
       pdf.setTextColor(htr, htg, htb);
       pdf.setFont(undefined, "bold");
-      el.columns.forEach((c, i) => { pdf.text(String(c), colX(i) + 1.5, curY + headerH / 2 + 2); });
+      headerLinesPerCol.forEach((lines, i) => {
+        const blockH = lines.length * lineHeightMm;
+        const startY = curY + (headerH - blockH) / 2 + lineHeightMm * 0.75;
+        pdf.text(lines, cellAnchorX(i), startY, { align: colAlign(i), lineHeightFactor: 1.15 });
+      });
       pdf.setDrawColor(200, 200, 200);
       pdf.rect(x, curY, el.w, headerH);
       el.columns.forEach((c, i) => { if (i > 0) pdf.line(colX(i), curY, colX(i), curY + headerH); });
@@ -626,7 +644,7 @@ a { color: inherit; text-decoration: none; }
         el.columns.forEach((c, i) => {
           if (i > 0) pdf.line(colX(i), curY, colX(i), curY + rowH);
           const val = row[c] || "";
-          pdf.text(String(val), colX(i) + 1.5, curY + rowH / 2 + 2);
+          pdf.text(String(val), cellAnchorX(i), curY + rowH / 2 + 2, { align: colAlign(i) });
         });
         curY += rowH;
       });
