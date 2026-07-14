@@ -149,6 +149,7 @@ a { color: inherit; text-decoration: none; }
 
     const FONT_OPTIONS = [
       "Palatino Linotype", "Work Sans", "Cormorant Garamond", "Alex Brush",
+      "Playfair Display", "Lora", "Roboto", "Caveat",
       "Arial", "Helvetica", "Times New Roman", "Georgia", "Garamond",
       "Book Antiqua", "Verdana", "Tahoma", "Trebuchet MS", "Segoe UI",
       "Calibri", "Cambria", "Courier New", "Lucida Sans",
@@ -508,24 +509,6 @@ a { color: inherit; text-decoration: none; }
 
       let html = "";
 
-      if (el.type === "text" || el.type.startsWith("field-")) {
-        html += `
-          <div class="field"><label>Schriftart</label>
-            <select id="p-fontfamily">
-              <option value="Work Sans" ${el.fontFamily === "Work Sans" ? "selected" : ""}>Work Sans (Standard)</option>
-              <option value="Cormorant Garamond" ${el.fontFamily === "Cormorant Garamond" ? "selected" : ""}>Cormorant Garamond</option>
-              <option value="Alex Brush" ${el.fontFamily === "Alex Brush" ? "selected" : ""}>Alex Brush (Schreibschrift)</option>
-              <option value="Playfair Display" ${el.fontFamily === "Playfair Display" ? "selected" : ""}>Playfair Display</option>
-              <option value="Lora" ${el.fontFamily === "Lora" ? "selected" : ""}>Lora</option>
-              <option value="Roboto" ${el.fontFamily === "Roboto" ? "selected" : ""}>Roboto</option>
-              <option value="Caveat" ${el.fontFamily === "Caveat" ? "selected" : ""}>Caveat (handschriftlich)</option>
-              <option value="Arial" ${el.fontFamily === "Arial" ? "selected" : ""}>Arial</option>
-              <option value="Times New Roman" ${el.fontFamily === "Times New Roman" ? "selected" : ""}>Times New Roman</option>
-              <option value="Courier New" ${el.fontFamily === "Courier New" ? "selected" : ""}>Courier New</option>
-            </select>
-          </div>
-        `;
-      }
       if (el.type === "text") {
         html += `<div class="field"><label>Text</label><textarea id="p-content">${escapeHtml(el.content || "")}</textarea></div>`;
       }
@@ -613,7 +596,6 @@ a { color: inherit; text-decoration: none; }
       bind("p-fontfamily", (e) => { el.fontFamily = e.target.value; updateElDom(el); });
       bind("p-label", (e) => { el.label = e.target.value; updateElDom(el); });
       bind("p-options", (e) => { el.options = e.target.value.split("\n").map(s => s.trim()).filter(Boolean); });
-      bind("p-fontfamily", (e) => { el.fontFamily = e.target.value; updateElDom(el); });
       bind("p-fontsize", (e) => { el.fontSize = parseInt(e.target.value, 10) || 11; updateElDom(el); });
       bind("p-align", (e) => { el.align = e.target.value; updateElDom(el); });
       bind("p-bold", (e) => { el.bold = e.target.checked; updateElDom(el); });
