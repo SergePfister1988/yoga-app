@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Layout-Vorlage – Yoga-App</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&family=Playfair+Display:wght@400;700&family=Lora:wght@400;700&family=Roboto:wght@400;700&family=Caveat&display=swap" rel="stylesheet">
   <style>
 :root {
   --color-bg: #FDFCFB; --color-surface: #FFFFFF; --color-pine: #572E2A; --color-pine-dark: #3E211D;
@@ -202,7 +202,7 @@ a { color: inherit; text-decoration: none; }
         type,
         x: 20, y: 20, w: size.w, h: size.h,
         z: elements.length + 1,
-        fontSize: 11, bold: false, align: "left", color: "#1E2622",
+        fontSize: 11, bold: false, align: "left", color: "#1E2622", fontFamily: "Work Sans",
       };
       if (type === "text") base.content = "Text";
       if (type.startsWith("field-")) base.label = fieldTypeLabel(type);
@@ -210,6 +210,7 @@ a { color: inherit; text-decoration: none; }
       if (type === "table") {
         base.columns = ["Spalte 1", "Spalte 2"];
         base.columnWidths = [1, 1];
+        base.columnAligns = ["left", "left"];
         base.headerRowHeight = 8;
         base.rowHeight = 7;
         base.rowCount = 3;
@@ -303,6 +304,7 @@ a { color: inherit; text-decoration: none; }
         inner.style.fontWeight = el.bold ? "700" : "400";
         inner.style.textAlign = el.align || "left";
         inner.style.color = el.color || "#1E2622";
+        inner.style.fontFamily = `"${el.fontFamily || "Work Sans"}", sans-serif`;
         inner.textContent = el.type === "text" ? (el.content || "") : "🏷 " + (el.label || fieldTypeLabel(el.type));
       } else if (el.type === "table") {
         const totalWeight = (el.columnWidths || el.columns.map(() => 1)).reduce((a, b) => a + b, 0);
@@ -313,10 +315,11 @@ a { color: inherit; text-decoration: none; }
           return `<col style="width:${(w / totalWeight) * 100}%;" />`;
         }).join("");
         const rowCount = Math.max(1, el.rowCount || 3);
+        const aligns = el.columnAligns || (el.columns || []).map(() => "left");
         const bodyRowsHtml = Array.from({ length: rowCount }).map(() =>
-          `<tr style="height:${mm2px(rowH)}px;">${(el.columns || []).map(() => `<td style="background:${el.bodyBgColor || "#FFFFFF"}; color:${el.bodyTextColor || "#1E2622"};">&nbsp;</td>`).join("")}</tr>`
+          `<tr style="height:${mm2px(rowH)}px;">${(el.columns || []).map((c, i) => `<td style="background:${el.bodyBgColor || "#FFFFFF"}; color:${el.bodyTextColor || "#1E2622"}; text-align:${aligns[i] || "left"};">&nbsp;</td>`).join("")}</tr>`
         ).join("");
-        const headerCellsHtml = (el.columns || []).map(c => `<th style="background:${el.headerBgColor || "#F5EEE9"}; color:${el.headerTextColor || "#3E211D"};">${escapeHtml(c)}</th>`).join("");
+        const headerCellsHtml = (el.columns || []).map((c, i) => `<th style="background:${el.headerBgColor || "#F5EEE9"}; color:${el.headerTextColor || "#3E211D"}; text-align:${aligns[i] || "left"};">${escapeHtml(c)}</th>`).join("");
         inner.innerHTML = `<table class="el-table-placeholder" style="width:100%; height:100%; border-collapse:collapse; table-layout:fixed;"><colgroup>${colgroup}</colgroup><thead><tr style="height:${mm2px(headerH)}px;">${headerCellsHtml}</tr></thead><tbody>${bodyRowsHtml}</tbody></table>`;
       } else if (el.type === "line") {
         inner.className = "el-line";
@@ -498,6 +501,24 @@ a { color: inherit; text-decoration: none; }
 
       let html = "";
 
+      if (el.type === "text" || el.type.startsWith("field-")) {
+        html += `
+          <div class="field"><label>Schriftart</label>
+            <select id="p-fontfamily">
+              <option value="Work Sans" ${el.fontFamily === "Work Sans" ? "selected" : ""}>Work Sans (Standard)</option>
+              <option value="Cormorant Garamond" ${el.fontFamily === "Cormorant Garamond" ? "selected" : ""}>Cormorant Garamond</option>
+              <option value="Alex Brush" ${el.fontFamily === "Alex Brush" ? "selected" : ""}>Alex Brush (Schreibschrift)</option>
+              <option value="Playfair Display" ${el.fontFamily === "Playfair Display" ? "selected" : ""}>Playfair Display</option>
+              <option value="Lora" ${el.fontFamily === "Lora" ? "selected" : ""}>Lora</option>
+              <option value="Roboto" ${el.fontFamily === "Roboto" ? "selected" : ""}>Roboto</option>
+              <option value="Caveat" ${el.fontFamily === "Caveat" ? "selected" : ""}>Caveat (handschriftlich)</option>
+              <option value="Arial" ${el.fontFamily === "Arial" ? "selected" : ""}>Arial</option>
+              <option value="Times New Roman" ${el.fontFamily === "Times New Roman" ? "selected" : ""}>Times New Roman</option>
+              <option value="Courier New" ${el.fontFamily === "Courier New" ? "selected" : ""}>Courier New</option>
+            </select>
+          </div>
+        `;
+      }
       if (el.type === "text") {
         html += `<div class="field"><label>Text</label><textarea id="p-content">${escapeHtml(el.content || "")}</textarea></div>`;
       }
@@ -575,6 +596,7 @@ a { color: inherit; text-decoration: none; }
       };
 
       bind("p-content", (e) => { el.content = e.target.value; updateElDom(el); });
+      bind("p-fontfamily", (e) => { el.fontFamily = e.target.value; updateElDom(el); });
       bind("p-label", (e) => { el.label = e.target.value; updateElDom(el); });
       bind("p-options", (e) => { el.options = e.target.value.split("\n").map(s => s.trim()).filter(Boolean); });
       bind("p-fontsize", (e) => { el.fontSize = parseInt(e.target.value, 10) || 11; updateElDom(el); });
@@ -617,6 +639,9 @@ a { color: inherit; text-decoration: none; }
       if (!el.columnWidths || el.columnWidths.length !== (el.columns || []).length) {
         el.columnWidths = (el.columns || []).map((_, i) => (el.columnWidths && el.columnWidths[i]) || 1);
       }
+      if (!el.columnAligns || el.columnAligns.length !== (el.columns || []).length) {
+        el.columnAligns = (el.columns || []).map((_, i) => (el.columnAligns && el.columnAligns[i]) || "left");
+      }
       function draw() {
         wrap.innerHTML = "";
         (el.columns || []).forEach((col, idx) => {
@@ -625,14 +650,22 @@ a { color: inherit; text-decoration: none; }
           row.innerHTML = `
             <input type="text" value="${escapeHtml(col)}" style="flex:2;" />
             <input type="number" value="${el.columnWidths[idx] || 1}" min="1" max="20" step="0.5" style="flex:1;" title="Relative Breite" />
+            <select style="flex:1;" title="Ausrichtung">
+              <option value="left" ${el.columnAligns[idx] === "left" ? "selected" : ""}>Links</option>
+              <option value="center" ${el.columnAligns[idx] === "center" ? "selected" : ""}>Mitte</option>
+              <option value="right" ${el.columnAligns[idx] === "right" ? "selected" : ""}>Rechts</option>
+            </select>
             <button type="button" class="btn-secondary" style="padding:4px 8px;">✕</button>
           `;
           const inputs = row.querySelectorAll("input");
+          const select = row.querySelector("select");
           inputs[0].addEventListener("input", (e) => { el.columns[idx] = e.target.value; updateElDom(el); });
           inputs[1].addEventListener("input", (e) => { el.columnWidths[idx] = parseFloat(e.target.value) || 1; updateElDom(el); });
+          select.addEventListener("change", (e) => { el.columnAligns[idx] = e.target.value; updateElDom(el); });
           row.querySelector("button").addEventListener("click", () => {
             el.columns.splice(idx, 1);
             el.columnWidths.splice(idx, 1);
+            el.columnAligns.splice(idx, 1);
             draw();
             updateElDom(el);
           });
@@ -643,8 +676,10 @@ a { color: inherit; text-decoration: none; }
       document.getElementById("p-add-col").onclick = () => {
         el.columns = el.columns || [];
         el.columnWidths = el.columnWidths || [];
+        el.columnAligns = el.columnAligns || [];
         el.columns.push("Neue Spalte");
         el.columnWidths.push(1);
+        el.columnAligns.push("left");
         draw();
         updateElDom(el);
       };
