@@ -111,6 +111,7 @@ a { color: inherit; text-decoration: none; }
       <button class="tool-btn" data-add="line">Linie</button>
       <h3 style="margin-top:18px;">Formularfelder</h3>
       <button class="tool-btn" data-add="field-text">Feld: Freitext</button>
+      <button class="tool-btn" data-add="field-address">Feld: Adresse</button>
       <button class="tool-btn" data-add="field-date">Feld: Datum</button>
       <button class="tool-btn" data-add="field-boolean">Feld: Ja/Nein</button>
       <button class="tool-btn" data-add="field-select">Feld: Auswahl</button>
@@ -187,6 +188,7 @@ a { color: inherit; text-decoration: none; }
       image: { w: 30, h: 20 },
       line: { w: 60, h: 2 },
       "field-text": { w: 60, h: 10 },
+      "field-address": { w: 65, h: 22 },
       "field-date": { w: 35, h: 10 },
       "field-boolean": { w: 35, h: 10 },
       "field-select": { w: 45, h: 10 },
@@ -214,6 +216,7 @@ a { color: inherit; text-decoration: none; }
     function fieldTypeLabel(type) {
       return {
         "field-text": "Freitext-Feld",
+        "field-address": "Adresse",
         "field-date": "Datum",
         "field-boolean": "Ja/Nein",
         "field-select": "Auswahl",
@@ -485,6 +488,9 @@ a { color: inherit; text-decoration: none; }
       }
       if (el.type.startsWith("field-")) {
         html += `<div class="field"><label>Beschriftung</label><input type="text" id="p-label" value="${escapeHtml(el.label || "")}" /></div>`;
+      }
+      if (el.type === "field-address") {
+        html += `<p style="font-size:12px; color: var(--color-text-muted); margin:-6px 0 12px 0;">Wird beim Ausfüllen automatisch mit der Adresse aus der Yogi:ni-Akte befüllt, falls das Dokument über eine Akte erstellt wird und dort eine Adresse hinterlegt ist. Sonst erscheint ein leeres Freitextfeld.</p>`;
       }
       if (el.type === "field-select") {
         html += `<div class="field"><label>Optionen (eine pro Zeile)</label><textarea id="p-options">${escapeHtml((el.options || []).join("\n"))}</textarea></div>`;
