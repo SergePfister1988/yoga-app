@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Layout-Vorlage – Yoga-App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --color-bg: #FDFCFB; --color-surface: #FFFFFF; --color-pine: #572E2A; --color-pine-dark: #3E211D;
+  --color-sand: #DBAEA4; --color-sand-dark: #C08F84; --color-text: #1E2622; --color-text-muted: #5B6660;
+  --color-border: #DBDFD5; --color-error: #A6483A;
+  --font-display: "Cormorant Garamond", Georgia, serif; --font-script: "Alex Brush", cursive; --font-body: "Work Sans", "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-body); background-color: var(--color-bg); color: var(--color-text); min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+.app-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+.nav-links { display: flex; gap: 20px; margin-left: 32px; flex-wrap: wrap; }
+.nav-links a { font-size: 14px; color: var(--color-text-muted); font-weight: 600; }
+.nav-links a.active, .nav-links a:hover { color: var(--color-pine); }
+.header-left { display: flex; align-items: center; flex-wrap: wrap; }
+.role-badge { display: inline-block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; background: var(--color-sand); color: #fff; margin-left: 10px; }
+.btn-primary { padding: 9px 16px; background: var(--color-sand); color: #fff; border: none; border-radius: 3px; font-size: 14px; font-family: var(--font-body); font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--color-sand-dark); }
+.btn-secondary { padding: 7px 14px; background: transparent; color: var(--color-pine-dark); border: 1px solid var(--color-border); border-radius: 3px; font-size: 13px; font-family: var(--font-body); cursor: pointer; }
+.btn-secondary:hover { border-color: var(--color-pine); }
+.btn-danger { padding: 7px 14px; background: transparent; color: var(--color-error); border: 1px solid var(--color-error); border-radius: 3px; font-size: 13px; font-family: var(--font-body); cursor: pointer; }
+.top-bar { display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); flex-wrap: wrap; }
+.top-bar input[type=text] { padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); }
+.top-bar select { padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); }
+.editor-layout { display: flex; gap: 0; align-items: flex-start; }
+.toolbox { width: 190px; flex-shrink: 0; padding: 16px 14px; border-right: 1px solid var(--color-border); background: var(--color-surface); min-height: calc(100vh - 110px); }
+.toolbox h3 { font-family: var(--font-display); font-size: 14px; color: var(--color-pine-dark); margin: 0 0 10px 0; }
+.tool-btn { display: block; width: 100%; text-align: left; padding: 9px 10px; margin-bottom: 6px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 3px; font-size: 13px; font-family: var(--font-body); color: var(--color-text); cursor: pointer; }
+.tool-btn:hover { border-color: var(--color-sand-dark); }
+.canvas-wrap { flex: 1; display: flex; justify-content: center; padding: 32px; overflow: auto; background: #ECEAE6; min-height: calc(100vh - 110px); }
+.a4-canvas { position: relative; width: 630px; height: 891px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.15); flex-shrink: 0; }
+.el { position: absolute; border: 1px dashed transparent; cursor: move; overflow: hidden; padding: 2px; }
+.el.selected { border-color: var(--color-pine); }
+.el .resize-handle { position: absolute; right: -6px; bottom: -6px; width: 12px; height: 12px; background: var(--color-pine); border-radius: 50%; cursor: nwse-resize; display: none; }
+.el.selected .resize-handle { display: block; }
+.el .el-delete { position: absolute; top: -12px; right: -12px; width: 20px; height: 20px; background: var(--color-error); color: #fff; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; line-height: 1; }
+.el.selected .el-delete { display: flex; }
+.el-content-text { font-size: 12px; line-height: 1.3; white-space: pre-wrap; width: 100%; height: 100%; }
+.el-field-label { font-size: 11px; color: var(--color-pine); background: rgba(219,174,164,0.15); width: 100%; height: 100%; display: flex; align-items: center; padding: 2px 4px; border: 1px dashed var(--color-sand-dark); }
+.el-table-placeholder { width: 100%; height: 100%; border: 1px solid var(--color-border); font-size: 10px; }
+.el-table-placeholder th, .el-table-placeholder td { border: 1px solid var(--color-border); padding: 2px 4px; }
+.el-line { width: 100%; height: 100%; }
+.el-image-placeholder { width: 100%; height: 100%; background: var(--color-bg); border: 1px dashed var(--color-border); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--color-text-muted); }
+.el-image-placeholder img { max-width: 100%; max-height: 100%; }
+.props-panel { width: 260px; flex-shrink: 0; padding: 16px 18px; border-left: 1px solid var(--color-border); background: var(--color-surface); min-height: calc(100vh - 110px); }
+.props-panel h3 { font-family: var(--font-display); font-size: 14px; color: var(--color-pine-dark); margin: 0 0 12px 0; }
+.props-panel .field { margin-bottom: 12px; }
+.props-panel label { display: block; font-size: 12px; color: var(--color-text-muted); margin-bottom: 4px; }
+.props-panel input, .props-panel select, .props-panel textarea { width: 100%; padding: 7px 8px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 13px; font-family: var(--font-body); }
+.props-panel textarea { resize: vertical; min-height: 50px; }
+.props-row { display: flex; gap: 8px; }
+.props-row > .field { flex: 1; }
+.checkbox-row { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.checkbox-row input { width: auto; }
+.col-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
+.col-row input { flex: 1; }
+.empty-props { color: var(--color-text-muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-left">
+      <nav class="nav-links">
+        <a href="dokumentvorlagen.html">← Vorlagen verwalten</a>
+      </nav>
+      <span class="role-badge" id="role-badge" style="display:none;"></span>
+    </div>
+    <button class="btn-secondary" id="logout-btn">Ausloggen</button>
+  </header>
+
+  <div class="top-bar">
+    <input type="text" id="template-name" placeholder="Name der Vorlage" style="min-width:220px;" />
+    <select id="template-category">
+      <option value="rechnung">Rechnung</option>
+      <option value="brief">Brief</option>
+      <option value="sonstiges" selected>Sonstiges</option>
+    </select>
+    <div style="flex:1;"></div>
+    <button class="btn-secondary" id="bring-front-btn" disabled>Nach vorne</button>
+    <button class="btn-secondary" id="send-back-btn" disabled>Nach hinten</button>
+    <button class="btn-primary" id="save-template-btn">Speichern</button>
+    <p id="save-message" style="font-size:13px; margin:0;"></p>
+  </div>
+
+  <div class="editor-layout">
+    <div class="toolbox">
+      <h3>Element hinzufügen</h3>
+      <button class="tool-btn" data-add="text">Text</button>
+      <button class="tool-btn" data-add="table">Tabelle</button>
+      <button class="tool-btn" data-add="image">Bild / Logo</button>
+      <button class="tool-btn" data-add="line">Linie</button>
+      <h3 style="margin-top:18px;">Formularfelder</h3>
+      <button class="tool-btn" data-add="field-text">Feld: Freitext</button>
+      <button class="tool-btn" data-add="field-date">Feld: Datum</button>
+      <button class="tool-btn" data-add="field-boolean">Feld: Ja/Nein</button>
+      <button class="tool-btn" data-add="field-select">Feld: Auswahl</button>
+      <button class="tool-btn" data-add="field-history">Feld: Verlauf</button>
+    </div>
+
+    <div class="canvas-wrap">
+      <div class="a4-canvas" id="canvas"></div>
+    </div>
+
+    <div class="props-panel" id="props-panel">
+      <h3>Eigenschaften</h3>
+      <p class="empty-props" id="props-empty">Element auswählen, um Eigenschaften zu bearbeiten.</p>
+      <div id="props-content" style="display:none;"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://yqklyumvybthkzlbsspj.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable__DLVShYfXjf0C27LLK1zbg_5vpFcxJy";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function roleLabel(role, gender) {
+      if (role === "admin") return "Admin";
+      if (role === "therapeut") return gender === "frau" ? "Therapeutin" : gender === "mann" ? "Therapeut" : "Therapeut:in";
+      return role;
+    }
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str || "";
+      return div.innerHTML;
+    }
+    function uid() { return "el_" + Math.random().toString(36).slice(2, 10); }
+
+    // ------------------------------------------------------------
+    // Massstab: 1mm = SCALE px. A4 = 210 x 297mm.
+    // ------------------------------------------------------------
+    const SCALE = 3;
+    const PAGE_W_MM = 210;
+    const PAGE_H_MM = 297;
+    const mm2px = mm => mm * SCALE;
+    const px2mm = px => px / SCALE;
+
+    let templateId = new URLSearchParams(window.location.search).get("id");
+    let elements = []; // { id, type, x, y, w, h, z, ...typeProps }
+    let selectedId = null;
+    let currentUserId = null;
+
+    const DEFAULT_SIZE = {
+      text: { w: 60, h: 12 },
+      table: { w: 170, h: 40 },
+      image: { w: 30, h: 20 },
+      line: { w: 60, h: 2 },
+      "field-text": { w: 60, h: 10 },
+      "field-date": { w: 35, h: 10 },
+      "field-boolean": { w: 35, h: 10 },
+      "field-select": { w: 45, h: 10 },
+      "field-history": { w: 170, h: 40 },
+    };
+
+    function defaultElement(type) {
+      const size = DEFAULT_SIZE[type] || { w: 50, h: 12 };
+      const base = {
+        id: uid(),
+        type,
+        x: 20, y: 20, w: size.w, h: size.h,
+        z: elements.length + 1,
+        fontSize: 11, bold: false, align: "left", color: "#1E2622",
+      };
+      if (type === "text") base.content = "Text";
+      if (type.startsWith("field-")) base.label = fieldTypeLabel(type);
+      if (type === "field-select") base.options = ["Option 1", "Option 2"];
+      if (type === "table") base.columns = ["Spalte 1", "Spalte 2"];
+      if (type === "line") { base.thickness = 1; base.color = "#1E2622"; }
+      if (type === "image") base.imagePath = null;
+      return base;
+    }
+
+    function fieldTypeLabel(type) {
+      return {
+        "field-text": "Freitext-Feld",
+        "field-date": "Datum",
+        "field-boolean": "Ja/Nein",
+        "field-select": "Auswahl",
+        "field-history": "Verlauf",
+      }[type] || type;
+    }
+
+    async function init() {
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      if (!sessionData.session) { window.location.href = "index.html"; return; }
+      currentUserId = sessionData.session.user.id;
+
+      const { data: profile } = await supabaseClient.from("profiles").select("role, gender").eq("id", currentUserId).single();
+      if (!profile || profile.role !== "admin") {
+        alert("Diese Seite ist nur für Admins.");
+        window.location.href = "dashboard.html";
+        return;
+      }
+      const badge = document.getElementById("role-badge");
+      badge.textContent = roleLabel(profile.role, profile.gender);
+      badge.style.display = "inline-block";
+
+      if (templateId) {
+        const { data: tpl, error } = await supabaseClient
+          .from("layout_templates")
+          .select("name, category, elements")
+          .eq("id", templateId)
+          .single();
+        if (error || !tpl) {
+          alert("Vorlage nicht gefunden.");
+          window.location.href = "dokumentvorlagen.html";
+          return;
+        }
+        document.getElementById("template-name").value = tpl.name;
+        document.getElementById("template-category").value = tpl.category;
+        elements = tpl.elements || [];
+      }
+
+      renderCanvas();
+      setupToolbox();
+      setupSaveAndOrder();
+    }
+
+    // ------------------------------------------------------------
+    // Canvas rendering
+    // ------------------------------------------------------------
+    function renderCanvas() {
+      const canvas = document.getElementById("canvas");
+      canvas.innerHTML = "";
+      elements
+        .slice()
+        .sort((a, b) => a.z - b.z)
+        .forEach(el => canvas.appendChild(buildElementDom(el)));
+      renderProps();
+    }
+
+    function buildElementDom(el) {
+      const div = document.createElement("div");
+      div.className = "el" + (el.id === selectedId ? " selected" : "");
+      div.dataset.id = el.id;
+      div.style.left = mm2px(el.x) + "px";
+      div.style.top = mm2px(el.y) + "px";
+      div.style.width = mm2px(el.w) + "px";
+      div.style.height = mm2px(el.h) + "px";
+      div.style.zIndex = el.z;
+
+      div.innerHTML = `<div class="el-delete" title="Löschen">✕</div><div class="resize-handle"></div>`;
+      const inner = document.createElement("div");
+
+      if (el.type === "text" || el.type.startsWith("field-")) {
+        inner.className = el.type === "text" ? "el-content-text" : "el-field-label";
+        inner.style.fontSize = (el.fontSize || 11) + "px";
+        inner.style.fontWeight = el.bold ? "700" : "400";
+        inner.style.textAlign = el.align || "left";
+        inner.style.color = el.color || "#1E2622";
+        inner.textContent = el.type === "text" ? (el.content || "") : "🏷 " + (el.label || fieldTypeLabel(el.type));
+      } else if (el.type === "table") {
+        inner.innerHTML = `<table class="el-table-placeholder" style="width:100%; border-collapse:collapse;"><thead><tr>${(el.columns || []).map(c => `<th>${escapeHtml(c)}</th>`).join("")}</tr></thead><tbody><tr>${(el.columns || []).map(() => `<td>&nbsp;</td>`).join("")}</tr></tbody></table>`;
+      } else if (el.type === "line") {
+        inner.className = "el-line";
+        inner.style.borderTop = `${el.thickness || 1}px solid ${el.color || "#1E2622"}`;
+        inner.style.marginTop = (mm2px(el.h) / 2) + "px";
+      } else if (el.type === "image") {
+        inner.className = "el-image-placeholder";
+        if (el.imagePath) {
+          const { data: pub } = supabaseClient.storage.from("asana-media").getPublicUrl(el.imagePath);
+          inner.innerHTML = `<img src="${pub.publicUrl}" />`;
+        } else {
+          inner.textContent = "Bild / Logo";
+        }
+      }
+      div.appendChild(inner);
+
+      div.querySelector(".el-delete").addEventListener("click", (e) => {
+        e.stopPropagation();
+        elements = elements.filter(x => x.id !== el.id);
+        if (selectedId === el.id) selectedId = null;
+        renderCanvas();
+      });
+
+      div.addEventListener("mousedown", (e) => {
+        if (e.target.classList.contains("resize-handle") || e.target.classList.contains("el-delete")) return;
+        selectElement(el.id);
+        startDrag(e, el);
+      });
+
+      div.querySelector(".resize-handle").addEventListener("mousedown", (e) => {
+        e.stopPropagation();
+        selectElement(el.id);
+        startResize(e, el);
+      });
+
+      return div;
+    }
+
+    function selectElement(id) {
+      selectedId = id;
+      document.querySelectorAll(".el").forEach(d => d.classList.toggle("selected", d.dataset.id === id));
+      document.getElementById("bring-front-btn").disabled = !id;
+      document.getElementById("send-back-btn").disabled = !id;
+      renderProps();
+    }
+
+    document.getElementById("canvas").addEventListener("mousedown", (e) => {
+      if (e.target.id === "canvas") { selectElement(null); }
+    });
+
+    // ------------------------------------------------------------
+    // Drag & Resize
+    // ------------------------------------------------------------
+    function startDrag(e, el) {
+      e.preventDefault();
+      const startX = e.clientX, startY = e.clientY;
+      const origX = el.x, origY = el.y;
+
+      function onMove(ev) {
+        const dxMm = px2mm(ev.clientX - startX);
+        const dyMm = px2mm(ev.clientY - startY);
+        el.x = Math.max(0, Math.min(PAGE_W_MM - el.w, origX + dxMm));
+        el.y = Math.max(0, Math.min(PAGE_H_MM - el.h, origY + dyMm));
+        const dom = document.querySelector(`.el[data-id="${el.id}"]`);
+        if (dom) { dom.style.left = mm2px(el.x) + "px"; dom.style.top = mm2px(el.y) + "px"; }
+      }
+      function onUp() {
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+      }
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    }
+
+    function startResize(e, el) {
+      e.preventDefault();
+      const startX = e.clientX, startY = e.clientY;
+      const origW = el.w, origH = el.h;
+
+      function onMove(ev) {
+        const dwMm = px2mm(ev.clientX - startX);
+        const dhMm = px2mm(ev.clientY - startY);
+        el.w = Math.max(8, Math.min(PAGE_W_MM - el.x, origW + dwMm));
+        el.h = Math.max(6, Math.min(PAGE_H_MM - el.y, origH + dhMm));
+        const dom = document.querySelector(`.el[data-id="${el.id}"]`);
+        if (dom) { dom.style.width = mm2px(el.w) + "px"; dom.style.height = mm2px(el.h) + "px"; }
+      }
+      function onUp() {
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        renderProps();
+      }
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    }
+
+    // ------------------------------------------------------------
+    // Toolbox: Elemente hinzufügen
+    // ------------------------------------------------------------
+    function setupToolbox() {
+      document.querySelectorAll(".tool-btn[data-add]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const el = defaultElement(btn.dataset.add);
+          elements.push(el);
+          selectedId = el.id;
+          renderCanvas();
+        });
+      });
+    }
+
+    // ------------------------------------------------------------
+    // Ebenen (einfach: nach vorne / nach hinten)
+    // ------------------------------------------------------------
+    function setupSaveAndOrder() {
+      document.getElementById("bring-front-btn").addEventListener("click", () => {
+        if (!selectedId) return;
+        const maxZ = Math.max(0, ...elements.map(e => e.z));
+        const el = elements.find(e => e.id === selectedId);
+        el.z = maxZ + 1;
+        renderCanvas();
+      });
+      document.getElementById("send-back-btn").addEventListener("click", () => {
+        if (!selectedId) return;
+        const minZ = Math.min(0, ...elements.map(e => e.z));
+        const el = elements.find(e => e.id === selectedId);
+        el.z = minZ - 1;
+        renderCanvas();
+      });
+
+      document.getElementById("save-template-btn").addEventListener("click", saveTemplate);
+    }
+
+    async function saveTemplate() {
+      const msgEl = document.getElementById("save-message");
+      const name = document.getElementById("template-name").value.trim();
+      const category = document.getElementById("template-category").value;
+
+      if (!name) {
+        msgEl.textContent = "Bitte einen Namen eingeben.";
+        msgEl.style.color = "var(--color-error)";
+        return;
+      }
+
+      const payload = { name, category, elements, updated_at: new Date().toISOString() };
+      let error;
+      if (templateId) {
+        ({ error } = await supabaseClient.from("layout_templates").update(payload).eq("id", templateId));
+      } else {
+        payload.created_by = currentUserId;
+        const { data, error: insertError } = await supabaseClient.from("layout_templates").insert(payload).select("id").single();
+        error = insertError;
+        if (!error && data) { templateId = data.id; history.replaceState(null, "", "?id=" + templateId); }
+      }
+
+      if (error) {
+        msgEl.textContent = "Fehler: " + error.message;
+        msgEl.style.color = "var(--color-error)";
+        return;
+      }
+      msgEl.textContent = "Gespeichert.";
+      msgEl.style.color = "var(--color-pine)";
+    }
+
+    // ------------------------------------------------------------
+    // Eigenschaften-Panel
+    // ------------------------------------------------------------
+    function renderProps() {
+      const emptyEl = document.getElementById("props-empty");
+      const contentEl = document.getElementById("props-content");
+      const el = elements.find(e => e.id === selectedId);
+
+      if (!el) {
+        emptyEl.style.display = "block";
+        contentEl.style.display = "none";
+        return;
+      }
+      emptyEl.style.display = "none";
+      contentEl.style.display = "block";
+
+      let html = "";
+
+      if (el.type === "text") {
+        html += `<div class="field"><label>Text</label><textarea id="p-content">${escapeHtml(el.content || "")}</textarea></div>`;
+      }
+      if (el.type.startsWith("field-")) {
+        html += `<div class="field"><label>Beschriftung</label><input type="text" id="p-label" value="${escapeHtml(el.label || "")}" /></div>`;
+      }
+      if (el.type === "field-select") {
+        html += `<div class="field"><label>Optionen (eine pro Zeile)</label><textarea id="p-options">${escapeHtml((el.options || []).join("\n"))}</textarea></div>`;
+      }
+      if (el.type === "table") {
+        html += `<div class="field"><label>Spalten</label><div id="p-columns"></div><button type="button" class="btn-secondary" id="p-add-col" style="width:100%; margin-top:4px;">+ Spalte</button></div>`;
+      }
+      if (el.type === "image") {
+        html += `<div class="field"><label>Bild hochladen</label><input type="file" id="p-image" accept="image/*" /></div>`;
+      }
+      if (el.type === "line") {
+        html += `<div class="field"><label>Dicke (px)</label><input type="number" id="p-thickness" value="${el.thickness || 1}" min="1" max="10" /></div>`;
+      }
+      if (el.type === "text" || el.type.startsWith("field-")) {
+        html += `
+          <div class="props-row">
+            <div class="field"><label>Schriftgrösse</label><input type="number" id="p-fontsize" value="${el.fontSize || 11}" min="6" max="48" /></div>
+            <div class="field"><label>Ausrichtung</label>
+              <select id="p-align">
+                <option value="left" ${el.align === "left" ? "selected" : ""}>Links</option>
+                <option value="center" ${el.align === "center" ? "selected" : ""}>Mitte</option>
+                <option value="right" ${el.align === "right" ? "selected" : ""}>Rechts</option>
+              </select>
+            </div>
+          </div>
+          <div class="field checkbox-row"><input type="checkbox" id="p-bold" ${el.bold ? "checked" : ""} /><label style="margin:0;">Fett</label></div>
+        `;
+      }
+      if (el.type === "text" || el.type.startsWith("field-") || el.type === "line") {
+        html += `<div class="field"><label>Farbe</label><input type="color" id="p-color" value="${el.color || "#1E2622"}" /></div>`;
+      }
+
+      html += `
+        <div class="props-row" style="margin-top:16px;">
+          <div class="field"><label>X (mm)</label><input type="number" id="p-x" value="${Math.round(el.x)}" /></div>
+          <div class="field"><label>Y (mm)</label><input type="number" id="p-y" value="${Math.round(el.y)}" /></div>
+        </div>
+        <div class="props-row">
+          <div class="field"><label>Breite (mm)</label><input type="number" id="p-w" value="${Math.round(el.w)}" /></div>
+          <div class="field"><label>Höhe (mm)</label><input type="number" id="p-h" value="${Math.round(el.h)}" /></div>
+        </div>
+      `;
+
+      contentEl.innerHTML = html;
+      wirePropsEvents(el);
+    }
+
+    function wirePropsEvents(el) {
+      const bind = (id, handler) => {
+        const node = document.getElementById(id);
+        if (node) node.addEventListener("input", handler);
+      };
+
+      bind("p-content", (e) => { el.content = e.target.value; updateElDom(el); });
+      bind("p-label", (e) => { el.label = e.target.value; updateElDom(el); });
+      bind("p-options", (e) => { el.options = e.target.value.split("\n").map(s => s.trim()).filter(Boolean); });
+      bind("p-fontsize", (e) => { el.fontSize = parseInt(e.target.value, 10) || 11; updateElDom(el); });
+      bind("p-align", (e) => { el.align = e.target.value; updateElDom(el); });
+      bind("p-bold", (e) => { el.bold = e.target.checked; updateElDom(el); });
+      bind("p-color", (e) => { el.color = e.target.value; updateElDom(el); });
+      bind("p-thickness", (e) => { el.thickness = parseInt(e.target.value, 10) || 1; updateElDom(el); });
+
+      bind("p-x", (e) => { el.x = Math.max(0, parseFloat(e.target.value) || 0); updateElDom(el); });
+      bind("p-y", (e) => { el.y = Math.max(0, parseFloat(e.target.value) || 0); updateElDom(el); });
+      bind("p-w", (e) => { el.w = Math.max(8, parseFloat(e.target.value) || 8); updateElDom(el); });
+      bind("p-h", (e) => { el.h = Math.max(6, parseFloat(e.target.value) || 6); updateElDom(el); });
+
+      if (el.type === "table") renderColumnEditor(el);
+
+      const imageInput = document.getElementById("p-image");
+      if (imageInput) {
+        imageInput.addEventListener("change", async () => {
+          const file = imageInput.files[0];
+          if (!file) return;
+          const safeName = file.name.replace(/[^a-zA-Z0-9.\-]/g, "_");
+          const path = `layout-templates/${Date.now()}_${safeName}`;
+          const { error } = await supabaseClient.storage.from("asana-media").upload(path, file);
+          if (error) { alert("Fehler beim Hochladen: " + error.message); return; }
+          el.imagePath = path;
+          renderCanvas();
+        });
+      }
+    }
+
+    function renderColumnEditor(el) {
+      const wrap = document.getElementById("p-columns");
+      function draw() {
+        wrap.innerHTML = "";
+        (el.columns || []).forEach((col, idx) => {
+          const row = document.createElement("div");
+          row.className = "col-row";
+          row.innerHTML = `<input type="text" value="${escapeHtml(col)}" /><button type="button" class="btn-secondary" style="padding:4px 8px;">✕</button>`;
+          row.querySelector("input").addEventListener("input", (e) => { el.columns[idx] = e.target.value; updateElDom(el); });
+          row.querySelector("button").addEventListener("click", () => { el.columns.splice(idx, 1); draw(); updateElDom(el); });
+          wrap.appendChild(row);
+        });
+      }
+      draw();
+      document.getElementById("p-add-col").onclick = () => {
+        el.columns = el.columns || [];
+        el.columns.push("Neue Spalte");
+        draw();
+        updateElDom(el);
+      };
+    }
+
+    function updateElDom(el) {
+      const dom = document.querySelector(`.el[data-id="${el.id}"]`);
+      if (!dom) return;
+      const newDom = buildElementDom(el);
+      dom.replaceWith(newDom);
+    }
+
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+      window.location.href = "index.html";
+    });
+
+    init();
+  </script>
+</body>
+</html>
