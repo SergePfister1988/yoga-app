@@ -207,7 +207,17 @@ a { color: inherit; text-decoration: none; }
       if (type === "text") base.content = "Text";
       if (type.startsWith("field-")) base.label = fieldTypeLabel(type);
       if (type === "field-select") base.options = ["Option 1", "Option 2"];
-      if (type === "table") { base.columns = ["Spalte 1", "Spalte 2"]; base.columnWidths = [1, 1]; base.headerRowHeight = 8; base.rowHeight = 7; }
+      if (type === "table") {
+        base.columns = ["Spalte 1", "Spalte 2"];
+        base.columnWidths = [1, 1];
+        base.headerRowHeight = 8;
+        base.rowHeight = 7;
+        base.rowCount = 3;
+        base.headerBgColor = "#F5EEE9";
+        base.headerTextColor = "#3E211D";
+        base.bodyBgColor = "#FFFFFF";
+        base.bodyTextColor = "#1E2622";
+      }
       if (type === "line") { base.thickness = 1; base.color = "#1E2622"; }
       if (type === "image") base.imagePath = null;
       return base;
@@ -302,7 +312,12 @@ a { color: inherit; text-decoration: none; }
           const w = ((el.columnWidths && el.columnWidths[i]) || 1);
           return `<col style="width:${(w / totalWeight) * 100}%;" />`;
         }).join("");
-        inner.innerHTML = `<table class="el-table-placeholder" style="width:100%; height:100%; border-collapse:collapse; table-layout:fixed;"><colgroup>${colgroup}</colgroup><thead><tr style="height:${mm2px(headerH)}px;">${(el.columns || []).map(c => `<th>${escapeHtml(c)}</th>`).join("")}</tr></thead><tbody><tr style="height:${mm2px(rowH)}px;">${(el.columns || []).map(() => `<td>&nbsp;</td>`).join("")}</tr></tbody></table>`;
+        const rowCount = Math.max(1, el.rowCount || 3);
+        const bodyRowsHtml = Array.from({ length: rowCount }).map(() =>
+          `<tr style="height:${mm2px(rowH)}px;">${(el.columns || []).map(() => `<td style="background:${el.bodyBgColor || "#FFFFFF"}; color:${el.bodyTextColor || "#1E2622"};">&nbsp;</td>`).join("")}</tr>`
+        ).join("");
+        const headerCellsHtml = (el.columns || []).map(c => `<th style="background:${el.headerBgColor || "#F5EEE9"}; color:${el.headerTextColor || "#3E211D"};">${escapeHtml(c)}</th>`).join("");
+        inner.innerHTML = `<table class="el-table-placeholder" style="width:100%; height:100%; border-collapse:collapse; table-layout:fixed;"><colgroup>${colgroup}</colgroup><thead><tr style="height:${mm2px(headerH)}px;">${headerCellsHtml}</tr></thead><tbody>${bodyRowsHtml}</tbody></table>`;
       } else if (el.type === "line") {
         inner.className = "el-line";
         inner.style.borderTop = `${el.thickness || 1}px solid ${el.color || "#1E2622"}`;
@@ -502,6 +517,15 @@ a { color: inherit; text-decoration: none; }
             <div class="field"><label>Kopfzeile Höhe (mm)</label><input type="number" id="p-header-h" value="${el.headerRowHeight || 8}" min="4" max="30" /></div>
             <div class="field"><label>Zeilenhöhe (mm)</label><input type="number" id="p-row-h" value="${el.rowHeight || 7}" min="4" max="30" /></div>
           </div>
+          <div class="field"><label>Anzahl Zeilen (ohne Kopfzeile)</label><input type="number" id="p-row-count" value="${el.rowCount || 3}" min="1" max="40" /></div>
+          <div class="props-row">
+            <div class="field"><label>Kopf: Hintergrund</label><input type="color" id="p-header-bg" value="${el.headerBgColor || "#F5EEE9"}" /></div>
+            <div class="field"><label>Kopf: Text</label><input type="color" id="p-header-text" value="${el.headerTextColor || "#3E211D"}" /></div>
+          </div>
+          <div class="props-row">
+            <div class="field"><label>Zellen: Hintergrund</label><input type="color" id="p-body-bg" value="${el.bodyBgColor || "#FFFFFF"}" /></div>
+            <div class="field"><label>Zellen: Text</label><input type="color" id="p-body-text" value="${el.bodyTextColor || "#1E2622"}" /></div>
+          </div>
         `;
       }
       if (el.type === "image") {
@@ -560,6 +584,11 @@ a { color: inherit; text-decoration: none; }
       bind("p-thickness", (e) => { el.thickness = parseInt(e.target.value, 10) || 1; updateElDom(el); });
       bind("p-header-h", (e) => { el.headerRowHeight = parseFloat(e.target.value) || 8; updateElDom(el); });
       bind("p-row-h", (e) => { el.rowHeight = parseFloat(e.target.value) || 7; updateElDom(el); });
+      bind("p-row-count", (e) => { el.rowCount = Math.max(1, parseInt(e.target.value, 10) || 1); updateElDom(el); });
+      bind("p-header-bg", (e) => { el.headerBgColor = e.target.value; updateElDom(el); });
+      bind("p-header-text", (e) => { el.headerTextColor = e.target.value; updateElDom(el); });
+      bind("p-body-bg", (e) => { el.bodyBgColor = e.target.value; updateElDom(el); });
+      bind("p-body-text", (e) => { el.bodyTextColor = e.target.value; updateElDom(el); });
 
       bind("p-x", (e) => { el.x = Math.max(0, parseFloat(e.target.value) || 0); updateElDom(el); });
       bind("p-y", (e) => { el.y = Math.max(0, parseFloat(e.target.value) || 0); updateElDom(el); });
