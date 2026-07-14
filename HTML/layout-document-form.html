@@ -171,13 +171,13 @@ a { color: inherit; text-decoration: none; }
       if (yogiId) {
         const addressEl = elements.find(e => e.type === "field-address");
         if (addressEl && (fieldValues[addressEl.id] === undefined || fieldValues[addressEl.id] === "")) {
-          const { data: file } = await supabaseClient
-            .from("client_files")
-            .select("address")
-            .eq("yogi_id", yogiId)
-            .maybeSingle();
+          const [{ data: file }, { data: yogiProfile }] = await Promise.all([
+            supabaseClient.from("client_files").select("address").eq("yogi_id", yogiId).maybeSingle(),
+            supabaseClient.from("profiles").select("first_name, last_name").eq("id", yogiId).single(),
+          ]);
           if (file && file.address) {
-            fieldValues[addressEl.id] = file.address;
+            const fullName = yogiProfile ? [yogiProfile.first_name, yogiProfile.last_name].filter(Boolean).join(" ") : "";
+            fieldValues[addressEl.id] = fullName ? `${fullName}\n${file.address}` : file.address;
           }
         }
       }
@@ -528,7 +528,7 @@ a { color: inherit; text-decoration: none; }
           const [r, g, b] = hexToRgb(el.color || "#1E2622");
           pdf.setTextColor(r, g, b);
           const lines = pdf.splitTextToSize(el.content || "", el.w);
-          pdf.text(lines, x, y + (el.fontSize || 11) * 0.35, { align: el.align || "left" });
+          drawAlignedText(pdf, lines, el, x, y);
         } else if (el.type === "line") {
           const [r, g, b] = hexToRgb(el.color || "#1E2622");
           pdf.setDrawColor(r, g, b);
@@ -556,7 +556,7 @@ a { color: inherit; text-decoration: none; }
           else if (el.type === "field-invoice-number") text = val || invoiceNumber || "";
           else text = val || "";
           const lines = pdf.splitTextToSize(String(text), el.w);
-          pdf.text(lines, x, y + (el.fontSize || 11) * 0.35, { align: el.align || "left" });
+          drawAlignedText(pdf, lines, el, x, y);
         }
         pdf.setTextColor(0);
       }
@@ -630,6 +630,24 @@ a { color: inherit; text-decoration: none; }
         });
         curY += rowH;
       });
+    }
+
+    function drawAlignedText(pdf, lines, el, x, y) {
+      const fontSize = el.fontSize || 11;
+      const lineHeightMm = fontSize * 0.353 * 1.15; // pt -> mm, mit Zeilenabstand
+
+      // Horizontale Ankerposition: jsPDF erwartet je nach align die linke/mittlere/rechte Kante
+      let anchorX = x;
+      if (el.align === "center") anchorX = x + el.w / 2;
+      else if (el.align === "right") anchorX = x + el.w;
+
+      // Vertikale Ausrichtung: Textblock oben/Mitte/unten im Element positionieren
+      const blockHeight = lines.length * lineHeightMm;
+      let startY = y + fontSize * 0.35; // Standard: oben
+      if (el.vAlign === "middle") startY = y + (el.h - blockHeight) / 2 + fontSize * 0.35;
+      else if (el.vAlign === "bottom") startY = y + el.h - blockHeight + fontSize * 0.35;
+
+      pdf.text(lines, anchorX, startY, { align: el.align || "left", lineHeightFactor: 1.15 });
     }
 
     function hexToRgb(hex) {
