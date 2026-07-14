@@ -147,6 +147,13 @@ a { color: inherit; text-decoration: none; }
     }
     function uid() { return "el_" + Math.random().toString(36).slice(2, 10); }
 
+    const FONT_OPTIONS = [
+      "Palatino Linotype", "Work Sans", "Cormorant Garamond", "Alex Brush",
+      "Arial", "Helvetica", "Times New Roman", "Georgia", "Garamond",
+      "Book Antiqua", "Verdana", "Tahoma", "Trebuchet MS", "Segoe UI",
+      "Calibri", "Cambria", "Courier New", "Lucida Sans",
+    ];
+
     // ------------------------------------------------------------
     // Massstab: 1mm = SCALE px. A4 = 210 x 297mm.
     // ------------------------------------------------------------
@@ -557,6 +564,13 @@ a { color: inherit; text-decoration: none; }
       }
       if (el.type === "text" || el.type.startsWith("field-")) {
         html += `
+          <div class="field">
+            <label>Schriftart</label>
+            <input type="text" id="p-fontfamily" list="font-options" value="${escapeHtml(el.fontFamily || "Work Sans")}" placeholder="Schriftart eingeben …" />
+            <datalist id="font-options">
+              ${FONT_OPTIONS.map(f => `<option value="${f}">`).join("")}
+            </datalist>
+          </div>
           <div class="props-row">
             <div class="field"><label>Schriftgrösse</label><input type="number" id="p-fontsize" value="${el.fontSize || 11}" min="6" max="48" /></div>
             <div class="field"><label>Ausrichtung</label>
@@ -599,6 +613,7 @@ a { color: inherit; text-decoration: none; }
       bind("p-fontfamily", (e) => { el.fontFamily = e.target.value; updateElDom(el); });
       bind("p-label", (e) => { el.label = e.target.value; updateElDom(el); });
       bind("p-options", (e) => { el.options = e.target.value.split("\n").map(s => s.trim()).filter(Boolean); });
+      bind("p-fontfamily", (e) => { el.fontFamily = e.target.value; updateElDom(el); });
       bind("p-fontsize", (e) => { el.fontSize = parseInt(e.target.value, 10) || 11; updateElDom(el); });
       bind("p-align", (e) => { el.align = e.target.value; updateElDom(el); });
       bind("p-bold", (e) => { el.bold = e.target.checked; updateElDom(el); });
