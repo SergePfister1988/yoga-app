@@ -37,7 +37,11 @@ a { color: inherit; text-decoration: none; }
 .tool-btn:hover { border-color: var(--color-sand-dark); }
 .canvas-wrap { flex: 1; display: flex; justify-content: center; padding: 32px; overflow: auto; background: #ECEAE6; min-height: calc(100vh - 110px); }
 .a4-canvas { position: relative; width: 630px; height: 891px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.15); flex-shrink: 0; }
-.el { position: absolute; border: 1px dashed transparent; cursor: move; overflow: hidden; padding: 2px; }
+.a4-canvas.grid-on { background-image: linear-gradient(to right, #E3E0DA 1px, transparent 1px), linear-gradient(to bottom, #E3E0DA 1px, transparent 1px); }
+.el { position: absolute; border: 1px dashed transparent; cursor: move; padding: 2px; }
+.el-content-text { overflow: hidden; }
+.el-table-placeholder { overflow: hidden; }
+.el-image-placeholder { overflow: hidden; }
 .el.selected { border-color: var(--color-pine); }
 .el .resize-handle { position: absolute; right: -6px; bottom: -6px; width: 12px; height: 12px; background: var(--color-pine); border-radius: 50%; cursor: nwse-resize; display: none; }
 .el.selected .resize-handle { display: block; }
@@ -84,6 +88,14 @@ a { color: inherit; text-decoration: none; }
       <option value="sonstiges" selected>Sonstiges</option>
     </select>
     <div style="flex:1;"></div>
+    <label style="display:flex; align-items:center; gap:6px; font-size:13px;">
+      <input type="checkbox" id="grid-toggle" style="width:auto;" /> Raster
+    </label>
+    <select id="grid-size" style="padding:6px 8px; font-size:13px;">
+      <option value="2">2 mm</option>
+      <option value="5" selected>5 mm</option>
+      <option value="10">10 mm</option>
+    </select>
     <button class="btn-secondary" id="bring-front-btn" disabled>Nach vorne</button>
     <button class="btn-secondary" id="send-back-btn" disabled>Nach hinten</button>
     <button class="btn-primary" id="save-template-btn">Speichern</button>
@@ -147,6 +159,27 @@ a { color: inherit; text-decoration: none; }
     let elements = []; // { id, type, x, y, w, h, z, ...typeProps }
     let selectedId = null;
     let currentUserId = null;
+    let gridEnabled = false;
+    let gridSize = 5;
+
+    function snapToGrid(value) {
+      if (!gridEnabled) return value;
+      return Math.round(value / gridSize) * gridSize;
+    }
+
+    document.getElementById("grid-toggle").addEventListener("change", (e) => {
+      gridEnabled = e.target.checked;
+      document.getElementById("canvas").classList.toggle("grid-on", gridEnabled);
+      updateGridBackgroundSize();
+    });
+    document.getElementById("grid-size").addEventListener("change", (e) => {
+      gridSize = parseInt(e.target.value, 10);
+      updateGridBackgroundSize();
+    });
+    function updateGridBackgroundSize() {
+      const px = mm2px(gridSize);
+      document.getElementById("canvas").style.backgroundSize = `${px}px ${px}px`;
+    }
 
     const DEFAULT_SIZE = {
       text: { w: 60, h: 12 },
@@ -222,6 +255,7 @@ a { color: inherit; text-decoration: none; }
       renderCanvas();
       setupToolbox();
       setupSaveAndOrder();
+      updateGridBackgroundSize();
     }
 
     // ------------------------------------------------------------
@@ -319,8 +353,8 @@ a { color: inherit; text-decoration: none; }
       function onMove(ev) {
         const dxMm = px2mm(ev.clientX - startX);
         const dyMm = px2mm(ev.clientY - startY);
-        el.x = Math.max(0, Math.min(PAGE_W_MM - el.w, origX + dxMm));
-        el.y = Math.max(0, Math.min(PAGE_H_MM - el.h, origY + dyMm));
+        el.x = snapToGrid(Math.max(0, Math.min(PAGE_W_MM - el.w, origX + dxMm)));
+        el.y = snapToGrid(Math.max(0, Math.min(PAGE_H_MM - el.h, origY + dyMm)));
         const dom = document.querySelector(`.el[data-id="${el.id}"]`);
         if (dom) { dom.style.left = mm2px(el.x) + "px"; dom.style.top = mm2px(el.y) + "px"; }
       }
@@ -340,8 +374,8 @@ a { color: inherit; text-decoration: none; }
       function onMove(ev) {
         const dwMm = px2mm(ev.clientX - startX);
         const dhMm = px2mm(ev.clientY - startY);
-        el.w = Math.max(8, Math.min(PAGE_W_MM - el.x, origW + dwMm));
-        el.h = Math.max(6, Math.min(PAGE_H_MM - el.y, origH + dhMm));
+        el.w = snapToGrid(Math.max(8, Math.min(PAGE_W_MM - el.x, origW + dwMm)));
+        el.h = snapToGrid(Math.max(6, Math.min(PAGE_H_MM - el.y, origH + dhMm)));
         const dom = document.querySelector(`.el[data-id="${el.id}"]`);
         if (dom) { dom.style.width = mm2px(el.w) + "px"; dom.style.height = mm2px(el.h) + "px"; }
       }
