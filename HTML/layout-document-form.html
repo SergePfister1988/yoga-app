@@ -101,6 +101,7 @@ a { color: inherit; text-decoration: none; }
     let documentId = qs.get("id");
     let templateId = qs.get("templateId");
     let yogiId = qs.get("yogiId") || null;
+    let titleFromQuery = qs.get("title") || null;
 
     let currentUserId = null;
     let currentUserRole = null;
@@ -187,7 +188,9 @@ a { color: inherit; text-decoration: none; }
       const invoiceEl = elements.find(e => e.type === "field-invoice-number");
 
       if (!documentId && !document.getElementById("doc-title").value) {
-        if (invoiceEl) {
+        if (titleFromQuery) {
+          document.getElementById("doc-title").value = titleFromQuery;
+        } else if (invoiceEl) {
           document.getElementById("doc-title").value = await suggestNextInvoiceNumber();
         } else {
           document.getElementById("doc-title").value = tpl.name;

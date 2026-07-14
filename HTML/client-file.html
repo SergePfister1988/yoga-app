@@ -447,12 +447,13 @@ if (profile.role === "admin" || profile.role === "therapeut") {
         templateSelect.innerHTML = "";
         const { data: templates, error } = await supabaseClient
           .from("layout_templates")
-          .select("id, name, category")
+          .select("id, name, category, elements")
           .order("name");
         if (error || !templates || !templates.length) {
           alert("Keine Layout-Vorlagen verfügbar. Lege zuerst eine unter 'Vorlagen verwalten' an.");
           return;
         }
+        allLayoutTemplatesCache = templates;
         templates.forEach(t => {
           const opt = document.createElement("option");
           opt.value = t.id;
@@ -466,11 +467,45 @@ if (profile.role === "admin" || profile.role === "therapeut") {
         document.getElementById("layout-template-modal").style.display = "none";
       });
 
-      document.getElementById("layout-template-confirm-btn").addEventListener("click", () => {
+      document.getElementById("layout-template-confirm-btn").addEventListener("click", async () => {
         const templateId = document.getElementById("layout-template-select").value;
         if (!templateId) return;
-        window.location.href = "layout-document-form.html?templateId=" + templateId + "&yogiId=" + yogiId;
+        const template = (allLayoutTemplatesCache || []).find(t => t.id === templateId);
+        const hasInvoiceNumber = template && (template.elements || []).some(e => e.type === "field-invoice-number");
+
+        let titleParam = "";
+        if (hasInvoiceNumber) {
+          const suggestion = await suggestNextInvoiceNumberFor(currentUserId);
+          const chosen = prompt("Dokumentname / Rechnungsnummer:", suggestion);
+          if (chosen === null) return;
+          if (!chosen.trim()) { alert("Bitte einen Namen eingeben."); return; }
+          titleParam = "&title=" + encodeURIComponent(chosen.trim());
+        }
+
+        window.location.href = "layout-document-form.html?templateId=" + templateId + "&yogiId=" + yogiId + titleParam;
       });
+    }
+
+    let allLayoutTemplatesCache = [];
+
+    async function suggestNextInvoiceNumberFor(userId) {
+      const { data: myProfile } = await supabaseClient.from("profiles").select("invoice_prefix").eq("id", userId).single();
+      const prefix = (myProfile && myProfile.invoice_prefix) || "RE";
+      const year = new Date().getFullYear();
+      const searchPrefix = `${prefix}-${year}-`;
+
+      const { data: existing } = await supabaseClient
+        .from("layout_documents")
+        .select("invoice_number")
+        .like("invoice_number", searchPrefix + "%");
+
+      let maxNum = 0;
+      (existing || []).forEach(row => {
+        const match = row.invoice_number && row.invoice_number.match(/(\d+)$/);
+        if (match) maxNum = Math.max(maxNum, parseInt(match[1], 10));
+      });
+
+      return `${searchPrefix}${String(maxNum + 1).padStart(4, "0")}`;
     }
 
     document.getElementById("documents-select").addEventListener("change", updateDocumentButtons);
