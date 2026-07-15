@@ -80,6 +80,7 @@ h1 { font-family: var(--font-display); color: var(--color-pine-dark); margin: 4p
       <nav class="nav-links">
         <a href="dashboard.html">Dashboard</a>
 
+        <a href="verwaltung.html" id="nav-verwaltung" style="display:none;">Verwaltung</a>
         <a href="users.html" id="nav-users" style="display:none;">Benutzer</a>
       </nav>
       <span class="role-badge" id="role-badge" style="display:none;"></span>
@@ -141,6 +142,10 @@ h1 { font-family: var(--font-display); color: var(--color-pine-dark); margin: 4p
         const badge = document.getElementById("role-badge");
         badge.textContent = roleLabel(profile.role, profile.gender);
         badge.style.display = "inline-block";
+        if (profile.role === "admin" || profile.role === "therapeut") {
+          const nv = document.getElementById("nav-verwaltung");
+          if (nv) nv.style.display = "inline";
+        }
         if (profile.role === "admin") {
           const nu = document.getElementById("nav-users");
           if (nu) nu.style.display = "inline";

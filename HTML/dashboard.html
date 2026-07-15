@@ -73,6 +73,7 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
       <nav class="nav-links">
         <a href="dashboard.html" class="active">Dashboard</a>
 
+        <a href="verwaltung.html" id="nav-verwaltung" style="display:none;">Verwaltung</a>
         <a href="users.html" id="nav-users" style="display:none;">Benutzer</a>
       </nav>
       <span class="role-badge" id="role-badge" style="display:none;"></span>
@@ -116,24 +117,9 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
         <div class="desc">Deine zugewiesenen Yogi:nis: Akte, Freigaben und zugewiesene Sequenzen auf einen Blick.</div>
       </a>
 
-      <a href="meine-dokumente.html" class="card-link" id="card-meine-dokumente" style="display:none;">
-        <div class="title">Dokumente</div>
-        <div class="desc">Eigene Dokumente auf Basis der Vorlagen erstellen und verwalten.</div>
-      </a>
-
-      <a href="belege.html" class="card-link" id="card-belege" style="display:none;">
-        <div class="title">Belege</div>
-        <div class="desc">Ausgaben erfassen: Foto, Betrag, Firma und Kategorie – für die Buchhaltung.</div>
-      </a>
-
       <a href="meine-therapeuten.html" class="card-link" id="card-meine-therapeuten" style="display:none;">
         <div class="title">Meine Therapeut:innen</div>
         <div class="desc">Übersicht aller Therapeut:innen mit Status und betreuten Yogi:nis.</div>
-      </a>
-
-      <a href="dokumentvorlagen.html" class="card-link" id="card-dokumentvorlagen" style="display:none;">
-        <div class="title">Vorlagen verwalten</div>
-        <div class="desc">Dokumentenvorlagen für Benutzerdokumente erstellen und anpassen.</div>
       </a>
 
       <a href="client-file.html" class="card-link" id="card-myfile" style="display:none;">
@@ -236,23 +222,17 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
         const badge = document.getElementById("role-badge");
         badge.textContent = roleLabel(profile.role, profile.gender);
         badge.style.display = "inline-block";
+        if (profile.role === "admin" || profile.role === "therapeut") {
+          const nv = document.getElementById("nav-verwaltung");
+          if (nv) nv.style.display = "inline";
+        }
         if (profile.role === "admin") {
           const nu = document.getElementById("nav-users");
           if (nu) nu.style.display = "inline";
         }
-        if (profile.role === "anbieter") {
-          }
         if (profile.role === "admin") {
           const mtCard = document.getElementById("card-meine-therapeuten");
           if (mtCard) mtCard.style.display = "block";
-          const dvCard = document.getElementById("card-dokumentvorlagen");
-          if (dvCard) dvCard.style.display = "block";
-        }
-        if (profile.role === "admin" || profile.role === "therapeut") {
-          const mdCard = document.getElementById("card-meine-dokumente");
-          if (mdCard) mdCard.style.display = "block";
-          const belegeCard = document.getElementById("card-belege");
-          if (belegeCard) belegeCard.style.display = "block";
         }
         if (profile.role === "admin" || profile.role === "therapeut" || profile.role === "anbieter") {
           const kalCard = document.getElementById("card-kalender");
@@ -283,7 +263,7 @@ body { margin: 0; font-family: var(--font-body); background-color: var(--color-b
           if (profile.role === "therapeut") {
             // Feste Kartenreihenfolge für Therapeut:in
             [
-              "card-selbstdeklaration", "card-my-yoginis", "card-meine-dokumente", "card-belege", "card-kalender", "card-community",
+              "card-selbstdeklaration", "card-my-yoginis", "card-kalender", "card-community",
               "card-sequences", "card-flows-db", "card-asanas", "card-pranayama", "card-mantras",
               "card-meine-angaben",
             ].forEach(id => {
