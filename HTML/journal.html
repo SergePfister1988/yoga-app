@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Journal – Yoga-App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --color-bg: #FDFCFB; --color-surface: #FFFFFF; --color-pine: #572E2A; --color-pine-dark: #3E211D;
+  --color-sand: #DBAEA4; --color-sand-dark: #C08F84; --color-text: #1E2622; --color-text-muted: #5B6660;
+  --color-border: #DBDFD5; --color-error: #A6483A; --color-green: #3E6B4F;
+  --font-display: "Cormorant Garamond", Georgia, serif; --font-script: "Alex Brush", cursive; --font-body: "Work Sans", "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-body); background-color: var(--color-bg); color: var(--color-text); min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+.app-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+.nav-links { display: flex; gap: 20px; margin-left: 32px; flex-wrap: wrap; }
+.nav-links a { font-size: 14px; color: var(--color-text-muted); font-weight: 600; }
+.nav-links a.active, .nav-links a:hover { color: var(--color-pine); }
+.header-left { display: flex; align-items: center; flex-wrap: wrap; }
+.role-badge { display: inline-block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; background: var(--color-sand); color: #fff; margin-left: 10px; }
+.btn-primary { padding: 11px 20px; background: var(--color-sand); color: #fff; border: none; border-radius: 3px; font-size: 15px; font-family: var(--font-body); font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--color-sand-dark); }
+.btn-secondary { padding: 8px 16px; background: transparent; color: var(--color-pine-dark); border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); cursor: pointer; }
+.btn-secondary:hover { border-color: var(--color-pine); }
+.btn-secondary.active-tab { background: var(--color-pine-dark); color: #fff; border-color: var(--color-pine-dark); }
+.btn-danger { padding: 6px 12px; background: transparent; color: var(--color-error); border: 1px solid var(--color-error); border-radius: 3px; font-size: 13px; font-family: var(--font-body); cursor: pointer; }
+.app-main { padding: 32px; max-width: 800px; margin: 0 auto; }
+.app-main h1 { font-family: var(--font-display); color: var(--color-pine-dark); margin-top: 8px; margin-bottom: 20px; }
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 22px 24px; margin-bottom: 18px; }
+.card h2 { font-family: var(--font-display); font-size: 16px; color: var(--color-pine-dark); margin: 0 0 14px 0; }
+.field { margin-bottom: 16px; }
+.field:last-child { margin-bottom: 0; }
+.field label { display: block; font-size: 13px; color: var(--color-text-muted); margin-bottom: 5px; }
+.field input, .field select, .field textarea {
+  width: 100%; padding: 10px 11px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 14px; font-family: var(--font-body); background: var(--color-bg);
+}
+.two-col { display: flex; gap: 16px; }
+.two-col .field { flex: 1; }
+.form-message { font-size: 13px; margin-top: 10px; }
+.form-message.error { color: var(--color-error); }
+.form-message.success { color: var(--color-pine); }
+.empty-state { color: var(--color-text-muted); font-size: 14px; text-align: center; padding: 20px 0; }
+.entry-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border-bottom: 1px solid var(--color-border); padding: 12px 0; }
+.entry-row:last-child { border-bottom: none; }
+.entry-main { flex: 1; min-width: 0; }
+.entry-amount.einnahme { color: var(--color-green); font-weight: 600; }
+.entry-amount.ausgabe { color: var(--color-error); font-weight: 600; }
+.entry-meta { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; }
+.entry-note { font-size: 13px; margin-top: 4px; }
+.filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-bar select, .filter-bar input { padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 3px; font-size: 13px; font-family: var(--font-body); background: var(--color-surface); }
+.filter-bar input[type=text] { flex: 1; min-width: 160px; }
+.tab-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.direction-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+.totals-summary { display: flex; gap: 20px; flex-wrap: wrap; font-size: 14px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--color-border); }
+.totals-summary .item { flex: 1; min-width: 140px; }
+.totals-summary .label { color: var(--color-text-muted); font-size: 12px; }
+.totals-summary .value { font-weight: 700; font-size: 16px; color: var(--color-pine-dark); }
+.eversports-badge { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 3px; background: var(--color-sand); color: #fff; margin-left: 6px; vertical-align: middle; }
+@media (max-width: 640px) {
+  .app-header { flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+  .nav-links { margin-left: 0; gap: 14px; }
+  .app-main { padding: 20px 16px; }
+  .two-col { flex-direction: column; gap: 0; }
+  .btn-primary { width: 100%; padding: 14px; font-size: 16px; }
+}
+.brand-banner { background: linear-gradient(135deg, #C08F84 0%, #E3C4BC 55%, #EBD3CC 100%); display: flex; justify-content: center; align-items: center; padding: 10px 20px; }
+.brand-lockup { display: inline-flex; flex-direction: column; align-items: flex-end; text-decoration: none; line-height: 1; }
+.brand-script { font-family: var(--font-script); font-weight: 400; font-size: 44px; color: var(--color-pine-dark); }
+.brand-serif { font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--color-pine-dark); margin-top: -6px; letter-spacing: 0.01em; }
+@media (max-width: 640px) { .brand-banner { padding: 8px 16px; } .brand-script { font-size: 32px; } .brand-serif { font-size: 14px; } }
+  </style>
+</head>
+<body>
+  <div class="brand-banner"><a href="dashboard.html" class="brand-lockup"><span class="brand-script">Pandora</span><span class="brand-serif">Community Bern</span></a></div>
+  <header class="app-header">
+    <div class="header-left">
+      <nav class="nav-links">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="verwaltung.html" class="active">Verwaltung</a>
+        <a href="users.html" id="nav-users" style="display:none;">Benutzer</a>
+      </nav>
+      <span class="role-badge" id="role-badge" style="display:none;"></span>
+    </div>
+    <button class="btn-secondary" id="logout-btn">Ausloggen</button>
+  </header>
+
+  <main class="app-main">
+    <a href="verwaltung.html" class="btn-secondary" style="margin-bottom: 10px;">← Zurück zur Verwaltung</a>
+    <h1>Journal</h1>
+
+    <div class="card">
+      <div class="tab-row">
+        <button class="btn-secondary active-tab" id="tab-manual" type="button">Buchung erfassen</button>
+        <button class="btn-secondary" id="tab-eversports" type="button">Eversports-Abrechnung</button>
+      </div>
+
+      <div id="panel-manual">
+        <h2 id="form-heading">Neue Buchung</h2>
+        <div class="direction-toggle">
+          <button type="button" class="btn-secondary active-tab" id="dir-einnahme" data-dir="einnahme">Einnahme</button>
+          <button type="button" class="btn-secondary" id="dir-ausgabe" data-dir="ausgabe">Ausgabe</button>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label for="entry-date">Datum</label>
+            <input type="date" id="entry-date" />
+          </div>
+          <div class="field">
+            <label for="entry-amount">Betrag (CHF)</label>
+            <input type="number" id="entry-amount" step="0.01" min="0" placeholder="0.00" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="entry-counterparty">Debitor / Kreditor</label>
+          <input type="text" id="entry-counterparty" placeholder="z.B. Twint, Sarah Muster, Loeb …" />
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label for="entry-category">Kategorie</label>
+            <select id="entry-category"></select>
+          </div>
+          <div class="field">
+            <label for="entry-payment">Zahlungsmittel</label>
+            <select id="entry-payment">
+              <option value="bank">Bank</option>
+              <option value="kasse">Kasse (bar)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="entry-note">Notiz</label>
+          <textarea id="entry-note" rows="2" placeholder="optional"></textarea>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-primary" id="save-entry-btn">Buchung speichern</button>
+          <button class="btn-secondary" id="cancel-edit-btn" type="button" style="display:none;">Abbrechen</button>
+        </div>
+        <p class="form-message" id="entry-message"></p>
+      </div>
+
+      <div id="panel-eversports" style="display:none;">
+        <h2>Eversports-Abrechnung erfassen</h2>
+        <p style="font-size:13px; color: var(--color-text-muted); margin-top:-6px;">
+          Erstellt automatisch zwei verknüpfte Buchungen: den Bruttoumsatz als Einnahme und die Kommission als Ausgabe.
+        </p>
+        <div class="field">
+          <label for="ev-date">Datum der Abrechnung</label>
+          <input type="date" id="ev-date" />
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label for="ev-gross">Bruttoumsatz (CHF)</label>
+            <input type="number" id="ev-gross" step="0.01" min="0" placeholder="0.00" />
+          </div>
+          <div class="field">
+            <label for="ev-commission">Kommission/Gebühren (CHF)</label>
+            <input type="number" id="ev-commission" step="0.01" min="0" placeholder="0.00" />
+          </div>
+        </div>
+        <p style="font-size:13px; color: var(--color-text-muted);">Auszahlungsbetrag (netto): <strong id="ev-net">CHF 0.00</strong></p>
+        <div class="field">
+          <label for="ev-note">Notiz</label>
+          <input type="text" id="ev-note" placeholder="z.B. Eversports Juli 2026" />
+        </div>
+        <button class="btn-primary" id="save-eversports-btn">Abrechnung erfassen</button>
+        <p class="form-message" id="eversports-message"></p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Buchungen</h2>
+      <div class="filter-bar">
+        <input type="text" id="filter-search" placeholder="Suche in Notiz/Debitor-Kreditor …" />
+        <select id="filter-direction">
+          <option value="">Einnahmen & Ausgaben</option>
+          <option value="einnahme">Nur Einnahmen</option>
+          <option value="ausgabe">Nur Ausgaben</option>
+        </select>
+        <select id="filter-month">
+          <option value="">Ganzes Jahr</option>
+          <option value="01">Januar</option><option value="02">Februar</option><option value="03">März</option>
+          <option value="04">April</option><option value="05">Mai</option><option value="06">Juni</option>
+          <option value="07">Juli</option><option value="08">August</option><option value="09">September</option>
+          <option value="10">Oktober</option><option value="11">November</option><option value="12">Dezember</option>
+        </select>
+      </div>
+      <div id="entry-list"></div>
+      <p class="empty-state" id="entry-empty" style="display:none;">Noch keine Buchungen erfasst.</p>
+      <div class="totals-summary">
+        <div class="item"><div class="label">Einnahmen</div><div class="value" id="total-einnahmen">CHF 0.00</div></div>
+        <div class="item"><div class="label">Ausgaben</div><div class="value" id="total-ausgaben">CHF 0.00</div></div>
+        <div class="item"><div class="label">Saldo</div><div class="value" id="total-saldo">CHF 0.00</div></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://yqklyumvybthkzlbsspj.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable__DLVShYfXjf0C27LLK1zbg_5vpFcxJy";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const CATEGORIES_EINNAHME = {
+      arbeit_warenverkauf: "Einnahmen Arbeit/Warenverkauf",
+      verrechnung: "Einnahmen aus Verrechnung",
+      provisionen: "Provisionen",
+      eversports: "Eversports-Einnahmen",
+      sonstige_einnahmen: "Sonstige Einnahmen",
+    };
+    const CATEGORIES_AUSGABE = {
+      uebrige_unkosten: "Übrige Geschäftsunkosten",
+      autokosten: "Autokosten",
+      ausbildung: "Ausbildungskosten",
+      ausgleichskasse: "Ausgleichskasse (AHV)",
+      miete_wohnung: "Mietkostenanteil Wohnung",
+      personalaufwand: "Personalaufwand",
+      ahv_bvg: "AHV/BVG-Beiträge",
+      abschreibungen: "Abschreibungen",
+      warenverkauf: "Warenverkauf-Ausgaben",
+      plattformgebuehren: "Plattformgebühren (z.B. Eversports)",
+      sonstiges: "Sonstiges",
+    };
+    const ALL_CATEGORY_LABELS = { ...CATEGORIES_EINNAHME, ...CATEGORIES_AUSGABE };
+
+    function roleLabel(role, gender) {
+      if (role === "admin") return "Admin";
+      if (role === "therapeut") return gender === "frau" ? "Therapeutin" : gender === "mann" ? "Therapeut" : "Therapeut:in";
+      return role;
+    }
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str || "";
+      return div.innerHTML;
+    }
+    function formatCHF(n) {
+      return "CHF " + Number(n || 0).toLocaleString("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    let currentUserId = null;
+    let editingId = null;
+    let currentDirection = "einnahme";
+    let allEntries = [];
+
+    async function init() {
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      if (!sessionData.session) { window.location.href = "index.html"; return; }
+      currentUserId = sessionData.session.user.id;
+
+      const { data: profile } = await supabaseClient.from("profiles").select("role, gender").eq("id", currentUserId).single();
+      if (!profile || (profile.role !== "admin" && profile.role !== "therapeut")) {
+        alert("Diese Seite ist nur für Admin und Therapeut:in verfügbar.");
+        window.location.href = "dashboard.html";
+        return;
+      }
+      const badge = document.getElementById("role-badge");
+      badge.textContent = roleLabel(profile.role, profile.gender);
+      badge.style.display = "inline-block";
+      if (profile.role === "admin") {
+        const nu = document.getElementById("nav-users");
+        if (nu) nu.style.display = "inline";
+      }
+
+      document.getElementById("entry-date").valueAsDate = new Date();
+      document.getElementById("ev-date").valueAsDate = new Date();
+
+      setupTabs();
+      setupDirectionToggle();
+      setupCategoryOptions();
+      setupForm();
+      setupEversports();
+      setupFilters();
+      await loadEntries();
+    }
+
+    // ------------------------------------------------------------
+    // Tabs: manuelle Buchung vs. Eversports
+    // ------------------------------------------------------------
+    function setupTabs() {
+      document.getElementById("tab-manual").addEventListener("click", () => {
+        document.getElementById("tab-manual").classList.add("active-tab");
+        document.getElementById("tab-eversports").classList.remove("active-tab");
+        document.getElementById("panel-manual").style.display = "block";
+        document.getElementById("panel-eversports").style.display = "none";
+      });
+      document.getElementById("tab-eversports").addEventListener("click", () => {
+        document.getElementById("tab-eversports").classList.add("active-tab");
+        document.getElementById("tab-manual").classList.remove("active-tab");
+        document.getElementById("panel-eversports").style.display = "block";
+        document.getElementById("panel-manual").style.display = "none";
+      });
+    }
+
+    function setupDirectionToggle() {
+      document.getElementById("dir-einnahme").addEventListener("click", () => setDirection("einnahme"));
+      document.getElementById("dir-ausgabe").addEventListener("click", () => setDirection("ausgabe"));
+    }
+
+    function setDirection(dir) {
+      currentDirection = dir;
+      document.getElementById("dir-einnahme").classList.toggle("active-tab", dir === "einnahme");
+      document.getElementById("dir-ausgabe").classList.toggle("active-tab", dir === "ausgabe");
+      setupCategoryOptions();
+    }
+
+    function setupCategoryOptions() {
+      const select = document.getElementById("entry-category");
+      const categories = currentDirection === "einnahme" ? CATEGORIES_EINNAHME : CATEGORIES_AUSGABE;
+      select.innerHTML = Object.entries(categories).map(([val, label]) => `<option value="${val}">${escapeHtml(label)}</option>`).join("");
+    }
+
+    // ------------------------------------------------------------
+    // Manuelle Buchung
+    // ------------------------------------------------------------
+    function setupForm() {
+      document.getElementById("cancel-edit-btn").addEventListener("click", resetForm);
+      document.getElementById("save-entry-btn").addEventListener("click", saveEntry);
+    }
+
+    function resetForm() {
+      editingId = null;
+      document.getElementById("form-heading").textContent = "Neue Buchung";
+      document.getElementById("entry-date").valueAsDate = new Date();
+      document.getElementById("entry-amount").value = "";
+      document.getElementById("entry-counterparty").value = "";
+      document.getElementById("entry-payment").value = "bank";
+      document.getElementById("entry-note").value = "";
+      setDirection("einnahme");
+      document.getElementById("save-entry-btn").textContent = "Buchung speichern";
+      document.getElementById("cancel-edit-btn").style.display = "none";
+    }
+
+    async function saveEntry() {
+      const msgEl = document.getElementById("entry-message");
+      const amount = parseFloat(document.getElementById("entry-amount").value);
+      const date = document.getElementById("entry-date").value;
+
+      if (!date || isNaN(amount) || amount <= 0) {
+        msgEl.textContent = "Bitte Datum und einen gültigen Betrag angeben.";
+        msgEl.className = "form-message error";
+        return;
+      }
+
+      const payload = {
+        entry_date: date,
+        direction: currentDirection,
+        category: document.getElementById("entry-category").value,
+        amount,
+        payment_method: document.getElementById("entry-payment").value,
+        counterparty: document.getElementById("entry-counterparty").value.trim() || null,
+        note: document.getElementById("entry-note").value.trim() || null,
+        updated_at: new Date().toISOString(),
+      };
+
+      let error;
+      if (editingId) {
+        ({ error } = await supabaseClient.from("journal_entries").update(payload).eq("id", editingId));
+      } else {
+        payload.user_id = currentUserId;
+        ({ error } = await supabaseClient.from("journal_entries").insert(payload));
+      }
+
+      if (error) {
+        msgEl.textContent = "Fehler: " + error.message;
+        msgEl.className = "form-message error";
+        return;
+      }
+      msgEl.textContent = "Gespeichert.";
+      msgEl.className = "form-message success";
+      resetForm();
+      await loadEntries();
+    }
+
+    // ------------------------------------------------------------
+    // Eversports-Schnellerfassung
+    // ------------------------------------------------------------
+    function setupEversports() {
+      function updateNet() {
+        const gross = parseFloat(document.getElementById("ev-gross").value) || 0;
+        const commission = parseFloat(document.getElementById("ev-commission").value) || 0;
+        document.getElementById("ev-net").textContent = formatCHF(gross - commission);
+      }
+      document.getElementById("ev-gross").addEventListener("input", updateNet);
+      document.getElementById("ev-commission").addEventListener("input", updateNet);
+
+      document.getElementById("save-eversports-btn").addEventListener("click", async () => {
+        const msgEl = document.getElementById("eversports-message");
+        const date = document.getElementById("ev-date").value;
+        const gross = parseFloat(document.getElementById("ev-gross").value);
+        const commission = parseFloat(document.getElementById("ev-commission").value) || 0;
+        const note = document.getElementById("ev-note").value.trim() || "Eversports-Abrechnung";
+
+        if (!date || isNaN(gross) || gross <= 0) {
+          msgEl.textContent = "Bitte Datum und einen gültigen Bruttoumsatz angeben.";
+          msgEl.className = "form-message error";
+          return;
+        }
+
+        const groupId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+
+        const rows = [
+          {
+            user_id: currentUserId, entry_date: date, direction: "einnahme", category: "eversports",
+            amount: gross, payment_method: "bank", counterparty: "Eversports",
+            note: note + " (Brutto)", linked_group_id: groupId,
+          },
+        ];
+        if (commission > 0) {
+          rows.push({
+            user_id: currentUserId, entry_date: date, direction: "ausgabe", category: "plattformgebuehren",
+            amount: commission, payment_method: "bank", counterparty: "Eversports",
+            note: note + " (Kommission)", linked_group_id: groupId,
+          });
+        }
+
+        const { error } = await supabaseClient.from("journal_entries").insert(rows);
+        if (error) {
+          msgEl.textContent = "Fehler: " + error.message;
+          msgEl.className = "form-message error";
+          return;
+        }
+
+        msgEl.textContent = commission > 0
+          ? "Erfasst: Bruttoeinnahme + Kommission als zwei verknüpfte Buchungen."
+          : "Erfasst: Bruttoeinnahme (keine Kommission angegeben).";
+        msgEl.className = "form-message success";
+        document.getElementById("ev-gross").value = "";
+        document.getElementById("ev-commission").value = "";
+        document.getElementById("ev-note").value = "";
+        document.getElementById("ev-net").textContent = "CHF 0.00";
+        await loadEntries();
+      });
+    }
+
+    // ------------------------------------------------------------
+    // Liste, Filter, Summen
+    // ------------------------------------------------------------
+    function setupFilters() {
+      document.getElementById("filter-search").addEventListener("input", renderEntries);
+      document.getElementById("filter-direction").addEventListener("change", renderEntries);
+      document.getElementById("filter-month").addEventListener("change", renderEntries);
+    }
+
+    async function loadEntries() {
+      const { data, error } = await supabaseClient
+        .from("journal_entries")
+        .select("id, entry_date, direction, category, amount, payment_method, counterparty, note, linked_group_id")
+        .eq("user_id", currentUserId)
+        .order("entry_date", { ascending: false });
+
+      if (error) {
+        document.getElementById("entry-empty").style.display = "block";
+        document.getElementById("entry-empty").textContent = "Fehler beim Laden: " + error.message;
+        return;
+      }
+      allEntries = data || [];
+      renderEntries();
+    }
+
+    function renderEntries() {
+      const listEl = document.getElementById("entry-list");
+      const emptyEl = document.getElementById("entry-empty");
+      const search = document.getElementById("filter-search").value.trim().toLowerCase();
+      const dirFilter = document.getElementById("filter-direction").value;
+      const monthFilter = document.getElementById("filter-month").value;
+
+      let filtered = allEntries;
+      if (dirFilter) filtered = filtered.filter(e => e.direction === dirFilter);
+      if (monthFilter) filtered = filtered.filter(e => e.entry_date && e.entry_date.slice(5, 7) === monthFilter);
+      if (search) {
+        filtered = filtered.filter(e =>
+          (e.counterparty || "").toLowerCase().includes(search) ||
+          (e.note || "").toLowerCase().includes(search)
+        );
+      }
+
+      listEl.innerHTML = "";
+      if (!filtered.length) {
+        emptyEl.style.display = "block";
+        emptyEl.textContent = "Keine Buchungen gefunden.";
+      } else {
+        emptyEl.style.display = "none";
+        filtered.forEach(e => {
+          const row = document.createElement("div");
+          row.className = "entry-row";
+          const dateStr = new Date(e.entry_date).toLocaleDateString("de-CH");
+          const sign = e.direction === "einnahme" ? "+" : "−";
+          const evBadge = e.category === "eversports" || e.category === "plattformgebuehren" ? `<span class="eversports-badge">Eversports</span>` : "";
+          row.innerHTML = `
+            <div class="entry-main">
+              <div><span class="entry-amount ${e.direction}">${sign} ${formatCHF(e.amount)}</span> · ${escapeHtml(ALL_CATEGORY_LABELS[e.category] || e.category)}${evBadge}</div>
+              <div class="entry-meta">${dateStr} · ${escapeHtml(e.counterparty || "–")} · ${e.payment_method === "kasse" ? "Kasse" : "Bank"}</div>
+              ${e.note ? `<div class="entry-note">${escapeHtml(e.note)}</div>` : ""}
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <button type="button" class="btn-secondary" style="padding:5px 10px; font-size:12px;" data-action="edit">Bearbeiten</button>
+              <button type="button" class="btn-danger" data-action="delete">Löschen</button>
+            </div>
+          `;
+          row.querySelector('[data-action="edit"]').addEventListener("click", () => startEdit(e));
+          row.querySelector('[data-action="delete"]').addEventListener("click", () => deleteEntry(e));
+          listEl.appendChild(row);
+        });
+      }
+
+      const totalEinnahmen = filtered.filter(e => e.direction === "einnahme").reduce((s, e) => s + Number(e.amount || 0), 0);
+      const totalAusgaben = filtered.filter(e => e.direction === "ausgabe").reduce((s, e) => s + Number(e.amount || 0), 0);
+      document.getElementById("total-einnahmen").textContent = formatCHF(totalEinnahmen);
+      document.getElementById("total-ausgaben").textContent = formatCHF(totalAusgaben);
+      document.getElementById("total-saldo").textContent = formatCHF(totalEinnahmen - totalAusgaben);
+    }
+
+    function startEdit(e) {
+      document.getElementById("tab-manual").click();
+      editingId = e.id;
+      document.getElementById("form-heading").textContent = "Buchung bearbeiten";
+      document.getElementById("entry-date").value = e.entry_date;
+      document.getElementById("entry-amount").value = e.amount;
+      document.getElementById("entry-counterparty").value = e.counterparty || "";
+      document.getElementById("entry-payment").value = e.payment_method;
+      document.getElementById("entry-note").value = e.note || "";
+      setDirection(e.direction);
+      document.getElementById("entry-category").value = e.category;
+      document.getElementById("save-entry-btn").textContent = "Änderungen speichern";
+      document.getElementById("cancel-edit-btn").style.display = "inline-block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function deleteEntry(e) {
+      let confirmMsg = `Buchung über ${formatCHF(e.amount)} wirklich löschen?`;
+      if (e.linked_group_id) {
+        confirmMsg = `Diese Buchung gehört zu einer Eversports-Abrechnung. Nur diese eine Zeile (${formatCHF(e.amount)}) löschen? Die verknüpfte Buchung bleibt bestehen.`;
+      }
+      if (!confirm(confirmMsg)) return;
+      const { error } = await supabaseClient.from("journal_entries").delete().eq("id", e.id);
+      if (error) { alert("Fehler: " + error.message); return; }
+      if (editingId === e.id) resetForm();
+      await loadEntries();
+    }
+
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+      window.location.href = "index.html";
+    });
+
+    init();
+  </script>
+</body>
+</html>
