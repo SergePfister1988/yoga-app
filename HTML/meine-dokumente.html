@@ -97,6 +97,7 @@ a { color: inherit; }
       <div class="action-row" style="display:flex; gap:8px; flex-wrap:wrap;">
         <button class="btn-secondary" id="ldoc-create-btn" type="button">Erstellen</button>
         <button class="btn-secondary" id="ldoc-edit-btn" type="button" disabled>Bearbeiten</button>
+        <button class="btn-secondary" id="ldoc-mark-paid-btn" type="button" disabled>Als bezahlt markieren</button>
         <button class="btn-secondary" id="ldoc-delete-btn" type="button" disabled style="border-color: var(--color-error); color: var(--color-error);">Löschen</button>
       </div>
       <p class="form-message" id="layout-documents-message" style="margin-top:10px;"></p>
@@ -112,6 +113,33 @@ a { color: inherit; }
       <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:16px;">
         <button class="btn-secondary" id="layout-template-cancel-btn" type="button">Abbrechen</button>
         <button class="btn-primary" id="layout-template-confirm-btn" type="button">Weiter</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="mark-paid-modal" style="display:none; position:fixed; inset:0; background:rgba(30,38,34,0.4); align-items:center; justify-content:center; z-index:100;">
+    <div style="background:var(--color-surface); border-radius:4px; padding:24px; width:100%; max-width:380px;">
+      <h2 style="font-family: var(--font-display); font-size:18px; color: var(--color-pine-dark); margin-top:0;">Rechnung als bezahlt markieren</h2>
+      <p style="font-size:13px; color: var(--color-text-muted); margin-top:-8px;">Erstellt automatisch die passende Einnahme-Buchung im Journal.</p>
+      <div class="field">
+        <label for="paid-date">Zahlungsdatum</label>
+        <input type="date" id="paid-date" style="width:100%; padding:9px 10px; border:1px solid var(--color-border); border-radius:3px; font-family: var(--font-body); font-size:14px;" />
+      </div>
+      <div class="field">
+        <label for="paid-amount">Erhaltener Betrag (CHF)</label>
+        <input type="number" id="paid-amount" step="0.01" min="0" style="width:100%; padding:9px 10px; border:1px solid var(--color-border); border-radius:3px; font-family: var(--font-body); font-size:14px;" />
+      </div>
+      <div class="field">
+        <label for="paid-method">Zahlungsmittel</label>
+        <select id="paid-method" style="width:100%; padding:9px 10px; border:1px solid var(--color-border); border-radius:3px; font-family: var(--font-body); font-size:14px;">
+          <option value="bank">Bank</option>
+          <option value="kasse">Kasse (bar)</option>
+        </select>
+      </div>
+      <p class="form-message" id="mark-paid-message"></p>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:16px;">
+        <button class="btn-secondary" id="mark-paid-cancel-btn" type="button">Abbrechen</button>
+        <button class="btn-primary" id="mark-paid-confirm-btn" type="button">Bestätigen</button>
       </div>
     </div>
   </div>
@@ -238,7 +266,7 @@ a { color: inherit; }
     async function loadLayoutDocuments() {
       const { data, error } = await supabaseClient
         .from("layout_documents")
-        .select("id, title, invoice_number, updated_at")
+        .select("id, title, invoice_number, payment_status, updated_at")
         .eq("created_by", currentUserId)
         .order("updated_at", { ascending: false });
 
@@ -263,7 +291,8 @@ a { color: inherit; }
           opt.value = doc.id;
           const d = new Date(doc.updated_at);
           const numPart = doc.invoice_number ? ` – ${doc.invoice_number}` : "";
-          opt.textContent = `${doc.title}${numPart} (${d.toLocaleDateString("de-CH")})`;
+          const statusPart = doc.invoice_number ? (doc.payment_status === "bezahlt" ? " ✓ Bezahlt" : " · Offen") : "";
+          opt.textContent = `${doc.title}${numPart} (${d.toLocaleDateString("de-CH")})${statusPart}`;
           selectEl.appendChild(opt);
         });
       }
@@ -271,9 +300,12 @@ a { color: inherit; }
     }
 
     function updateLayoutDocumentButtons() {
-      const hasSelection = !!document.getElementById("layout-documents-select").value;
+      const id = document.getElementById("layout-documents-select").value;
+      const doc = allLayoutDocuments.find(d => d.id === id);
+      const hasSelection = !!id;
       document.getElementById("ldoc-edit-btn").disabled = !hasSelection;
       document.getElementById("ldoc-delete-btn").disabled = !hasSelection;
+      document.getElementById("ldoc-mark-paid-btn").disabled = !hasSelection || !doc || !doc.invoice_number || doc.payment_status === "bezahlt";
     }
 
     function setupLayoutDocuments() {
@@ -294,6 +326,76 @@ a { color: inherit; }
         if (!confirm(`${label} wirklich löschen? Der Name/die Rechnungsnummer wird danach wieder frei.`)) return;
         const { error } = await supabaseClient.from("layout_documents").delete().eq("id", id);
         if (error) { alert("Fehler: " + error.message); return; }
+        await loadLayoutDocuments();
+      });
+
+      document.getElementById("ldoc-mark-paid-btn").addEventListener("click", () => {
+        const id = document.getElementById("layout-documents-select").value;
+        if (!id) return;
+        document.getElementById("paid-date").valueAsDate = new Date();
+        document.getElementById("paid-amount").value = "";
+        document.getElementById("paid-method").value = "bank";
+        document.getElementById("mark-paid-message").textContent = "";
+        document.getElementById("mark-paid-modal").dataset.docId = id;
+        document.getElementById("mark-paid-modal").style.display = "flex";
+      });
+
+      document.getElementById("mark-paid-cancel-btn").addEventListener("click", () => {
+        document.getElementById("mark-paid-modal").style.display = "none";
+      });
+
+      document.getElementById("mark-paid-confirm-btn").addEventListener("click", async () => {
+        const msgEl = document.getElementById("mark-paid-message");
+        const id = document.getElementById("mark-paid-modal").dataset.docId;
+        const doc = allLayoutDocuments.find(d => d.id === id);
+        const date = document.getElementById("paid-date").value;
+        const amount = parseFloat(document.getElementById("paid-amount").value);
+        const method = document.getElementById("paid-method").value;
+
+        if (!date || isNaN(amount) || amount <= 0) {
+          msgEl.textContent = "Bitte Datum und einen gültigen Betrag angeben.";
+          msgEl.className = "form-message error";
+          return;
+        }
+
+        const { data: journalRow, error: journalError } = await supabaseClient
+          .from("journal_entries")
+          .insert({
+            user_id: currentUserId,
+            entry_date: date,
+            direction: "einnahme",
+            category: "arbeit_warenverkauf",
+            amount,
+            payment_method: method,
+            counterparty: doc ? doc.title : null,
+            note: `Rechnung ${doc ? doc.invoice_number : ""} bezahlt`,
+          })
+          .select("id")
+          .single();
+
+        if (journalError) {
+          msgEl.textContent = "Fehler beim Erstellen der Journal-Buchung: " + journalError.message;
+          msgEl.className = "form-message error";
+          return;
+        }
+
+        const { error: docError } = await supabaseClient
+          .from("layout_documents")
+          .update({
+            payment_status: "bezahlt",
+            paid_date: date,
+            paid_amount: amount,
+            journal_entry_id: journalRow.id,
+          })
+          .eq("id", id);
+
+        if (docError) {
+          msgEl.textContent = "Journal-Buchung erstellt, aber Fehler beim Markieren der Rechnung: " + docError.message;
+          msgEl.className = "form-message error";
+          return;
+        }
+
+        document.getElementById("mark-paid-modal").style.display = "none";
         await loadLayoutDocuments();
       });
 
