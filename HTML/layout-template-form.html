@@ -107,6 +107,7 @@ a { color: inherit; text-decoration: none; }
       <h3>Element hinzufügen</h3>
       <button class="tool-btn" data-add="text">Text</button>
       <button class="tool-btn" data-add="table">Tabelle</button>
+      <button class="tool-btn" id="add-invoice-table-btn" type="button">Tabelle: Rechnungsposten (automatisch)</button>
       <button class="tool-btn" data-add="image">Bild / Logo</button>
       <button class="tool-btn" data-add="line">Linie</button>
       <h3 style="margin-top:18px;">Formularfelder</h3>
@@ -447,6 +448,20 @@ a { color: inherit; text-decoration: none; }
           renderCanvas();
         });
       });
+
+      document.getElementById("add-invoice-table-btn").addEventListener("click", () => {
+        const el = defaultElement("table");
+        el.columns = ["Menge", "Beschreibung", "Preis pro Einheit", "Rabatt %", "Summe der Positionen"];
+        el.columnWidths = [0.8, 3, 1.2, 1, 1.4];
+        el.columnRoles = ["quantity", "text", "price", "discount", "total"];
+        el.columnAligns = ["left", "left", "right", "right", "right"];
+        el.rowCount = 4;
+        el.w = 170;
+        el.h = 45;
+        elements.push(el);
+        selectedId = el.id;
+        renderCanvas();
+      });
     }
 
     // ------------------------------------------------------------
@@ -715,6 +730,10 @@ a { color: inherit; text-decoration: none; }
       if (!el.columnAligns || el.columnAligns.length !== (el.columns || []).length) {
         el.columnAligns = (el.columns || []).map((_, i) => (el.columnAligns && el.columnAligns[i]) || "left");
       }
+      if (!el.columnRoles || el.columnRoles.length !== (el.columns || []).length) {
+        el.columnRoles = (el.columns || []).map((_, i) => (el.columnRoles && el.columnRoles[i]) || "text");
+      }
+      const ROLE_LABELS = { text: "Text", quantity: "Menge", price: "Preis pro Einheit", discount: "Rabatt %", total: "Summe (berechnet)" };
       function draw() {
         wrap.innerHTML = "";
         (el.columns || []).forEach((col, idx) => {
@@ -730,19 +749,30 @@ a { color: inherit; text-decoration: none; }
             </select>
             <button type="button" class="btn-secondary" style="padding:4px 8px;">✕</button>
           `;
+          const roleRow = document.createElement("div");
+          roleRow.style.cssText = "margin:-2px 0 8px 0;";
+          roleRow.innerHTML = `
+            <select style="width:100%; font-size:12px; padding:4px;" title="Rolle für automatische Berechnung">
+              ${Object.entries(ROLE_LABELS).map(([val, label]) => `<option value="${val}" ${el.columnRoles[idx] === val ? "selected" : ""}>Rolle: ${label}</option>`).join("")}
+            </select>
+          `;
           const inputs = row.querySelectorAll("input");
           const select = row.querySelector("select");
+          const roleSelect = roleRow.querySelector("select");
           inputs[0].addEventListener("input", (e) => { el.columns[idx] = e.target.value; updateElDom(el); });
           inputs[1].addEventListener("input", (e) => { el.columnWidths[idx] = parseFloat(e.target.value) || 1; updateElDom(el); });
           select.addEventListener("change", (e) => { el.columnAligns[idx] = e.target.value; updateElDom(el); });
+          roleSelect.addEventListener("change", (e) => { el.columnRoles[idx] = e.target.value; });
           row.querySelector("button").addEventListener("click", () => {
             el.columns.splice(idx, 1);
             el.columnWidths.splice(idx, 1);
             el.columnAligns.splice(idx, 1);
+            el.columnRoles.splice(idx, 1);
             draw();
             updateElDom(el);
           });
           wrap.appendChild(row);
+          wrap.appendChild(roleRow);
         });
       }
       draw();
