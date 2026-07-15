@@ -416,7 +416,7 @@ if (profile.role === "admin" || profile.role === "therapeut") {
     async function loadLayoutDocuments() {
       const { data, error } = await supabaseClient
         .from("layout_documents")
-        .select("id, title, invoice_number, payment_status, updated_at")
+        .select("id, title, invoice_number, payment_status, invoice_total_amount, updated_at")
         .eq("yogi_id", yogiId)
         .order("updated_at", { ascending: false });
 
@@ -482,8 +482,9 @@ if (profile.role === "admin" || profile.role === "therapeut") {
       document.getElementById("ldoc-mark-paid-btn").addEventListener("click", () => {
         const id = document.getElementById("layout-documents-select").value;
         if (!id) return;
+        const doc = allLayoutDocuments.find(d => d.id === id);
         document.getElementById("paid-date").valueAsDate = new Date();
-        document.getElementById("paid-amount").value = "";
+        document.getElementById("paid-amount").value = (doc && doc.invoice_total_amount) ? doc.invoice_total_amount : "";
         document.getElementById("paid-method").value = "bank";
         document.getElementById("mark-paid-message").textContent = "";
         document.getElementById("mark-paid-modal").dataset.docId = id;

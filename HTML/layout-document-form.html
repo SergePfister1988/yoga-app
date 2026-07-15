@@ -109,6 +109,8 @@ a { color: inherit; text-decoration: none; }
     let fieldValues = {}; // { elementId: value }
     let invoiceNumber = null;
     let invoiceNumberInputEl = null;
+    let allTotalBoxes = [];
+    let recalculatedTotalAmount = null;
 
     async function suggestNextInvoiceNumber() {
       const { data: myProfile } = await supabaseClient.from("profiles").select("invoice_prefix").eq("id", currentUserId).single();
@@ -226,9 +228,11 @@ a { color: inherit; text-decoration: none; }
     function renderCanvas() {
       const canvas = document.getElementById("canvas");
       canvas.innerHTML = "";
+      allTotalBoxes = [];
       elements.slice().sort((a, b) => a.z - b.z).forEach(el => {
         canvas.appendChild(buildFillElement(el));
       });
+      recomputeAllTotals();
     }
 
     function fontStack(el) {
@@ -320,6 +324,10 @@ a { color: inherit; text-decoration: none; }
         return input;
       }
 
+      if (el.type === "field-total") {
+        return buildTotalBox(el);
+      }
+
       // field-text, field-address, sonstige
       const textarea = document.createElement("textarea");
       textarea.style.fontSize = (el.fontSize || 11) + "px";
@@ -329,6 +337,64 @@ a { color: inherit; text-decoration: none; }
       textarea.value = value || "";
       textarea.addEventListener("input", () => { fieldValues[el.id] = textarea.value; });
       return textarea;
+    }
+
+    const VAT_RATES = [
+      { key: "none", label: "Nicht MWST-pflichtig", rate: 0 },
+      { key: "reduced", label: "2.6% (reduzierter Satz)", rate: 0.026 },
+      { key: "lodging", label: "3.8% (Sondersatz Beherbergung)", rate: 0.038 },
+      { key: "normal", label: "8.1% (Normalsatz)", rate: 0.081 },
+    ];
+
+    function computeTableSubtotal(sourceTableElementId, sourceColumn) {
+      if (!sourceTableElementId || !sourceColumn) return 0;
+      const rows = Array.isArray(fieldValues[sourceTableElementId]) ? fieldValues[sourceTableElementId] : [];
+      return rows.reduce((sum, row) => sum + (parseFloat(row[sourceColumn]) || 0), 0);
+    }
+
+    function buildTotalBox(el) {
+      const box = document.createElement("div");
+      box.style.cssText = "width:100%; height:100%; overflow-y:auto; padding:4px; font-size:12px;";
+      const stored = fieldValues[el.id] || {};
+      let vatKey = stored.vatKey || "none";
+
+      function draw() {
+        const subtotal = computeTableSubtotal(el.sourceTableElementId, el.sourceColumn);
+        const vatInfo = VAT_RATES.find(v => v.key === vatKey) || VAT_RATES[0];
+        const vatAmount = subtotal * vatInfo.rate;
+        const total = subtotal + vatAmount;
+
+        fieldValues[el.id] = { vatKey, vatLabel: vatInfo.label, vatRate: vatInfo.rate, subtotal, vatAmount, total };
+        recalculatedTotalAmount = total;
+
+        box.innerHTML = `
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Zwischensumme</span><strong>${formatMoney(subtotal)}</strong></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:6px;">
+            <select style="flex:1; font-size:11px; padding:3px;" id="total-vat-select-${el.id}">
+              ${VAT_RATES.map(v => `<option value="${v.key}" ${v.key === vatKey ? "selected" : ""}>${v.label}</option>`).join("")}
+            </select>
+            <strong>${formatMoney(vatAmount)}</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; border-top:1px solid var(--color-sand); padding-top:4px; font-weight:700;"><span>Total</span><span>${formatMoney(total)}</span></div>
+        `;
+        box.querySelector(`#total-vat-select-${el.id}`).addEventListener("change", (e) => {
+          vatKey = e.target.value;
+          draw();
+        });
+      }
+
+      draw();
+      box.dataset.recompute = "total";
+      allTotalBoxes.push(draw);
+      return box;
+    }
+
+    function formatMoney(n) {
+      return "CHF " + Number(n || 0).toLocaleString("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function recomputeAllTotals() {
+      allTotalBoxes.forEach(draw => draw());
     }
 
     function buildHistoryBox(el) {
@@ -405,7 +471,7 @@ a { color: inherit; text-decoration: none; }
             input.value = row[c] || "";
             input.style.color = el.bodyTextColor || "#1E2622";
             input.style.textAlign = (el.columnAligns && el.columnAligns[cIdx]) || "left";
-            input.addEventListener("input", () => { rows[rIdx][c] = input.value; fieldValues[el.id] = rows; });
+            input.addEventListener("input", () => { rows[rIdx][c] = input.value; fieldValues[el.id] = rows; recomputeAllTotals(); });
             td.appendChild(input);
             tr.appendChild(td);
           });
@@ -414,7 +480,7 @@ a { color: inherit; text-decoration: none; }
           delBtn.type = "button";
           delBtn.className = "row-del-btn";
           delBtn.textContent = "✕";
-          delBtn.addEventListener("click", () => { rows.splice(rIdx, 1); fieldValues[el.id] = rows; draw(); });
+          delBtn.addEventListener("click", () => { rows.splice(rIdx, 1); fieldValues[el.id] = rows; draw(); recomputeAllTotals(); });
           delTd.appendChild(delBtn);
           tr.appendChild(delTd);
           tbody.appendChild(tr);
@@ -426,7 +492,7 @@ a { color: inherit; text-decoration: none; }
         addBtn.type = "button";
         addBtn.className = "el-table-add-row btn-secondary";
         addBtn.textContent = "+ Zeile";
-        addBtn.addEventListener("click", () => { rows.push({}); fieldValues[el.id] = rows; draw(); });
+        addBtn.addEventListener("click", () => { rows.push({}); fieldValues[el.id] = rows; draw(); recomputeAllTotals(); });
         wrapDiv.appendChild(addBtn);
       }
       draw();
@@ -452,12 +518,15 @@ a { color: inherit; text-decoration: none; }
         fieldValues[invoiceEl.id] = invoiceNumber;
       }
 
+      const totalEl = elements.find(e => e.type === "field-total");
+
       const payload = {
         title,
         template_id: templateId,
         yogi_id: yogiId,
         field_values: fieldValues,
         invoice_number: invoiceEl ? invoiceNumber : null,
+        invoice_total_amount: totalEl ? recalculatedTotalAmount : null,
         updated_at: new Date().toISOString(),
       };
 
@@ -566,6 +635,8 @@ a { color: inherit; text-decoration: none; }
           } catch (e) { /* Bild optional */ }
         } else if (el.type === "table") {
           drawPdfTable(pdf, el, x, y);
+        } else if (el.type === "field-total") {
+          drawPdfTotalBox(pdf, el, x, y);
         } else if (el.type.startsWith("field-")) {
           pdf.setFontSize(el.fontSize || 11);
           const [r, g, b] = hexToRgb(el.color || "#1E2622");
@@ -618,6 +689,31 @@ a { color: inherit; text-decoration: none; }
       pdf.save(title.replace(/[^a-z0-9]+/gi, "_") + ".pdf");
       msgEl.textContent = "PDF heruntergeladen.";
       msgEl.style.color = "var(--color-pine)";
+    }
+
+    function drawPdfTotalBox(pdf, el, x, y) {
+      const data = fieldValues[el.id] || {};
+      const fontSize = el.fontSize || 10;
+      pdf.setFontSize(fontSize);
+      const [r, g, b] = hexToRgb(el.color || "#1E2622");
+      pdf.setTextColor(r, g, b);
+      const lineH = fontSize * 0.353 * 1.5;
+      let curY = y + fontSize * 0.35;
+
+      pdf.setFont(undefined, "normal");
+      pdf.text("Zwischensumme", x, curY);
+      pdf.text(formatMoney(data.subtotal || 0), x + el.w, curY, { align: "right" });
+      curY += lineH;
+
+      pdf.text(data.vatLabel || "Nicht MWST-pflichtig", x, curY);
+      pdf.text(formatMoney(data.vatAmount || 0), x + el.w, curY, { align: "right" });
+      curY += lineH;
+
+      pdf.setFont(undefined, "bold");
+      pdf.text("Total", x, curY);
+      pdf.text(formatMoney(data.total || 0), x + el.w, curY, { align: "right" });
+      pdf.setFont(undefined, "normal");
+      pdf.setTextColor(0);
     }
 
     function drawPdfTable(pdf, el, x, y) {

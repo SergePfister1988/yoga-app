@@ -118,7 +118,6 @@ a { color: inherit; text-decoration: none; }
             <option value="ahv_bvg">AHV/BVG-Beiträge</option>
             <option value="abschreibungen">Abschreibungen</option>
             <option value="warenverkauf">Warenverkauf-Ausgaben</option>
-            <option value="plattformgebuehren">Plattformgebühren (z.B. Eversports)</option>
             <option value="sonstiges">Sonstiges</option>
           </select>
         </div>
@@ -161,7 +160,6 @@ a { color: inherit; text-decoration: none; }
           <option value="ahv_bvg">AHV/BVG-Beiträge</option>
           <option value="abschreibungen">Abschreibungen</option>
           <option value="warenverkauf">Warenverkauf-Ausgaben</option>
-          <option value="plattformgebuehren">Plattformgebühren (z.B. Eversports)</option>
           <option value="sonstiges">Sonstiges</option>
         </select>
         <select id="filter-month">
@@ -197,7 +195,6 @@ a { color: inherit; text-decoration: none; }
       ahv_bvg: "AHV/BVG-Beiträge",
       abschreibungen: "Abschreibungen",
       warenverkauf: "Warenverkauf-Ausgaben",
-      plattformgebuehren: "Plattformgebühren (z.B. Eversports)",
       sonstiges: "Sonstiges",
     };
 
@@ -294,10 +291,9 @@ a { color: inherit; text-decoration: none; }
       }
 
       const payload = {
-        entry_date: date,
-        direction: "ausgabe",
+        receipt_date: date,
         amount,
-        counterparty: document.getElementById("receipt-company").value.trim() || null,
+        company: document.getElementById("receipt-company").value.trim() || null,
         category: document.getElementById("receipt-category").value,
         payment_method: document.getElementById("receipt-payment").value,
         note: document.getElementById("receipt-note").value.trim() || null,
@@ -321,10 +317,10 @@ a { color: inherit; text-decoration: none; }
 
       let error;
       if (editingId) {
-        ({ error } = await supabaseClient.from("journal_entries").update(payload).eq("id", editingId));
+        ({ error } = await supabaseClient.from("expense_receipts").update(payload).eq("id", editingId));
       } else {
         payload.user_id = currentUserId;
-        ({ error } = await supabaseClient.from("journal_entries").insert(payload));
+        ({ error } = await supabaseClient.from("expense_receipts").insert(payload));
       }
 
       if (error) {
@@ -347,11 +343,10 @@ a { color: inherit; text-decoration: none; }
 
     async function loadReceipts() {
       const { data, error } = await supabaseClient
-        .from("journal_entries")
-        .select("id, receipt_date:entry_date, company:counterparty, category, amount, payment_method, note, photo_path")
+        .from("expense_receipts")
+        .select("id, receipt_date, company, category, amount, payment_method, note, photo_path")
         .eq("user_id", currentUserId)
-        .eq("direction", "ausgabe")
-        .order("entry_date", { ascending: false });
+        .order("receipt_date", { ascending: false });
 
       if (error) {
         document.getElementById("receipt-empty").style.display = "block";
@@ -445,7 +440,7 @@ a { color: inherit; text-decoration: none; }
 
     async function deleteReceipt(r) {
       if (!confirm(`Beleg über ${formatCHF(r.amount)} wirklich löschen?`)) return;
-      const { error } = await supabaseClient.from("journal_entries").delete().eq("id", r.id);
+      const { error } = await supabaseClient.from("expense_receipts").delete().eq("id", r.id);
       if (error) { alert("Fehler: " + error.message); return; }
       if (editingId === r.id) resetForm();
       await loadReceipts();

@@ -448,7 +448,7 @@ a { color: inherit; text-decoration: none; }
     async function loadEntries() {
       const { data, error } = await supabaseClient
         .from("journal_entries")
-        .select("id, entry_date, direction, category, amount, payment_method, counterparty, note, linked_group_id, photo_path")
+        .select("id, entry_date, direction, category, amount, payment_method, counterparty, note, linked_group_id")
         .eq("user_id", currentUserId)
         .order("entry_date", { ascending: false });
 
@@ -490,17 +490,7 @@ a { color: inherit; text-decoration: none; }
           const dateStr = new Date(e.entry_date).toLocaleDateString("de-CH");
           const sign = e.direction === "einnahme" ? "+" : "−";
           const evBadge = e.category === "eversports" || e.category === "plattformgebuehren" ? `<span class="eversports-badge">Eversports</span>` : "";
-          let thumbHtml = "";
-          if (e.photo_path) {
-            const { data: pub } = supabaseClient.storage.from("asana-media").getPublicUrl(e.photo_path);
-            if (e.photo_path.toLowerCase().endsWith(".pdf")) {
-              thumbHtml = `<a href="${pub.publicUrl}" target="_blank" style="width:36px; height:36px; border-radius:3px; border:1px solid var(--color-border); display:flex; align-items:center; justify-content:center; font-size:9px; color:var(--color-text-muted); flex-shrink:0;">PDF</a>`;
-            } else {
-              thumbHtml = `<img src="${pub.publicUrl}" style="width:36px; height:36px; object-fit:cover; border-radius:3px; border:1px solid var(--color-border); flex-shrink:0; cursor:pointer;" onclick="window.open('${pub.publicUrl}', '_blank')" />`;
-            }
-          }
           row.innerHTML = `
-            ${thumbHtml}
             <div class="entry-main">
               <div><span class="entry-amount ${e.direction}">${sign} ${formatCHF(e.amount)}</span> · ${escapeHtml(ALL_CATEGORY_LABELS[e.category] || e.category)}${evBadge}</div>
               <div class="entry-meta">${dateStr} · ${escapeHtml(e.counterparty || "–")} · ${e.payment_method === "kasse" ? "Kasse" : "Bank"}</div>
