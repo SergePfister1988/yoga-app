@@ -35,6 +35,11 @@ a { color: inherit; text-decoration: none; }
 .toolbox h3 { font-family: var(--font-display); font-size: 14px; color: var(--color-pine-dark); margin: 0 0 10px 0; }
 .tool-btn { display: block; width: 100%; text-align: left; padding: 9px 10px; margin-bottom: 6px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 3px; font-size: 13px; font-family: var(--font-body); color: var(--color-text); cursor: pointer; }
 .tool-btn:hover { border-color: var(--color-sand-dark); }
+.layer-item { display: flex; align-items: center; gap: 4px; padding: 6px 6px; border: 1px solid var(--color-border); border-radius: 3px; margin-bottom: 4px; font-size: 12px; cursor: pointer; background: var(--color-bg); }
+.layer-item.selected { border-color: var(--color-pine); background: rgba(219,174,164,0.15); }
+.layer-item .layer-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.layer-item button { border: none; background: none; cursor: pointer; font-size: 12px; color: var(--color-text-muted); padding: 2px 4px; }
+.layer-item button:hover { color: var(--color-pine); }
 .canvas-wrap { flex: 1; display: flex; justify-content: center; padding: 32px; overflow: auto; background: #ECEAE6; min-height: calc(100vh - 110px); }
 .a4-canvas { position: relative; width: 630px; height: 891px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.15); flex-shrink: 0; }
 .a4-canvas.grid-on { background-image: linear-gradient(to right, #E3E0DA 1px, transparent 1px), linear-gradient(to bottom, #E3E0DA 1px, transparent 1px); }
@@ -119,6 +124,10 @@ a { color: inherit; text-decoration: none; }
       <button class="tool-btn" data-add="field-boolean">Feld: Ja/Nein</button>
       <button class="tool-btn" data-add="field-select">Feld: Auswahl</button>
       <button class="tool-btn" data-add="field-history">Feld: Verlauf</button>
+
+      <h3 style="margin-top:18px;">Ebenen</h3>
+      <p style="font-size:11px; color: var(--color-text-muted); margin:-4px 0 8px 0;">Auch verdeckte Elemente hier anklicken.</p>
+      <div id="layers-list"></div>
     </div>
 
     <div class="canvas-wrap">
@@ -299,6 +308,53 @@ a { color: inherit; text-decoration: none; }
         .sort((a, b) => a.z - b.z)
         .forEach(el => canvas.appendChild(buildElementDom(el)));
       renderProps();
+      renderLayersList();
+    }
+
+    const LAYER_TYPE_LABELS = {
+      text: "Text", table: "Tabelle", image: "Bild/Logo", line: "Linie",
+      "field-text": "Feld: Freitext", "field-address": "Feld: Adresse",
+      "field-invoice-number": "Feld: Rechnungsnummer", "field-total": "Feld: Rechnungssumme",
+      "field-date": "Feld: Datum", "field-boolean": "Feld: Ja/Nein",
+      "field-select": "Feld: Auswahl", "field-history": "Feld: Verlauf",
+    };
+
+    function layerName(el) {
+      const typeLabel = LAYER_TYPE_LABELS[el.type] || el.type;
+      if (el.type === "text" && el.content) return `${typeLabel}: "${el.content.slice(0, 18)}"`;
+      if (el.label) return `${typeLabel}: ${el.label.slice(0, 18)}`;
+      return typeLabel;
+    }
+
+    function renderLayersList() {
+      const listEl = document.getElementById("layers-list");
+      listEl.innerHTML = "";
+      // Oberste Ebene zuerst anzeigen (höchster z-Wert oben)
+      elements.slice().sort((a, b) => b.z - a.z).forEach(el => {
+        const item = document.createElement("div");
+        item.className = "layer-item" + (el.id === selectedId ? " selected" : "");
+        item.innerHTML = `
+          <span class="layer-label">${escapeHtml(layerName(el))}</span>
+          <button type="button" data-action="up" title="Eine Ebene nach vorne">▲</button>
+          <button type="button" data-action="down" title="Eine Ebene nach hinten">▼</button>
+        `;
+        item.querySelector(".layer-label").addEventListener("click", () => selectElement(el.id));
+        item.querySelector('[data-action="up"]').addEventListener("click", (e) => { e.stopPropagation(); moveLayer(el.id, 1); });
+        item.querySelector('[data-action="down"]').addEventListener("click", (e) => { e.stopPropagation(); moveLayer(el.id, -1); });
+        listEl.appendChild(item);
+      });
+    }
+
+    function moveLayer(id, direction) {
+      // direction: +1 = eine Ebene nach vorne, -1 = eine Ebene nach hinten
+      const sorted = elements.slice().sort((a, b) => a.z - b.z);
+      const idx = sorted.findIndex(e => e.id === id);
+      const swapIdx = idx + (direction > 0 ? 1 : -1);
+      if (swapIdx < 0 || swapIdx >= sorted.length) return;
+      const zTemp = sorted[idx].z;
+      sorted[idx].z = sorted[swapIdx].z;
+      sorted[swapIdx].z = zTemp;
+      renderCanvas();
     }
 
     function buildElementDom(el) {
@@ -381,9 +437,11 @@ a { color: inherit; text-decoration: none; }
     function selectElement(id) {
       selectedId = id;
       document.querySelectorAll(".el").forEach(d => d.classList.toggle("selected", d.dataset.id === id));
+      document.querySelectorAll(".layer-item").forEach(d => d.classList.remove("selected"));
       document.getElementById("bring-front-btn").disabled = !id;
       document.getElementById("send-back-btn").disabled = !id;
       renderProps();
+      renderLayersList();
     }
 
     document.getElementById("canvas").addEventListener("mousedown", (e) => {
