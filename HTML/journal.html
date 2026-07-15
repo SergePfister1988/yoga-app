@@ -176,10 +176,20 @@ a { color: inherit; text-decoration: none; }
       <h2>Buchungen</h2>
       <div class="filter-bar">
         <input type="text" id="filter-search" placeholder="Suche in Notiz/Debitor-Kreditor …" />
+        <input type="number" id="filter-amount" placeholder="Betrag (CHF)" step="0.01" style="max-width:140px;" />
         <select id="filter-direction">
           <option value="">Einnahmen & Ausgaben</option>
           <option value="einnahme">Nur Einnahmen</option>
           <option value="ausgabe">Nur Ausgaben</option>
+        </select>
+        <select id="filter-payment">
+          <option value="">Alle Zahlungsmittel</option>
+          <option value="bank">Bank</option>
+          <option value="kasse">Kasse</option>
+          <option value="privat">Privat (kein Geldfluss)</option>
+        </select>
+        <select id="filter-category">
+          <option value="">Alle Kategorien</option>
         </select>
         <select id="filter-month">
           <option value="">Ganzes Jahr</option>
@@ -440,8 +450,20 @@ a { color: inherit; text-decoration: none; }
     // Liste, Filter, Summen
     // ------------------------------------------------------------
     function setupFilters() {
+      const categorySelect = document.getElementById("filter-category");
+      const allCategories = { ...CATEGORIES_EINNAHME, ...CATEGORIES_AUSGABE };
+      Object.entries(allCategories).forEach(([val, label]) => {
+        const opt = document.createElement("option");
+        opt.value = val;
+        opt.textContent = label;
+        categorySelect.appendChild(opt);
+      });
+
       document.getElementById("filter-search").addEventListener("input", renderEntries);
+      document.getElementById("filter-amount").addEventListener("input", renderEntries);
       document.getElementById("filter-direction").addEventListener("change", renderEntries);
+      document.getElementById("filter-payment").addEventListener("change", renderEntries);
+      document.getElementById("filter-category").addEventListener("change", renderEntries);
       document.getElementById("filter-month").addEventListener("change", renderEntries);
     }
 
@@ -465,12 +487,20 @@ a { color: inherit; text-decoration: none; }
       const listEl = document.getElementById("entry-list");
       const emptyEl = document.getElementById("entry-empty");
       const search = document.getElementById("filter-search").value.trim().toLowerCase();
+      const amountFilter = document.getElementById("filter-amount").value.trim();
       const dirFilter = document.getElementById("filter-direction").value;
+      const paymentFilter = document.getElementById("filter-payment").value;
+      const categoryFilter = document.getElementById("filter-category").value;
       const monthFilter = document.getElementById("filter-month").value;
 
       let filtered = allEntries;
       if (dirFilter) filtered = filtered.filter(e => e.direction === dirFilter);
+      if (paymentFilter) filtered = filtered.filter(e => e.payment_method === paymentFilter);
+      if (categoryFilter) filtered = filtered.filter(e => e.category === categoryFilter);
       if (monthFilter) filtered = filtered.filter(e => e.entry_date && e.entry_date.slice(5, 7) === monthFilter);
+      if (amountFilter) {
+        filtered = filtered.filter(e => String(Number(e.amount).toFixed(2)).includes(amountFilter));
+      }
       if (search) {
         filtered = filtered.filter(e =>
           (e.counterparty || "").toLowerCase().includes(search) ||
