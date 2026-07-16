@@ -424,7 +424,7 @@ a { color: inherit; text-decoration: none; }
         ({ error } = await supabaseClient.from("journal_entries").update(payload).eq("id", editingId));
       } else {
         payload.user_id = currentUserId;
-        const { data: nextBeleg, error: belegError } = await supabaseClient.rpc("next_beleg_number", { p_direction: currentDirection });
+        const { data: nextBeleg, error: belegError } = await supabaseClient.rpc("next_beleg_number", { p_direction: currentDirection, p_year: new Date(date).getFullYear() });
         if (belegError) {
           msgEl.textContent = "Fehler beim Vergeben der Belegnummer: " + belegError.message;
           msgEl.className = "form-message error";
@@ -475,19 +475,33 @@ a { color: inherit; text-decoration: none; }
         }
 
         const groupId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+        const year = new Date(date).getFullYear();
+
+        const { data: einnahmeBeleg, error: belegError1 } = await supabaseClient.rpc("next_beleg_number", { p_direction: "einnahme", p_year: year });
+        if (belegError1) {
+          msgEl.textContent = "Fehler beim Vergeben der Belegnummer: " + belegError1.message;
+          msgEl.className = "form-message error";
+          return;
+        }
 
         const rows = [
           {
             user_id: currentUserId, entry_date: date, direction: "einnahme", category: "eversports",
             amount: gross, payment_method: "bank", counterparty: "Eversports",
-            note: note + " (Brutto)", linked_group_id: groupId,
+            note: note + " (Brutto)", linked_group_id: groupId, beleg_nr: einnahmeBeleg,
           },
         ];
         if (commission > 0) {
+          const { data: ausgabeBeleg, error: belegError2 } = await supabaseClient.rpc("next_beleg_number", { p_direction: "ausgabe", p_year: year });
+          if (belegError2) {
+            msgEl.textContent = "Fehler beim Vergeben der Belegnummer: " + belegError2.message;
+            msgEl.className = "form-message error";
+            return;
+          }
           rows.push({
             user_id: currentUserId, entry_date: date, direction: "ausgabe", category: "plattformgebuehren",
             amount: commission, payment_method: "bank", counterparty: "Eversports",
-            note: note + " (Kommission)", linked_group_id: groupId,
+            note: note + " (Kommission)", linked_group_id: groupId, beleg_nr: ausgabeBeleg,
           });
         }
 

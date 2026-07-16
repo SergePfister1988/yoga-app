@@ -388,7 +388,7 @@ a { color: inherit; text-decoration: none; }
         }
       }
 
-      const { data: nextBeleg, error: belegError } = await supabaseClient.rpc("next_beleg_number", { p_direction: "ausgabe" });
+      const { data: nextBeleg, error: belegError } = await supabaseClient.rpc("next_beleg_number", { p_direction: "ausgabe", p_year: new Date(date).getFullYear() });
       if (belegError) {
         msgEl.textContent = "Fehler beim Vergeben der Belegnummer: " + belegError.message;
         msgEl.className = "form-message error";
