@@ -198,8 +198,11 @@ a { color: inherit; text-decoration: none; }
       abschreibungen: "Abschreibungen",
       warenverkauf: "Warenverkauf-Ausgaben",
       plattformgebuehren: "Plattformgebühren (z.B. Eversports)",
+      privatbezug: "Privatbezug (Eigenlohn)",
+      interne_umbuchung: "Interne Umbuchung (Kasse ↔ Bank)",
       sonstiges: "Sonstiges",
     };
+    const EXCLUDED_FROM_TOTALS = ["privatbezug", "privateinlage", "interne_umbuchung"];
 
     function roleLabel(role, gender) {
       if (role === "admin") return "Admin";
@@ -435,7 +438,7 @@ a { color: inherit; text-decoration: none; }
         });
       }
 
-      const total = filtered.filter(r => r.status !== "storniert").reduce((sum, r) => sum + Number(r.amount || 0), 0);
+      const total = filtered.filter(r => r.status !== "storniert" && !EXCLUDED_FROM_TOTALS.includes(r.category)).reduce((sum, r) => sum + Number(r.amount || 0), 0);
       document.getElementById("total-amount").textContent = formatCHF(total);
     }
 

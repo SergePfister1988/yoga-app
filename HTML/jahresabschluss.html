@@ -235,7 +235,7 @@ a { color: inherit; text-decoration: none; }
     async function refreshForYear() {
       const yearEntries = allEntries.filter(e => new Date(e.entry_date).getFullYear() === selectedYear);
 
-      const totalEinnahmen = yearEntries.filter(e => e.direction === "einnahme").reduce((s, e) => s + Number(e.amount), 0);
+      const totalEinnahmen = yearEntries.filter(e => e.direction === "einnahme" && !["privateinlage", "interne_umbuchung"].includes(e.category)).reduce((s, e) => s + Number(e.amount), 0);
       const ausgaben = yearEntries.filter(e => e.direction === "ausgabe");
       const sumByCats = cats => ausgaben.filter(e => cats.includes(e.category)).reduce((s, e) => s + Number(e.amount), 0);
 

@@ -203,6 +203,9 @@ a { color: inherit; text-decoration: none; }
     };
 
     const MONTH_NAMES = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+    // Diese Kategorien beeinflussen den Kontostand, zählen aber nicht als
+    // steuerlich relevante Einnahme/Ausgabe (kein Einfluss auf Reingewinn)
+    const EXCLUDED_FROM_TOTALS = ["privatbezug", "privateinlage", "interne_umbuchung"];
     const CHART_COLORS = ["#DBAEA4", "#C08F84", "#8FA893", "#3E6B4F", "#A6483A", "#D4A5A0", "#7A9E93", "#B08968", "#6B7F76", "#9C8AA5", "#C4A57B"];
 
     function roleLabel(role, gender) {
@@ -271,8 +274,8 @@ a { color: inherit; text-decoration: none; }
     async function refreshForYear() {
       const yearEntries = allEntries.filter(e => new Date(e.entry_date).getFullYear() === selectedYear);
 
-      const totalEinnahmen = yearEntries.filter(e => e.direction === "einnahme").reduce((s, e) => s + Number(e.amount), 0);
-      const totalAusgaben = yearEntries.filter(e => e.direction === "ausgabe").reduce((s, e) => s + Number(e.amount), 0);
+      const totalEinnahmen = yearEntries.filter(e => e.direction === "einnahme" && !EXCLUDED_FROM_TOTALS.includes(e.category)).reduce((s, e) => s + Number(e.amount), 0);
+      const totalAusgaben = yearEntries.filter(e => e.direction === "ausgabe" && !EXCLUDED_FROM_TOTALS.includes(e.category)).reduce((s, e) => s + Number(e.amount), 0);
       document.getElementById("kpi-einnahmen").textContent = formatCHF(totalEinnahmen);
       document.getElementById("kpi-ausgaben").textContent = formatCHF(totalAusgaben);
       const reingewinnEl = document.getElementById("kpi-reingewinn");
@@ -457,6 +460,7 @@ a { color: inherit; text-decoration: none; }
       const einnahmenByMonth = new Array(12).fill(0);
       const ausgabenByMonth = new Array(12).fill(0);
       yearEntries.forEach(e => {
+        if (EXCLUDED_FROM_TOTALS.includes(e.category)) return;
         const m = new Date(e.entry_date).getMonth();
         if (e.direction === "einnahme") einnahmenByMonth[m] += Number(e.amount);
         else ausgabenByMonth[m] += Number(e.amount);
@@ -483,6 +487,7 @@ a { color: inherit; text-decoration: none; }
       const incomeTotals = {};
       const expenseTotals = {};
       yearEntries.forEach(e => {
+        if (EXCLUDED_FROM_TOTALS.includes(e.category)) return;
         if (e.direction === "einnahme") incomeTotals[e.category] = (incomeTotals[e.category] || 0) + Number(e.amount);
         else expenseTotals[e.category] = (expenseTotals[e.category] || 0) + Number(e.amount);
       });

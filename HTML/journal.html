@@ -116,6 +116,8 @@ a { color: inherit; text-decoration: none; }
       <div class="tab-row">
         <button class="btn-secondary active-tab" id="tab-manual" type="button">Buchung erfassen</button>
         <button class="btn-secondary" id="tab-eversports" type="button">Eversports-Abrechnung</button>
+        <button class="btn-secondary" id="tab-eigenlohn" type="button">Eigenlohn</button>
+        <button class="btn-secondary" id="tab-transfer" type="button">Kasse ↔ Bank</button>
       </div>
 
       <div id="panel-manual">
@@ -189,6 +191,66 @@ a { color: inherit; text-decoration: none; }
         <button class="btn-primary" id="save-eversports-btn">Abrechnung erfassen</button>
         <p class="form-message" id="eversports-message"></p>
       </div>
+
+      <div id="panel-eigenlohn" style="display:none;">
+        <h2>Eigenlohn (Privatbezug)</h2>
+        <p style="font-size:13px; color: var(--color-text-muted); margin-top:-6px;">
+          Überweisung vom Geschäfts- aufs Privatkonto. Reduziert den Bank-/Kassensaldo, zählt aber <strong>nicht</strong> als Geschäftsausgabe – wirkt sich nicht auf Reingewinn oder MWST-Umsatz aus.
+        </p>
+        <div class="two-col">
+          <div class="field">
+            <label for="el-date">Datum</label>
+            <input type="date" id="el-date" />
+          </div>
+          <div class="field">
+            <label for="el-amount">Betrag (CHF)</label>
+            <input type="number" id="el-amount" step="0.01" min="0" placeholder="0.00" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="el-payment">Von welchem Konto abgehoben?</label>
+          <select id="el-payment">
+            <option value="bank">Bank</option>
+            <option value="kasse">Kasse</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="el-note">Notiz</label>
+          <input type="text" id="el-note" placeholder="z.B. Eigenlohn Juli 2026" />
+        </div>
+        <button class="btn-primary" id="save-eigenlohn-btn">Eigenlohn erfassen</button>
+        <p class="form-message" id="eigenlohn-message"></p>
+      </div>
+
+      <div id="panel-transfer" style="display:none;">
+        <h2>Kasse ↔ Bank (interner Transfer)</h2>
+        <p style="font-size:13px; color: var(--color-text-muted); margin-top:-6px;">
+          z.B. Bareinzahlung von der Kasse aufs Geschäftskonto. Erstellt zwei verknüpfte Buchungen (eine je Konto) – zählt <strong>nicht</strong> als Einnahme/Ausgabe.
+        </p>
+        <div class="two-col">
+          <div class="field">
+            <label for="tr-date">Datum</label>
+            <input type="date" id="tr-date" />
+          </div>
+          <div class="field">
+            <label for="tr-amount">Betrag (CHF)</label>
+            <input type="number" id="tr-amount" step="0.01" min="0" placeholder="0.00" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="tr-direction">Richtung</label>
+          <select id="tr-direction">
+            <option value="kasse_to_bank">Bareinzahlung: Kasse → Bank</option>
+            <option value="bank_to_kasse">Barbezug: Bank → Kasse</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="tr-note">Notiz</label>
+          <input type="text" id="tr-note" placeholder="z.B. Bareinzahlung 27.06.2026" />
+        </div>
+        <button class="btn-primary" id="save-transfer-btn">Transfer erfassen</button>
+        <p class="form-message" id="transfer-message"></p>
+      </div>
     </div>
 
     <div class="card">
@@ -250,6 +312,7 @@ a { color: inherit; text-decoration: none; }
       provisionen: "Provisionen",
       eversports: "Eversports-Einnahmen",
       sonstige_einnahmen: "Sonstige Einnahmen",
+      privateinlage: "Privateinlage (Kapitaleinlage)",
     };
     const CATEGORIES_AUSGABE = {
       uebrige_unkosten: "Übrige Geschäftsunkosten",
@@ -262,9 +325,13 @@ a { color: inherit; text-decoration: none; }
       abschreibungen: "Abschreibungen",
       warenverkauf: "Warenverkauf-Ausgaben",
       plattformgebuehren: "Plattformgebühren (z.B. Eversports)",
+      privatbezug: "Privatbezug (Eigenlohn)",
       sonstiges: "Sonstiges",
     };
-    const ALL_CATEGORY_LABELS = { ...CATEGORIES_EINNAHME, ...CATEGORIES_AUSGABE };
+    const ALL_CATEGORY_LABELS = { ...CATEGORIES_EINNAHME, ...CATEGORIES_AUSGABE, interne_umbuchung: "Interne Umbuchung (Kasse ↔ Bank)" };
+    // Diese Kategorien beeinflussen den Kontostand, zählen aber nicht als
+    // steuerlich relevante Einnahme/Ausgabe (kein Einfluss auf Reingewinn)
+    const EXCLUDED_FROM_TOTALS = ["privatbezug", "privateinlage", "interne_umbuchung"];
 
     function roleLabel(role, gender) {
       if (role === "admin") return "Admin";
@@ -306,12 +373,19 @@ a { color: inherit; text-decoration: none; }
 
       document.getElementById("entry-date").valueAsDate = new Date();
       document.getElementById("ev-date").valueAsDate = new Date();
+      document.getElementById("el-date").valueAsDate = new Date();
+      document.getElementById("tr-date").valueAsDate = new Date();
+      document.getElementById("el-date").valueAsDate = new Date();
+      document.getElementById("tr-date").valueAsDate = new Date();
 
       setupTabs();
       setupDirectionToggle();
       setupCategoryOptions();
       setupForm();
       setupEversports();
+      setupEigenlohnAndTransfer();
+      setupEigenlohn();
+      setupTransfer();
       setupFilters();
       await loadEntries();
       await setupYearLock();
@@ -326,17 +400,19 @@ a { color: inherit; text-decoration: none; }
     // Tabs: manuelle Buchung vs. Eversports
     // ------------------------------------------------------------
     function setupTabs() {
-      document.getElementById("tab-manual").addEventListener("click", () => {
-        document.getElementById("tab-manual").classList.add("active-tab");
-        document.getElementById("tab-eversports").classList.remove("active-tab");
-        document.getElementById("panel-manual").style.display = "block";
-        document.getElementById("panel-eversports").style.display = "none";
-      });
-      document.getElementById("tab-eversports").addEventListener("click", () => {
-        document.getElementById("tab-eversports").classList.add("active-tab");
-        document.getElementById("tab-manual").classList.remove("active-tab");
-        document.getElementById("panel-eversports").style.display = "block";
-        document.getElementById("panel-manual").style.display = "none";
+      const tabs = [
+        { btn: "tab-manual", panel: "panel-manual" },
+        { btn: "tab-eversports", panel: "panel-eversports" },
+        { btn: "tab-eigenlohn", panel: "panel-eigenlohn" },
+        { btn: "tab-transfer", panel: "panel-transfer" },
+      ];
+      tabs.forEach(t => {
+        document.getElementById(t.btn).addEventListener("click", () => {
+          tabs.forEach(other => {
+            document.getElementById(other.btn).classList.toggle("active-tab", other.btn === t.btn);
+            document.getElementById(other.panel).style.display = other.btn === t.btn ? "block" : "none";
+          });
+        });
       });
     }
 
@@ -525,11 +601,121 @@ a { color: inherit; text-decoration: none; }
     }
 
     // ------------------------------------------------------------
+    // Eigenlohn (Privatbezug) & interner Transfer Kasse <-> Bank
+    // ------------------------------------------------------------
+    function setupEigenlohnAndTransfer() {
+      document.getElementById("save-eigenlohn-btn").addEventListener("click", async () => {
+        const msgEl = document.getElementById("eigenlohn-message");
+        const date = document.getElementById("el-date").value;
+        const amount = parseFloat(document.getElementById("el-amount").value);
+        const payment = document.getElementById("el-payment").value;
+        const note = document.getElementById("el-note").value.trim() || "Eigenlohn";
+
+        if (!date || isNaN(amount) || amount <= 0) {
+          msgEl.textContent = "Bitte Datum und einen gültigen Betrag angeben.";
+          msgEl.className = "form-message error";
+          return;
+        }
+
+        const year = new Date(date).getFullYear();
+        const { data: beleg, error: belegError } = await supabaseClient.rpc("next_beleg_number", { p_direction: "ausgabe", p_year: year });
+        if (belegError) {
+          msgEl.textContent = "Fehler beim Vergeben der Belegnummer: " + belegError.message;
+          msgEl.className = "form-message error";
+          return;
+        }
+
+        const { error } = await supabaseClient.from("journal_entries").insert({
+          user_id: currentUserId, entry_date: date, direction: "ausgabe", category: "privatbezug",
+          amount, payment_method: payment, counterparty: "Privat", note, beleg_nr: beleg,
+        });
+
+        if (error) {
+          if (error.message && error.message.toLowerCase().includes("row-level security")) {
+            msgEl.textContent = `Das Jahr ${year} ist abgeschlossen (gesperrt).`;
+          } else {
+            msgEl.textContent = "Fehler: " + error.message;
+          }
+          msgEl.className = "form-message error";
+          return;
+        }
+
+        msgEl.textContent = "Eigenlohn erfasst.";
+        msgEl.className = "form-message success";
+        document.getElementById("el-amount").value = "";
+        document.getElementById("el-note").value = "";
+        await loadEntries();
+      });
+
+      document.getElementById("save-transfer-btn").addEventListener("click", async () => {
+        const msgEl = document.getElementById("transfer-message");
+        const date = document.getElementById("tr-date").value;
+        const amount = parseFloat(document.getElementById("tr-amount").value);
+        const direction = document.getElementById("tr-direction").value;
+        const note = document.getElementById("tr-note").value.trim() || "Interner Transfer";
+
+        if (!date || isNaN(amount) || amount <= 0) {
+          msgEl.textContent = "Bitte Datum und einen gültigen Betrag angeben.";
+          msgEl.className = "form-message error";
+          return;
+        }
+
+        const sourceMethod = direction === "kasse_to_bank" ? "kasse" : "bank";
+        const targetMethod = direction === "kasse_to_bank" ? "bank" : "kasse";
+        const year = new Date(date).getFullYear();
+        const groupId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+
+        const { data: ausgabeBeleg, error: belegError1 } = await supabaseClient.rpc("next_beleg_number", { p_direction: "ausgabe", p_year: year });
+        if (belegError1) {
+          msgEl.textContent = "Fehler beim Vergeben der Belegnummer: " + belegError1.message;
+          msgEl.className = "form-message error";
+          return;
+        }
+        const { data: einnahmeBeleg, error: belegError2 } = await supabaseClient.rpc("next_beleg_number", { p_direction: "einnahme", p_year: year });
+        if (belegError2) {
+          msgEl.textContent = "Fehler beim Vergeben der Belegnummer: " + belegError2.message;
+          msgEl.className = "form-message error";
+          return;
+        }
+
+        const rows = [
+          {
+            user_id: currentUserId, entry_date: date, direction: "ausgabe", category: "interne_umbuchung",
+            amount, payment_method: sourceMethod, counterparty: "Interner Transfer",
+            note, linked_group_id: groupId, beleg_nr: ausgabeBeleg,
+          },
+          {
+            user_id: currentUserId, entry_date: date, direction: "einnahme", category: "interne_umbuchung",
+            amount, payment_method: targetMethod, counterparty: "Interner Transfer",
+            note, linked_group_id: groupId, beleg_nr: einnahmeBeleg,
+          },
+        ];
+
+        const { error } = await supabaseClient.from("journal_entries").insert(rows);
+        if (error) {
+          if (error.message && error.message.toLowerCase().includes("row-level security")) {
+            msgEl.textContent = `Das Jahr ${year} ist abgeschlossen (gesperrt).`;
+          } else {
+            msgEl.textContent = "Fehler: " + error.message;
+          }
+          msgEl.className = "form-message error";
+          return;
+        }
+
+        msgEl.textContent = "Transfer erfasst (zwei verknüpfte Buchungen).";
+        msgEl.className = "form-message success";
+        document.getElementById("tr-amount").value = "";
+        document.getElementById("tr-note").value = "";
+        await loadEntries();
+      });
+    }
+
+    // ------------------------------------------------------------
     // Liste, Filter, Summen
     // ------------------------------------------------------------
     function setupFilters() {
       const categorySelect = document.getElementById("filter-category");
-      const allCategories = { ...CATEGORIES_EINNAHME, ...CATEGORIES_AUSGABE };
+      const allCategories = { ...CATEGORIES_EINNAHME, ...CATEGORIES_AUSGABE, interne_umbuchung: "Interne Umbuchung (Kasse ↔ Bank)" };
       Object.entries(allCategories).forEach(([val, label]) => {
         const opt = document.createElement("option");
         opt.value = val;
@@ -635,8 +821,8 @@ a { color: inherit; text-decoration: none; }
         });
       }
 
-      const totalEinnahmen = filtered.filter(e => e.direction === "einnahme" && e.status !== "storniert").reduce((s, e) => s + Number(e.amount || 0), 0);
-      const totalAusgaben = filtered.filter(e => e.direction === "ausgabe" && e.status !== "storniert").reduce((s, e) => s + Number(e.amount || 0), 0);
+      const totalEinnahmen = filtered.filter(e => e.direction === "einnahme" && e.status !== "storniert" && !EXCLUDED_FROM_TOTALS.includes(e.category)).reduce((s, e) => s + Number(e.amount || 0), 0);
+      const totalAusgaben = filtered.filter(e => e.direction === "ausgabe" && e.status !== "storniert" && !EXCLUDED_FROM_TOTALS.includes(e.category)).reduce((s, e) => s + Number(e.amount || 0), 0);
       document.getElementById("total-einnahmen").textContent = formatCHF(totalEinnahmen);
       document.getElementById("total-ausgaben").textContent = formatCHF(totalAusgaben);
       document.getElementById("total-saldo").textContent = formatCHF(totalEinnahmen - totalAusgaben);
@@ -782,7 +968,7 @@ a { color: inherit; text-decoration: none; }
     function checkMwstThreshold() {
       const currentYear = new Date().getFullYear();
       const yearEinnahmen = allEntries
-        .filter(e => e.direction === "einnahme" && e.status !== "storniert" && new Date(e.entry_date).getFullYear() === currentYear)
+        .filter(e => e.direction === "einnahme" && e.status !== "storniert" && !EXCLUDED_FROM_TOTALS.includes(e.category) && new Date(e.entry_date).getFullYear() === currentYear)
         .reduce((s, e) => s + Number(e.amount), 0);
 
       const banner = document.getElementById("mwst-warning");
