@@ -214,6 +214,13 @@ a { color: inherit; text-decoration: none; }
             <option value="kasse">Kasse</option>
           </select>
         </div>
+        <div class="field" style="display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="el-affects-balance" checked style="width:auto;" />
+          <label for="el-affects-balance" style="margin:0;">Vom Konto abziehen (beeinflusst den berechneten Kontostand)</label>
+        </div>
+        <p style="font-size:12px; color: var(--color-text-muted); margin:-8px 0 14px 0;">
+          Aktiv: Der Betrag wird effektiv vom gewählten Konto abgezogen und im Saldo berücksichtigt. Inaktiv: reine buchhalterische Erfassung ohne echten Geldfluss – der Kontostand bleibt unverändert. Steuerlich zählt Eigenlohn so oder so nie als Ausgabe.
+        </p>
         <div class="field">
           <label for="el-note">Notiz</label>
           <input type="text" id="el-note" placeholder="z.B. Eigenlohn Juli 2026" />
@@ -625,9 +632,12 @@ a { color: inherit; text-decoration: none; }
           return;
         }
 
+        const affectsBalance = document.getElementById("el-affects-balance").checked;
+
         const { error } = await supabaseClient.from("journal_entries").insert({
           user_id: currentUserId, entry_date: date, direction: "ausgabe", category: "privatbezug",
           amount, payment_method: payment, counterparty: "Privat", note, beleg_nr: beleg,
+          affects_balance: affectsBalance,
         });
 
         if (error) {

@@ -251,7 +251,7 @@ a { color: inherit; text-decoration: none; }
     async function loadAllEntries() {
       const { data, error } = await supabaseClient
         .from("journal_entries")
-        .select("entry_date, direction, category, amount, payment_method, status")
+        .select("entry_date, direction, category, amount, payment_method, status, affects_balance")
         .eq("user_id", currentUserId);
       if (error) { console.error(error); return; }
       // Stornierte Buchungen zählen nirgends mit
@@ -323,8 +323,8 @@ a { color: inherit; text-decoration: none; }
         const prevBankOpening = prevData ? Number(prevData.bank_opening) : 0;
         const prevKasseOpening = prevData ? Number(prevData.kasse_opening) : 0;
         const prevYearEntries = allEntries.filter(e => new Date(e.entry_date).getFullYear() === selectedYear - 1);
-        const prevBankNet = prevYearEntries.filter(e => e.payment_method === "bank").reduce((s, e) => s + (e.direction === "einnahme" ? Number(e.amount) : -Number(e.amount)), 0);
-        const prevKasseNet = prevYearEntries.filter(e => e.payment_method === "kasse").reduce((s, e) => s + (e.direction === "einnahme" ? Number(e.amount) : -Number(e.amount)), 0);
+        const prevBankNet = prevYearEntries.filter(e => e.payment_method === "bank" && e.affects_balance !== false).reduce((s, e) => s + (e.direction === "einnahme" ? Number(e.amount) : -Number(e.amount)), 0);
+        const prevKasseNet = prevYearEntries.filter(e => e.payment_method === "kasse" && e.affects_balance !== false).reduce((s, e) => s + (e.direction === "einnahme" ? Number(e.amount) : -Number(e.amount)), 0);
 
         const suggestedBank = prevBankOpening + prevBankNet;
         const suggestedKasse = prevKasseOpening + prevKasseNet;
@@ -364,7 +364,7 @@ a { color: inherit; text-decoration: none; }
     function renderBalances() {
       const bankOpening = parseFloat(document.getElementById("bank-opening").value) || 0;
       const kasseOpening = parseFloat(document.getElementById("kasse-opening").value) || 0;
-      const yearEntries = allEntries.filter(e => new Date(e.entry_date).getFullYear() === selectedYear);
+      const yearEntries = allEntries.filter(e => new Date(e.entry_date).getFullYear() === selectedYear && e.affects_balance !== false);
 
       const bankNet = yearEntries.filter(e => e.payment_method === "bank").reduce((s, e) => s + (e.direction === "einnahme" ? Number(e.amount) : -Number(e.amount)), 0);
       const kasseNet = yearEntries.filter(e => e.payment_method === "kasse").reduce((s, e) => s + (e.direction === "einnahme" ? Number(e.amount) : -Number(e.amount)), 0);
@@ -381,7 +381,7 @@ a { color: inherit; text-decoration: none; }
       const kasseOpening = parseFloat(document.getElementById("kasse-opening").value) || 0;
       const opening = method === "bank" ? bankOpening : kasseOpening;
       const net = allEntries
-        .filter(e => e.payment_method === method && new Date(e.entry_date) <= new Date(asOfDate))
+        .filter(e => e.payment_method === method && e.affects_balance !== false && new Date(e.entry_date) <= new Date(asOfDate))
         .reduce((s, e) => s + (e.direction === "einnahme" ? Number(e.amount) : -Number(e.amount)), 0);
       return opening + net;
     }
