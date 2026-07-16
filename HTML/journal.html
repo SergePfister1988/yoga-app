@@ -93,6 +93,25 @@ a { color: inherit; text-decoration: none; }
     <a href="verwaltung.html" class="btn-secondary" style="margin-bottom: 10px;">← Zurück zur Verwaltung</a>
     <h1>Journal</h1>
 
+    <div id="mwst-warning" style="display:none; background:#FDF0E0; border:1px solid #E0B37A; color:#7A5310; padding:10px 14px; border-radius:4px; font-size:13px; margin-bottom:16px;"></div>
+
+    <div class="card">
+      <h2>Buchhaltungsjahr</h2>
+      <div class="two-col">
+        <div class="field">
+          <label for="lock-year-select">Jahr</label>
+          <select id="lock-year-select"></select>
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <p id="lock-status" style="margin:9px 0; font-size:14px;">–</p>
+        </div>
+      </div>
+      <button class="btn-secondary" id="lock-toggle-btn" type="button">Jahr abschliessen</button>
+      <button class="btn-secondary" id="export-csv-btn" type="button" style="margin-left:8px;">Als CSV exportieren</button>
+      <p class="form-message" id="lock-message"></p>
+    </div>
+
     <div class="card">
       <div class="tab-row">
         <button class="btn-secondary active-tab" id="tab-manual" type="button">Buchung erfassen</button>
@@ -175,7 +194,7 @@ a { color: inherit; text-decoration: none; }
     <div class="card">
       <h2>Buchungen</h2>
       <div class="filter-bar">
-        <input type="text" id="filter-search" placeholder="Suche in Notiz/Debitor-Kreditor …" />
+        <input type="text" id="filter-search" placeholder="Suche in Beleg Nr./Notiz/Debitor-Kreditor …" />
         <input type="number" id="filter-amount" placeholder="Betrag (CHF)" step="0.01" style="max-width:140px;" />
         <select id="filter-direction">
           <option value="">Einnahmen & Ausgaben</option>
@@ -208,6 +227,16 @@ a { color: inherit; text-decoration: none; }
       </div>
     </div>
   </main>
+
+  <div id="history-modal" style="display:none; position:fixed; inset:0; background:rgba(30,38,34,0.4); align-items:center; justify-content:center; z-index:100;">
+    <div style="background:var(--color-surface); border-radius:4px; padding:24px; width:100%; max-width:480px; max-height:80vh; overflow-y:auto;">
+      <h2 style="font-family: var(--font-display); font-size:18px; color: var(--color-pine-dark); margin-top:0;">Änderungsverlauf</h2>
+      <div id="history-content"></div>
+      <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+        <button class="btn-secondary" id="history-close-btn" type="button">Schliessen</button>
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
@@ -285,6 +314,12 @@ a { color: inherit; text-decoration: none; }
       setupEversports();
       setupFilters();
       await loadEntries();
+      await setupYearLock();
+      checkMwstThreshold();
+      document.getElementById("export-csv-btn").addEventListener("click", exportCsv);
+      document.getElementById("history-close-btn").addEventListener("click", () => {
+        document.getElementById("history-modal").style.display = "none";
+      });
     }
 
     // ------------------------------------------------------------
@@ -355,13 +390,30 @@ a { color: inherit; text-decoration: none; }
         return;
       }
 
+      const counterpartyVal = document.getElementById("entry-counterparty").value.trim() || null;
+
+      // Duplikatserkennung: gleiche Buchung (Datum + Betrag + Debitor/Kreditor) bereits vorhanden?
+      if (!editingId) {
+        const possibleDuplicate = allEntries.find(e =>
+          e.entry_date === date &&
+          Number(e.amount) === amount &&
+          (e.counterparty || null) === counterpartyVal
+        );
+        if (possibleDuplicate) {
+          const proceed = confirm(
+            `Es gibt bereits eine Buchung mit demselben Datum, Betrag und Debitor/Kreditor (Beleg Nr. ${possibleDuplicate.beleg_nr || "–"}). Trotzdem als neue, separate Buchung speichern?`
+          );
+          if (!proceed) return;
+        }
+      }
+
       const payload = {
         entry_date: date,
         direction: currentDirection,
         category: document.getElementById("entry-category").value,
         amount,
         payment_method: document.getElementById("entry-payment").value,
-        counterparty: document.getElementById("entry-counterparty").value.trim() || null,
+        counterparty: counterpartyVal,
         note: document.getElementById("entry-note").value.trim() || null,
         updated_at: new Date().toISOString(),
       };
@@ -371,11 +423,22 @@ a { color: inherit; text-decoration: none; }
         ({ error } = await supabaseClient.from("journal_entries").update(payload).eq("id", editingId));
       } else {
         payload.user_id = currentUserId;
+        const { data: nextBeleg, error: belegError } = await supabaseClient.rpc("next_beleg_number");
+        if (belegError) {
+          msgEl.textContent = "Fehler beim Vergeben der Belegnummer: " + belegError.message;
+          msgEl.className = "form-message error";
+          return;
+        }
+        payload.beleg_nr = nextBeleg;
         ({ error } = await supabaseClient.from("journal_entries").insert(payload));
       }
 
       if (error) {
-        msgEl.textContent = "Fehler: " + error.message;
+        if (error.message && error.message.toLowerCase().includes("row-level security")) {
+          msgEl.textContent = `Das Jahr ${new Date(date).getFullYear()} ist abgeschlossen (gesperrt). Hebe die Sperre unter "Buchhaltungsjahr" auf, um diese Buchung zu speichern.`;
+        } else {
+          msgEl.textContent = "Fehler: " + error.message;
+        }
         msgEl.className = "form-message error";
         return;
       }
@@ -470,7 +533,7 @@ a { color: inherit; text-decoration: none; }
     async function loadEntries() {
       const { data, error } = await supabaseClient
         .from("journal_entries")
-        .select("id, entry_date, direction, category, amount, payment_method, counterparty, note, linked_group_id, photo_path")
+        .select("id, beleg_nr, entry_date, direction, category, amount, payment_method, counterparty, note, linked_group_id, photo_path")
         .eq("user_id", currentUserId)
         .order("entry_date", { ascending: false });
 
@@ -504,7 +567,8 @@ a { color: inherit; text-decoration: none; }
       if (search) {
         filtered = filtered.filter(e =>
           (e.counterparty || "").toLowerCase().includes(search) ||
-          (e.note || "").toLowerCase().includes(search)
+          (e.note || "").toLowerCase().includes(search) ||
+          String(e.beleg_nr || "").includes(search)
         );
       }
 
@@ -533,16 +597,18 @@ a { color: inherit; text-decoration: none; }
             ${thumbHtml}
             <div class="entry-main">
               <div><span class="entry-amount ${e.direction}">${sign} ${formatCHF(e.amount)}</span> · ${escapeHtml(ALL_CATEGORY_LABELS[e.category] || e.category)}${evBadge}</div>
-              <div class="entry-meta">${dateStr} · ${escapeHtml(e.counterparty || "–")} · ${e.payment_method === "kasse" ? "Kasse" : e.payment_method === "privat" ? "Privat (kein Geldfluss)" : "Bank"}</div>
+              <div class="entry-meta">Beleg Nr. ${e.beleg_nr || "–"} · ${dateStr} · ${escapeHtml(e.counterparty || "–")} · ${e.payment_method === "kasse" ? "Kasse" : e.payment_method === "privat" ? "Privat (kein Geldfluss)" : "Bank"}</div>
               ${e.note ? `<div class="entry-note">${escapeHtml(e.note)}</div>` : ""}
             </div>
             <div style="display:flex; flex-direction:column; gap:6px;">
               <button type="button" class="btn-secondary" style="padding:5px 10px; font-size:12px;" data-action="edit">Bearbeiten</button>
+              <button type="button" class="btn-secondary" style="padding:5px 10px; font-size:11px;" data-action="history">Verlauf</button>
               <button type="button" class="btn-danger" data-action="delete">Löschen</button>
             </div>
           `;
           row.querySelector('[data-action="edit"]').addEventListener("click", () => startEdit(e));
           row.querySelector('[data-action="delete"]').addEventListener("click", () => deleteEntry(e));
+          row.querySelector('[data-action="history"]').addEventListener("click", () => showHistory(e));
           listEl.appendChild(row);
         });
       }
@@ -577,9 +643,143 @@ a { color: inherit; text-decoration: none; }
       }
       if (!confirm(confirmMsg)) return;
       const { error } = await supabaseClient.from("journal_entries").delete().eq("id", e.id);
-      if (error) { alert("Fehler: " + error.message); return; }
+      if (error) {
+        if (error.message && error.message.toLowerCase().includes("row-level security")) {
+          alert(`Das Jahr ${new Date(e.entry_date).getFullYear()} ist abgeschlossen (gesperrt). Hebe die Sperre unter "Buchhaltungsjahr" auf, um diese Buchung zu löschen.`);
+        } else {
+          alert("Fehler: " + error.message);
+        }
+        return;
+      }
       if (editingId === e.id) resetForm();
       await loadEntries();
+    }
+
+    // ------------------------------------------------------------
+    // Änderungsverlauf
+    // ------------------------------------------------------------
+    async function showHistory(e) {
+      const { data, error } = await supabaseClient
+        .from("journal_entries_audit")
+        .select("action, changed_at, old_data")
+        .eq("entry_id", e.id)
+        .order("changed_at", { ascending: false });
+
+      const contentEl = document.getElementById("history-content");
+      if (error) {
+        contentEl.innerHTML = `<p class="empty-state">Fehler: ${escapeHtml(error.message)}</p>`;
+      } else if (!data || !data.length) {
+        contentEl.innerHTML = `<p class="empty-state">Keine Änderungen protokolliert – Original-Buchung (Beleg Nr. ${e.beleg_nr || "–"}).</p>`;
+      } else {
+        contentEl.innerHTML = data.map(h => {
+          const d = h.old_data;
+          const when = new Date(h.changed_at).toLocaleString("de-CH");
+          const actionLabel = h.action === "delete" ? "Gelöscht" : "Geändert (vorheriger Stand)";
+          return `
+            <div style="border-bottom:1px solid var(--color-border); padding:10px 0; font-size:13px;">
+              <strong>${actionLabel}</strong> · ${when}<br/>
+              ${formatCHF(d.amount)} · ${escapeHtml(ALL_CATEGORY_LABELS[d.category] || d.category)} · ${escapeHtml(d.counterparty || "–")}<br/>
+              ${d.note ? escapeHtml(d.note) : ""}
+            </div>
+          `;
+        }).join("");
+      }
+      document.getElementById("history-modal").style.display = "flex";
+    }
+
+    // ------------------------------------------------------------
+    // Jahresabschluss-Sperre
+    // ------------------------------------------------------------
+    let lockedYears = new Set();
+
+    async function setupYearLock() {
+      const years = new Set(allEntries.map(e => new Date(e.entry_date).getFullYear()));
+      years.add(new Date().getFullYear());
+      const sorted = Array.from(years).sort((a, b) => b - a);
+      const select = document.getElementById("lock-year-select");
+      select.innerHTML = sorted.map(y => `<option value="${y}">${y}</option>`).join("");
+
+      const { data } = await supabaseClient.from("year_locks").select("year").eq("user_id", currentUserId);
+      lockedYears = new Set((data || []).map(r => r.year));
+
+      select.addEventListener("change", renderLockStatus);
+      document.getElementById("lock-toggle-btn").addEventListener("click", toggleYearLock);
+      renderLockStatus();
+    }
+
+    function renderLockStatus() {
+      const year = parseInt(document.getElementById("lock-year-select").value, 10);
+      const isLocked = lockedYears.has(year);
+      document.getElementById("lock-status").textContent = isLocked ? "🔒 Abgeschlossen (gesperrt)" : "🔓 Offen";
+      document.getElementById("lock-toggle-btn").textContent = isLocked ? "Sperre aufheben" : "Jahr abschliessen";
+    }
+
+    async function toggleYearLock() {
+      const msgEl = document.getElementById("lock-message");
+      const year = parseInt(document.getElementById("lock-year-select").value, 10);
+      const isLocked = lockedYears.has(year);
+
+      if (isLocked) {
+        const { error } = await supabaseClient.from("year_locks").delete().eq("user_id", currentUserId).eq("year", year);
+        if (error) { msgEl.textContent = "Fehler: " + error.message; msgEl.className = "form-message error"; return; }
+        lockedYears.delete(year);
+        msgEl.textContent = `Sperre für ${year} aufgehoben.`;
+      } else {
+        if (!confirm(`Jahr ${year} wirklich abschliessen? Danach können keine Buchungen mit Datum in ${year} mehr erstellt, bearbeitet oder gelöscht werden, bis du die Sperre wieder aufhebst.`)) return;
+        const { error } = await supabaseClient.from("year_locks").insert({ user_id: currentUserId, year });
+        if (error) { msgEl.textContent = "Fehler: " + error.message; msgEl.className = "form-message error"; return; }
+        lockedYears.add(year);
+        msgEl.textContent = `Jahr ${year} abgeschlossen.`;
+      }
+      msgEl.className = "form-message success";
+      renderLockStatus();
+    }
+
+    // ------------------------------------------------------------
+    // MWST-Schwellenwert-Warnung (CHF 100'000 Jahresumsatz)
+    // ------------------------------------------------------------
+    function checkMwstThreshold() {
+      const currentYear = new Date().getFullYear();
+      const yearEinnahmen = allEntries
+        .filter(e => e.direction === "einnahme" && new Date(e.entry_date).getFullYear() === currentYear)
+        .reduce((s, e) => s + Number(e.amount), 0);
+
+      const banner = document.getElementById("mwst-warning");
+      const threshold = 100000;
+      if (yearEinnahmen >= threshold) {
+        banner.textContent = `⚠️ Dein Umsatz ${currentYear} liegt bei ${formatCHF(yearEinnahmen)} und hat die MWST-Schwelle von CHF 100'000 erreicht/überschritten. Bitte MWST-Pflicht prüfen (lassen).`;
+        banner.style.display = "block";
+      } else if (yearEinnahmen >= threshold * 0.8) {
+        banner.textContent = `Hinweis: Dein Umsatz ${currentYear} liegt bei ${formatCHF(yearEinnahmen)} – die MWST-Schwelle von CHF 100'000 rückt näher.`;
+        banner.style.display = "block";
+      } else {
+        banner.style.display = "none";
+      }
+    }
+
+    // ------------------------------------------------------------
+    // CSV-Export
+    // ------------------------------------------------------------
+    function exportCsv() {
+      const header = ["Beleg Nr.", "Datum", "Art", "Kategorie", "Betrag", "Zahlungsmittel", "Debitor/Kreditor", "Notiz"];
+      const rows = allEntries.map(e => [
+        e.beleg_nr || "",
+        e.entry_date,
+        e.direction === "einnahme" ? "Einnahme" : "Ausgabe",
+        ALL_CATEGORY_LABELS[e.category] || e.category,
+        Number(e.amount).toFixed(2),
+        e.payment_method,
+        e.counterparty || "",
+        (e.note || "").replace(/"/g, '""'),
+      ]);
+      const csv = [header, ...rows].map(r => r.map(v => `"${v}"`).join(";")).join("\n");
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `journal_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
     }
 
     document.getElementById("logout-btn").addEventListener("click", async () => {

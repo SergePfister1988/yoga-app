@@ -110,6 +110,7 @@ a { color: inherit; text-decoration: none; }
           </div>
         </div>
       </div>
+      <p class="hint" id="opening-carryforward-hint" style="display:none; font-size:12px; color: var(--color-text-muted); margin: -8px 0 10px 0;"></p>
       <button class="btn-primary" id="save-opening-btn">Speichern</button>
       <p class="form-message" id="opening-message"></p>
 
@@ -123,6 +124,34 @@ a { color: inherit; text-decoration: none; }
           <div class="amount" id="balance-kasse">CHF 0.00</div>
         </div>
       </div>
+    </div>
+
+    <div class="card">
+      <h2>Kontenabgleich</h2>
+      <p style="font-size:13px; color: var(--color-text-muted); margin-top:-6px;">Gleiche den berechneten Saldo regelmässig mit dem effektiven Kontoauszug/Kassenbestand ab.</p>
+      <div class="two-col">
+        <div class="field">
+          <label for="reconcile-date">Datum</label>
+          <input type="date" id="reconcile-date" />
+        </div>
+        <div class="field">
+          <label for="reconcile-method">Konto</label>
+          <select id="reconcile-method">
+            <option value="bank">Bank</option>
+            <option value="kasse">Kasse</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="reconcile-statement">Effektiver Kontostand laut Auszug (CHF)</label>
+        <input type="number" id="reconcile-statement" step="0.01" />
+      </div>
+      <p style="font-size:13px;">Berechneter Saldo in der App: <strong id="reconcile-computed">CHF 0.00</strong></p>
+      <p style="font-size:14px; font-weight:700;" id="reconcile-difference"></p>
+      <button class="btn-primary" id="save-reconcile-btn">Abgleich speichern</button>
+      <p class="form-message" id="reconcile-message"></p>
+
+      <div id="reconcile-history" style="margin-top:16px;"></div>
     </div>
 
     <div class="card">
@@ -211,6 +240,8 @@ a { color: inherit; text-decoration: none; }
       await loadAllEntries();
       setupYearSelect();
       document.getElementById("save-opening-btn").addEventListener("click", saveOpeningBalances);
+      document.getElementById("reconcile-date").valueAsDate = new Date();
+      setupReconciliation();
       await refreshForYear();
     }
 
@@ -271,8 +302,40 @@ a { color: inherit; text-decoration: none; }
         .eq("user_id", currentUserId)
         .eq("year", selectedYear)
         .maybeSingle();
-      document.getElementById("bank-opening").value = data ? data.bank_opening : 0;
-      document.getElementById("kasse-opening").value = data ? data.kasse_opening : 0;
+
+      if (data) {
+        document.getElementById("bank-opening").value = data.bank_opening;
+        document.getElementById("kasse-opening").value = data.kasse_opening;
+        document.getElementById("opening-carryforward-hint").style.display = "none";
+      } else {
+        // Kein Anfangsbestand für dieses Jahr erfasst: Schlussbestand des Vorjahres vorschlagen
+        const { data: prevData } = await supabaseClient
+          .from("opening_balances")
+          .select("bank_opening, kasse_opening")
+          .eq("user_id", currentUserId)
+          .eq("year", selectedYear - 1)
+          .maybeSingle();
+
+        const prevBankOpening = prevData ? Number(prevData.bank_opening) : 0;
+        const prevKasseOpening = prevData ? Number(prevData.kasse_opening) : 0;
+        const prevYearEntries = allEntries.filter(e => new Date(e.entry_date).getFullYear() === selectedYear - 1);
+        const prevBankNet = prevYearEntries.filter(e => e.payment_method === "bank").reduce((s, e) => s + (e.direction === "einnahme" ? Number(e.amount) : -Number(e.amount)), 0);
+        const prevKasseNet = prevYearEntries.filter(e => e.payment_method === "kasse").reduce((s, e) => s + (e.direction === "einnahme" ? Number(e.amount) : -Number(e.amount)), 0);
+
+        const suggestedBank = prevBankOpening + prevBankNet;
+        const suggestedKasse = prevKasseOpening + prevKasseNet;
+
+        document.getElementById("bank-opening").value = suggestedBank.toFixed(2);
+        document.getElementById("kasse-opening").value = suggestedKasse.toFixed(2);
+
+        const hintEl = document.getElementById("opening-carryforward-hint");
+        if (prevData || prevYearEntries.length) {
+          hintEl.textContent = `Vorschlag automatisch aus dem Schlussbestand ${selectedYear - 1} übernommen – bitte prüfen und speichern.`;
+          hintEl.style.display = "block";
+        } else {
+          hintEl.style.display = "none";
+        }
+      }
     }
 
     async function saveOpeningBalances() {
@@ -304,6 +367,86 @@ a { color: inherit; text-decoration: none; }
 
       document.getElementById("balance-bank").textContent = formatCHF(bankOpening + bankNet);
       document.getElementById("balance-kasse").textContent = formatCHF(kasseOpening + kasseNet);
+    }
+
+    // ------------------------------------------------------------
+    // Kontenabgleich
+    // ------------------------------------------------------------
+    function computeBalanceAsOf(method, asOfDate) {
+      const bankOpening = parseFloat(document.getElementById("bank-opening").value) || 0;
+      const kasseOpening = parseFloat(document.getElementById("kasse-opening").value) || 0;
+      const opening = method === "bank" ? bankOpening : kasseOpening;
+      const net = allEntries
+        .filter(e => e.payment_method === method && new Date(e.entry_date) <= new Date(asOfDate))
+        .reduce((s, e) => s + (e.direction === "einnahme" ? Number(e.amount) : -Number(e.amount)), 0);
+      return opening + net;
+    }
+
+    function setupReconciliation() {
+      function updateComputed() {
+        const method = document.getElementById("reconcile-method").value;
+        const date = document.getElementById("reconcile-date").value || new Date().toISOString().slice(0, 10);
+        const computed = computeBalanceAsOf(method, date);
+        document.getElementById("reconcile-computed").textContent = formatCHF(computed);
+        const statement = parseFloat(document.getElementById("reconcile-statement").value);
+        const diffEl = document.getElementById("reconcile-difference");
+        if (!isNaN(statement)) {
+          const diff = statement - computed;
+          diffEl.textContent = Math.abs(diff) < 0.01 ? "✓ Stimmt überein." : `Differenz: ${formatCHF(diff)}`;
+          diffEl.style.color = Math.abs(diff) < 0.01 ? "var(--color-green)" : "var(--color-error)";
+        } else {
+          diffEl.textContent = "";
+        }
+      }
+      document.getElementById("reconcile-method").addEventListener("change", updateComputed);
+      document.getElementById("reconcile-date").addEventListener("change", updateComputed);
+      document.getElementById("reconcile-statement").addEventListener("input", updateComputed);
+      updateComputed();
+
+      document.getElementById("save-reconcile-btn").addEventListener("click", async () => {
+        const msgEl = document.getElementById("reconcile-message");
+        const method = document.getElementById("reconcile-method").value;
+        const date = document.getElementById("reconcile-date").value;
+        const statement = parseFloat(document.getElementById("reconcile-statement").value);
+        if (!date || isNaN(statement)) {
+          msgEl.textContent = "Bitte Datum und effektiven Kontostand angeben.";
+          msgEl.className = "form-message error";
+          return;
+        }
+        const computed = computeBalanceAsOf(method, date);
+        const difference = statement - computed;
+
+        const { error } = await supabaseClient.from("bank_reconciliations").insert({
+          user_id: currentUserId, reconciliation_date: date, payment_method: method,
+          statement_balance: statement, computed_balance: computed, difference,
+        });
+        if (error) { msgEl.textContent = "Fehler: " + error.message; msgEl.className = "form-message error"; return; }
+        msgEl.textContent = "Abgleich gespeichert.";
+        msgEl.className = "form-message success";
+        await loadReconciliationHistory();
+      });
+
+      loadReconciliationHistory();
+    }
+
+    async function loadReconciliationHistory() {
+      const { data } = await supabaseClient
+        .from("bank_reconciliations")
+        .select("reconciliation_date, payment_method, statement_balance, computed_balance, difference")
+        .eq("user_id", currentUserId)
+        .order("reconciliation_date", { ascending: false })
+        .limit(10);
+
+      const listEl = document.getElementById("reconcile-history");
+      if (!data || !data.length) { listEl.innerHTML = ""; return; }
+      listEl.innerHTML = `<p style="font-size:12px; color:var(--color-text-muted); margin-bottom:6px;">Letzte Abgleiche:</p>` +
+        data.map(r => {
+          const ok = Math.abs(r.difference) < 0.01;
+          return `<div style="font-size:13px; padding:6px 0; border-bottom:1px solid var(--color-border);">
+            ${new Date(r.reconciliation_date).toLocaleDateString("de-CH")} · ${r.payment_method === "bank" ? "Bank" : "Kasse"} ·
+            ${formatCHF(r.statement_balance)} <span style="color:${ok ? "var(--color-green)" : "var(--color-error)"};">${ok ? "✓" : "Diff. " + formatCHF(r.difference)}</span>
+          </div>`;
+        }).join("");
     }
 
     // ------------------------------------------------------------
