@@ -388,9 +388,21 @@ a { color: inherit; text-decoration: none; }
         }
       }
 
+      const { data: nextBeleg, error: belegError } = await supabaseClient.rpc("next_beleg_number", { p_direction: "ausgabe" });
+      if (belegError) {
+        msgEl.textContent = "Fehler beim Vergeben der Belegnummer: " + belegError.message;
+        msgEl.className = "form-message error";
+        return;
+      }
+      payload.beleg_nr = nextBeleg;
+
       const { error } = await supabaseClient.from("journal_entries").insert(payload);
       if (error) {
-        msgEl.textContent = "Fehler: " + error.message;
+        if (error.message && error.message.toLowerCase().includes("row-level security")) {
+          msgEl.textContent = `Das Jahr ${new Date(date).getFullYear()} ist abgeschlossen (gesperrt). Hebe die Sperre im Journal auf.`;
+        } else {
+          msgEl.textContent = "Fehler: " + error.message;
+        }
         msgEl.className = "form-message error";
         return;
       }
@@ -420,7 +432,7 @@ a { color: inherit; text-decoration: none; }
     async function loadSpesen() {
       const { data, error } = await supabaseClient
         .from("journal_entries")
-        .select("id, entry_date, category, amount, payment_method, counterparty, note, photo_path")
+        .select("id, beleg_nr, entry_date, category, amount, payment_method, counterparty, note, photo_path, status")
         .eq("user_id", currentUserId)
         .eq("direction", "ausgabe")
         .like("note", "[%")
@@ -461,8 +473,11 @@ a { color: inherit; text-decoration: none; }
         filtered.forEach(e => {
           const row = document.createElement("div");
           row.className = "entry-row";
+          const isCancelled = e.status === "storniert";
+          if (isCancelled) row.style.opacity = "0.55";
           const dateStr = new Date(e.entry_date).toLocaleDateString("de-CH");
           const noteDisplay = (e.note || "").replace(/^\[[^\]]+\]\s*/, "");
+          const cancelledBadge = isCancelled ? `<span class="type-badge" style="background:var(--color-error); color:#fff; border-color:var(--color-error);">Storniert</span>` : "";
           let thumbHtml = "";
           if (e.photo_path) {
             const { data: pub } = supabaseClient.storage.from("asana-media").getPublicUrl(e.photo_path);
@@ -475,25 +490,37 @@ a { color: inherit; text-decoration: none; }
           row.innerHTML = `
             ${thumbHtml}
             <div class="entry-main">
-              <div><span class="entry-amount">− ${formatCHF(e.amount)}</span><span class="type-badge">${TYPE_LABELS[e.spesenType]}</span></div>
-              <div class="entry-meta">${dateStr} · ${escapeHtml(e.counterparty || "–")} · ${e.payment_method === "kasse" ? "Kasse" : e.payment_method === "privat" ? "Privat (kein Geldfluss)" : "Bank"}</div>
+              <div><span class="entry-amount" style="${isCancelled ? "text-decoration:line-through;" : ""}">− ${formatCHF(e.amount)}</span><span class="type-badge">${TYPE_LABELS[e.spesenType]}</span>${cancelledBadge}</div>
+              <div class="entry-meta">Beleg Nr. ${e.beleg_nr || "–"} · ${dateStr} · ${escapeHtml(e.counterparty || "–")} · ${e.payment_method === "kasse" ? "Kasse" : e.payment_method === "privat" ? "Privat (kein Geldfluss)" : "Bank"}</div>
               ${noteDisplay ? `<div class="entry-note">${escapeHtml(noteDisplay)}</div>` : ""}
             </div>
-            <button type="button" class="btn-danger" data-action="delete">Löschen</button>
+            ${isCancelled ? "" : `<button type="button" class="btn-danger" data-action="cancel">Stornieren</button>`}
           `;
-          row.querySelector('[data-action="delete"]').addEventListener("click", () => deleteSpesen(e));
+          if (!isCancelled) {
+            row.querySelector('[data-action="cancel"]').addEventListener("click", () => cancelSpesen(e));
+          }
           listEl.appendChild(row);
         });
       }
 
-      const total = filtered.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+      const total = filtered.filter(e => e.status !== "storniert").reduce((sum, e) => sum + Number(e.amount || 0), 0);
       document.getElementById("total-amount").textContent = formatCHF(total);
     }
 
-    async function deleteSpesen(e) {
-      if (!confirm(`Spesen-Eintrag über ${formatCHF(e.amount)} wirklich löschen?`)) return;
-      const { error } = await supabaseClient.from("journal_entries").delete().eq("id", e.id);
-      if (error) { alert("Fehler: " + error.message); return; }
+    async function cancelSpesen(e) {
+      if (!confirm(`Spesen-Eintrag Beleg Nr. ${e.beleg_nr} über ${formatCHF(e.amount)} wirklich stornieren? Er bleibt sichtbar, zählt aber nicht mehr in der Summe.`)) return;
+      const { error } = await supabaseClient
+        .from("journal_entries")
+        .update({ status: "storniert", cancelled_at: new Date().toISOString() })
+        .eq("id", e.id);
+      if (error) {
+        if (error.message && error.message.toLowerCase().includes("row-level security")) {
+          alert(`Das Jahr ${new Date(e.entry_date).getFullYear()} ist abgeschlossen (gesperrt). Hebe die Sperre im Journal auf, um diesen Eintrag zu stornieren.`);
+        } else {
+          alert("Fehler: " + error.message);
+        }
+        return;
+      }
       await loadSpesen();
     }
 

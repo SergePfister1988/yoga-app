@@ -395,6 +395,7 @@ a { color: inherit; text-decoration: none; }
       // Duplikatserkennung: gleiche Buchung (Datum + Betrag + Debitor/Kreditor) bereits vorhanden?
       if (!editingId) {
         const possibleDuplicate = allEntries.find(e =>
+          e.status !== "storniert" &&
           e.entry_date === date &&
           Number(e.amount) === amount &&
           (e.counterparty || null) === counterpartyVal
@@ -423,7 +424,7 @@ a { color: inherit; text-decoration: none; }
         ({ error } = await supabaseClient.from("journal_entries").update(payload).eq("id", editingId));
       } else {
         payload.user_id = currentUserId;
-        const { data: nextBeleg, error: belegError } = await supabaseClient.rpc("next_beleg_number");
+        const { data: nextBeleg, error: belegError } = await supabaseClient.rpc("next_beleg_number", { p_direction: currentDirection });
         if (belegError) {
           msgEl.textContent = "Fehler beim Vergeben der Belegnummer: " + belegError.message;
           msgEl.className = "form-message error";
@@ -533,7 +534,7 @@ a { color: inherit; text-decoration: none; }
     async function loadEntries() {
       const { data, error } = await supabaseClient
         .from("journal_entries")
-        .select("id, beleg_nr, entry_date, direction, category, amount, payment_method, counterparty, note, linked_group_id, photo_path")
+        .select("id, beleg_nr, entry_date, direction, category, amount, payment_method, counterparty, note, linked_group_id, photo_path, status")
         .eq("user_id", currentUserId)
         .order("entry_date", { ascending: false });
 
@@ -581,9 +582,12 @@ a { color: inherit; text-decoration: none; }
         filtered.forEach(e => {
           const row = document.createElement("div");
           row.className = "entry-row";
+          const isCancelled = e.status === "storniert";
+          if (isCancelled) row.style.opacity = "0.55";
           const dateStr = new Date(e.entry_date).toLocaleDateString("de-CH");
           const sign = e.direction === "einnahme" ? "+" : "−";
           const evBadge = e.category === "eversports" || e.category === "plattformgebuehren" ? `<span class="eversports-badge">Eversports</span>` : "";
+          const cancelledBadge = isCancelled ? `<span class="eversports-badge" style="background:var(--color-error);">Storniert</span>` : "";
           let thumbHtml = "";
           if (e.photo_path) {
             const { data: pub } = supabaseClient.storage.from("asana-media").getPublicUrl(e.photo_path);
@@ -596,25 +600,29 @@ a { color: inherit; text-decoration: none; }
           row.innerHTML = `
             ${thumbHtml}
             <div class="entry-main">
-              <div><span class="entry-amount ${e.direction}">${sign} ${formatCHF(e.amount)}</span> · ${escapeHtml(ALL_CATEGORY_LABELS[e.category] || e.category)}${evBadge}</div>
+              <div><span class="entry-amount ${e.direction}" style="${isCancelled ? "text-decoration:line-through;" : ""}">${sign} ${formatCHF(e.amount)}</span> · ${escapeHtml(ALL_CATEGORY_LABELS[e.category] || e.category)}${evBadge}${cancelledBadge}</div>
               <div class="entry-meta">Beleg Nr. ${e.beleg_nr || "–"} · ${dateStr} · ${escapeHtml(e.counterparty || "–")} · ${e.payment_method === "kasse" ? "Kasse" : e.payment_method === "privat" ? "Privat (kein Geldfluss)" : "Bank"}</div>
               ${e.note ? `<div class="entry-note">${escapeHtml(e.note)}</div>` : ""}
             </div>
             <div style="display:flex; flex-direction:column; gap:6px;">
-              <button type="button" class="btn-secondary" style="padding:5px 10px; font-size:12px;" data-action="edit">Bearbeiten</button>
+              <button type="button" class="btn-secondary" style="padding:5px 10px; font-size:12px;" data-action="edit" ${isCancelled ? "disabled" : ""}>Bearbeiten</button>
               <button type="button" class="btn-secondary" style="padding:5px 10px; font-size:11px;" data-action="history">Verlauf</button>
-              <button type="button" class="btn-danger" data-action="delete">Löschen</button>
+              ${isCancelled
+                ? ""
+                : `<button type="button" class="btn-danger" data-action="cancel">Stornieren</button>`}
             </div>
           `;
-          row.querySelector('[data-action="edit"]').addEventListener("click", () => startEdit(e));
-          row.querySelector('[data-action="delete"]').addEventListener("click", () => deleteEntry(e));
+          if (!isCancelled) {
+            row.querySelector('[data-action="edit"]').addEventListener("click", () => startEdit(e));
+            row.querySelector('[data-action="cancel"]').addEventListener("click", () => cancelEntry(e));
+          }
           row.querySelector('[data-action="history"]').addEventListener("click", () => showHistory(e));
           listEl.appendChild(row);
         });
       }
 
-      const totalEinnahmen = filtered.filter(e => e.direction === "einnahme").reduce((s, e) => s + Number(e.amount || 0), 0);
-      const totalAusgaben = filtered.filter(e => e.direction === "ausgabe").reduce((s, e) => s + Number(e.amount || 0), 0);
+      const totalEinnahmen = filtered.filter(e => e.direction === "einnahme" && e.status !== "storniert").reduce((s, e) => s + Number(e.amount || 0), 0);
+      const totalAusgaben = filtered.filter(e => e.direction === "ausgabe" && e.status !== "storniert").reduce((s, e) => s + Number(e.amount || 0), 0);
       document.getElementById("total-einnahmen").textContent = formatCHF(totalEinnahmen);
       document.getElementById("total-ausgaben").textContent = formatCHF(totalAusgaben);
       document.getElementById("total-saldo").textContent = formatCHF(totalEinnahmen - totalAusgaben);
@@ -636,16 +644,19 @@ a { color: inherit; text-decoration: none; }
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    async function deleteEntry(e) {
-      let confirmMsg = `Buchung über ${formatCHF(e.amount)} wirklich löschen?`;
+    async function cancelEntry(e) {
+      let confirmMsg = `Buchung Beleg Nr. ${e.beleg_nr} über ${formatCHF(e.amount)} wirklich stornieren? Sie bleibt sichtbar (als "storniert" markiert), zählt aber nicht mehr in den Summen. Die Belegnummer bleibt lückenlos erhalten.`;
       if (e.linked_group_id) {
-        confirmMsg = `Diese Buchung gehört zu einer Eversports-Abrechnung. Nur diese eine Zeile (${formatCHF(e.amount)}) löschen? Die verknüpfte Buchung bleibt bestehen.`;
+        confirmMsg = `Diese Buchung gehört zu einer Eversports-Abrechnung. Nur diese eine Zeile (Beleg Nr. ${e.beleg_nr}) stornieren? Die verknüpfte Buchung bleibt bestehen.`;
       }
       if (!confirm(confirmMsg)) return;
-      const { error } = await supabaseClient.from("journal_entries").delete().eq("id", e.id);
+      const { error } = await supabaseClient
+        .from("journal_entries")
+        .update({ status: "storniert", cancelled_at: new Date().toISOString() })
+        .eq("id", e.id);
       if (error) {
         if (error.message && error.message.toLowerCase().includes("row-level security")) {
-          alert(`Das Jahr ${new Date(e.entry_date).getFullYear()} ist abgeschlossen (gesperrt). Hebe die Sperre unter "Buchhaltungsjahr" auf, um diese Buchung zu löschen.`);
+          alert(`Das Jahr ${new Date(e.entry_date).getFullYear()} ist abgeschlossen (gesperrt). Hebe die Sperre unter "Buchhaltungsjahr" auf, um diese Buchung zu stornieren.`);
         } else {
           alert("Fehler: " + error.message);
         }
@@ -741,7 +752,7 @@ a { color: inherit; text-decoration: none; }
     function checkMwstThreshold() {
       const currentYear = new Date().getFullYear();
       const yearEinnahmen = allEntries
-        .filter(e => e.direction === "einnahme" && new Date(e.entry_date).getFullYear() === currentYear)
+        .filter(e => e.direction === "einnahme" && e.status !== "storniert" && new Date(e.entry_date).getFullYear() === currentYear)
         .reduce((s, e) => s + Number(e.amount), 0);
 
       const banner = document.getElementById("mwst-warning");
@@ -761,7 +772,7 @@ a { color: inherit; text-decoration: none; }
     // CSV-Export
     // ------------------------------------------------------------
     function exportCsv() {
-      const header = ["Beleg Nr.", "Datum", "Art", "Kategorie", "Betrag", "Zahlungsmittel", "Debitor/Kreditor", "Notiz"];
+      const header = ["Beleg Nr.", "Datum", "Art", "Kategorie", "Betrag", "Zahlungsmittel", "Debitor/Kreditor", "Notiz", "Status"];
       const rows = allEntries.map(e => [
         e.beleg_nr || "",
         e.entry_date,
@@ -771,6 +782,7 @@ a { color: inherit; text-decoration: none; }
         e.payment_method,
         e.counterparty || "",
         (e.note || "").replace(/"/g, '""'),
+        e.status === "storniert" ? "Storniert" : "Aktiv",
       ]);
       const csv = [header, ...rows].map(r => r.map(v => `"${v}"`).join(";")).join("\n");
       const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });

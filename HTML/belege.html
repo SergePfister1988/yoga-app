@@ -118,6 +118,7 @@ a { color: inherit; text-decoration: none; }
             <option value="ahv_bvg">AHV/BVG-Beiträge</option>
             <option value="abschreibungen">Abschreibungen</option>
             <option value="warenverkauf">Warenverkauf-Ausgaben</option>
+            <option value="plattformgebuehren">Plattformgebühren (z.B. Eversports)</option>
             <option value="sonstiges">Sonstiges</option>
           </select>
         </div>
@@ -160,6 +161,7 @@ a { color: inherit; text-decoration: none; }
           <option value="ahv_bvg">AHV/BVG-Beiträge</option>
           <option value="abschreibungen">Abschreibungen</option>
           <option value="warenverkauf">Warenverkauf-Ausgaben</option>
+          <option value="plattformgebuehren">Plattformgebühren (z.B. Eversports)</option>
           <option value="sonstiges">Sonstiges</option>
         </select>
         <select id="filter-month">
@@ -195,6 +197,7 @@ a { color: inherit; text-decoration: none; }
       ahv_bvg: "AHV/BVG-Beiträge",
       abschreibungen: "Abschreibungen",
       warenverkauf: "Warenverkauf-Ausgaben",
+      plattformgebuehren: "Plattformgebühren (z.B. Eversports)",
       sonstiges: "Sonstiges",
     };
 
@@ -291,9 +294,10 @@ a { color: inherit; text-decoration: none; }
       }
 
       const payload = {
-        receipt_date: date,
+        entry_date: date,
+        direction: "ausgabe",
         amount,
-        company: document.getElementById("receipt-company").value.trim() || null,
+        counterparty: document.getElementById("receipt-company").value.trim() || null,
         category: document.getElementById("receipt-category").value,
         payment_method: document.getElementById("receipt-payment").value,
         note: document.getElementById("receipt-note").value.trim() || null,
@@ -317,14 +321,25 @@ a { color: inherit; text-decoration: none; }
 
       let error;
       if (editingId) {
-        ({ error } = await supabaseClient.from("expense_receipts").update(payload).eq("id", editingId));
+        ({ error } = await supabaseClient.from("journal_entries").update(payload).eq("id", editingId));
       } else {
         payload.user_id = currentUserId;
-        ({ error } = await supabaseClient.from("expense_receipts").insert(payload));
+        const { data: nextBeleg, error: belegError } = await supabaseClient.rpc("next_beleg_number", { p_direction: "ausgabe" });
+        if (belegError) {
+          msgEl.textContent = "Fehler beim Vergeben der Belegnummer: " + belegError.message;
+          msgEl.className = "form-message error";
+          return;
+        }
+        payload.beleg_nr = nextBeleg;
+        ({ error } = await supabaseClient.from("journal_entries").insert(payload));
       }
 
       if (error) {
-        msgEl.textContent = "Fehler: " + error.message;
+        if (error.message && error.message.toLowerCase().includes("row-level security")) {
+          msgEl.textContent = `Das Jahr ${new Date(date).getFullYear()} ist abgeschlossen (gesperrt). Hebe die Sperre im Journal auf.`;
+        } else {
+          msgEl.textContent = "Fehler: " + error.message;
+        }
         msgEl.className = "form-message error";
         return;
       }
@@ -343,10 +358,11 @@ a { color: inherit; text-decoration: none; }
 
     async function loadReceipts() {
       const { data, error } = await supabaseClient
-        .from("expense_receipts")
-        .select("id, receipt_date, company, category, amount, payment_method, note, photo_path")
+        .from("journal_entries")
+        .select("id, beleg_nr, receipt_date:entry_date, company:counterparty, category, amount, payment_method, note, photo_path, status")
         .eq("user_id", currentUserId)
-        .order("receipt_date", { ascending: false });
+        .eq("direction", "ausgabe")
+        .order("entry_date", { ascending: false });
 
       if (error) {
         document.getElementById("receipt-empty").style.display = "block";
@@ -370,7 +386,8 @@ a { color: inherit; text-decoration: none; }
       if (searchFilter) {
         filtered = filtered.filter(r =>
           (r.company || "").toLowerCase().includes(searchFilter) ||
-          (r.note || "").toLowerCase().includes(searchFilter)
+          (r.note || "").toLowerCase().includes(searchFilter) ||
+          String(r.beleg_nr || "").toLowerCase().includes(searchFilter)
         );
       }
 
@@ -383,7 +400,10 @@ a { color: inherit; text-decoration: none; }
         filtered.forEach(r => {
           const row = document.createElement("div");
           row.className = "receipt-row";
+          const isCancelled = r.status === "storniert";
+          if (isCancelled) row.style.opacity = "0.55";
           const dateStr = new Date(r.receipt_date).toLocaleDateString("de-CH");
+          const cancelledBadge = isCancelled ? ` <span style="font-size:10px; padding:1px 6px; border-radius:3px; background:var(--color-error); color:#fff;">Storniert</span>` : "";
           let thumbHtml = "";
           if (r.photo_path) {
             const { data: pub } = supabaseClient.storage.from("asana-media").getPublicUrl(r.photo_path);
@@ -396,22 +416,24 @@ a { color: inherit; text-decoration: none; }
           row.innerHTML = `
             ${thumbHtml}
             <div class="receipt-main">
-              <div><span class="receipt-amount">${formatCHF(r.amount)}</span> · ${escapeHtml(CATEGORY_LABELS[r.category] || r.category)}</div>
-              <div class="receipt-meta">${dateStr} · ${escapeHtml(r.company || "–")} · ${r.payment_method === "kasse" ? "Kasse" : "Bank"}</div>
+              <div><span class="receipt-amount" style="${isCancelled ? "text-decoration:line-through;" : ""}">${formatCHF(r.amount)}</span> · ${escapeHtml(CATEGORY_LABELS[r.category] || r.category)}${cancelledBadge}</div>
+              <div class="receipt-meta">Beleg Nr. ${r.beleg_nr || "–"} · ${dateStr} · ${escapeHtml(r.company || "–")} · ${r.payment_method === "kasse" ? "Kasse" : "Bank"}</div>
               ${r.note ? `<div class="receipt-note">${escapeHtml(r.note)}</div>` : ""}
             </div>
             <div style="display:flex; flex-direction:column; gap:6px;">
-              <button type="button" class="btn-secondary" style="padding:5px 10px; font-size:12px;" data-action="edit">Bearbeiten</button>
-              <button type="button" class="btn-danger" data-action="delete">Löschen</button>
+              ${isCancelled ? "" : `<button type="button" class="btn-secondary" style="padding:5px 10px; font-size:12px;" data-action="edit">Bearbeiten</button>
+              <button type="button" class="btn-danger" data-action="cancel">Stornieren</button>`}
             </div>
           `;
-          row.querySelector('[data-action="edit"]').addEventListener("click", () => startEdit(r));
-          row.querySelector('[data-action="delete"]').addEventListener("click", () => deleteReceipt(r));
+          if (!isCancelled) {
+            row.querySelector('[data-action="edit"]').addEventListener("click", () => startEdit(r));
+            row.querySelector('[data-action="cancel"]').addEventListener("click", () => cancelReceipt(r));
+          }
           listEl.appendChild(row);
         });
       }
 
-      const total = filtered.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+      const total = filtered.filter(r => r.status !== "storniert").reduce((sum, r) => sum + Number(r.amount || 0), 0);
       document.getElementById("total-amount").textContent = formatCHF(total);
     }
 
@@ -438,10 +460,20 @@ a { color: inherit; text-decoration: none; }
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    async function deleteReceipt(r) {
-      if (!confirm(`Beleg über ${formatCHF(r.amount)} wirklich löschen?`)) return;
-      const { error } = await supabaseClient.from("expense_receipts").delete().eq("id", r.id);
-      if (error) { alert("Fehler: " + error.message); return; }
+    async function cancelReceipt(r) {
+      if (!confirm(`Beleg Nr. ${r.beleg_nr} über ${formatCHF(r.amount)} wirklich stornieren? Er bleibt sichtbar, zählt aber nicht mehr in der Summe.`)) return;
+      const { error } = await supabaseClient
+        .from("journal_entries")
+        .update({ status: "storniert", cancelled_at: new Date().toISOString() })
+        .eq("id", r.id);
+      if (error) {
+        if (error.message && error.message.toLowerCase().includes("row-level security")) {
+          alert(`Das Jahr ${new Date(r.receipt_date).getFullYear()} ist abgeschlossen (gesperrt). Hebe die Sperre im Journal auf.`);
+        } else {
+          alert("Fehler: " + error.message);
+        }
+        return;
+      }
       if (editingId === r.id) resetForm();
       await loadReceipts();
     }

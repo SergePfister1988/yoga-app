@@ -212,10 +212,11 @@ a { color: inherit; text-decoration: none; }
     async function loadAllEntries() {
       const { data, error } = await supabaseClient
         .from("journal_entries")
-        .select("entry_date, direction, category, amount")
+        .select("entry_date, direction, category, amount, status")
         .eq("user_id", currentUserId);
       if (error) { console.error(error); return; }
-      allEntries = data || [];
+      // Stornierte Buchungen zählen nirgends mit
+      allEntries = (data || []).filter(e => e.status !== "storniert");
     }
 
     function setupYearSelect() {
