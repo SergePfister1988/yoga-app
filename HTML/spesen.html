@@ -494,17 +494,35 @@ a { color: inherit; text-decoration: none; }
               <div class="entry-meta">Beleg Nr. ${e.beleg_nr || "–"} · ${dateStr} · ${escapeHtml(e.counterparty || "–")} · ${e.payment_method === "kasse" ? "Kasse" : e.payment_method === "privat" ? "Privat (kein Geldfluss)" : "Bank"}</div>
               ${noteDisplay ? `<div class="entry-note">${escapeHtml(noteDisplay)}</div>` : ""}
             </div>
-            ${isCancelled ? "" : `<button type="button" class="btn-danger" data-action="cancel">Stornieren</button>`}
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              ${isCancelled ? "" : `<button type="button" class="btn-danger" data-action="cancel">Stornieren</button>`}
+              <button type="button" class="btn-danger" data-action="delete" style="opacity:0.75;">Löschen</button>
+            </div>
           `;
           if (!isCancelled) {
             row.querySelector('[data-action="cancel"]').addEventListener("click", () => cancelSpesen(e));
           }
+          row.querySelector('[data-action="delete"]').addEventListener("click", () => deleteSpesenPermanently(e));
           listEl.appendChild(row);
         });
       }
 
       const total = filtered.filter(e => e.status !== "storniert").reduce((sum, e) => sum + Number(e.amount || 0), 0);
       document.getElementById("total-amount").textContent = formatCHF(total);
+    }
+
+    async function deleteSpesenPermanently(e) {
+      if (!confirm(`Spesen-Eintrag Beleg Nr. ${e.beleg_nr || "–"} über ${formatCHF(e.amount)} wirklich ENDGÜLTIG löschen? Das kann nicht rückgängig gemacht werden.`)) return;
+      const { error } = await supabaseClient.from("journal_entries").delete().eq("id", e.id);
+      if (error) {
+        if (error.message && error.message.toLowerCase().includes("row-level security")) {
+          alert(`Das Jahr ${new Date(e.entry_date).getFullYear()} ist abgeschlossen (gesperrt). Hebe die Sperre im Journal auf.`);
+        } else {
+          alert("Fehler: " + error.message);
+        }
+        return;
+      }
+      await loadSpesen();
     }
 
     async function cancelSpesen(e) {

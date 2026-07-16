@@ -607,9 +607,8 @@ a { color: inherit; text-decoration: none; }
             <div style="display:flex; flex-direction:column; gap:6px;">
               <button type="button" class="btn-secondary" style="padding:5px 10px; font-size:12px;" data-action="edit" ${isCancelled ? "disabled" : ""}>Bearbeiten</button>
               <button type="button" class="btn-secondary" style="padding:5px 10px; font-size:11px;" data-action="history">Verlauf</button>
-              ${isCancelled
-                ? ""
-                : `<button type="button" class="btn-danger" data-action="cancel">Stornieren</button>`}
+              ${isCancelled ? "" : `<button type="button" class="btn-danger" data-action="cancel">Stornieren</button>`}
+              <button type="button" class="btn-danger" data-action="delete" style="opacity:0.75;">Löschen</button>
             </div>
           `;
           if (!isCancelled) {
@@ -617,6 +616,7 @@ a { color: inherit; text-decoration: none; }
             row.querySelector('[data-action="cancel"]').addEventListener("click", () => cancelEntry(e));
           }
           row.querySelector('[data-action="history"]').addEventListener("click", () => showHistory(e));
+          row.querySelector('[data-action="delete"]').addEventListener("click", () => deleteEntryPermanently(e));
           listEl.appendChild(row);
         });
       }
@@ -642,6 +642,22 @@ a { color: inherit; text-decoration: none; }
       document.getElementById("save-entry-btn").textContent = "Änderungen speichern";
       document.getElementById("cancel-edit-btn").style.display = "inline-block";
       window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function deleteEntryPermanently(e) {
+      const confirmMsg = `Beleg Nr. ${e.beleg_nr || "–"} über ${formatCHF(e.amount)} wirklich ENDGÜLTIG löschen? Das kann nicht rückgängig gemacht werden und hinterlässt eine Lücke in der Belegnummerierung (z.B. nützlich beim Nacherfassen/Korrigieren von Tippfehlern, bei bereits abgeschlossenen Buchhaltungen besser "Stornieren" verwenden).`;
+      if (!confirm(confirmMsg)) return;
+      const { error } = await supabaseClient.from("journal_entries").delete().eq("id", e.id);
+      if (error) {
+        if (error.message && error.message.toLowerCase().includes("row-level security")) {
+          alert(`Das Jahr ${new Date(e.entry_date).getFullYear()} ist abgeschlossen (gesperrt). Hebe die Sperre unter "Buchhaltungsjahr" auf, um diese Buchung zu löschen.`);
+        } else {
+          alert("Fehler: " + error.message);
+        }
+        return;
+      }
+      if (editingId === e.id) resetForm();
+      await loadEntries();
     }
 
     async function cancelEntry(e) {

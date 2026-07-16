@@ -423,12 +423,14 @@ a { color: inherit; text-decoration: none; }
             <div style="display:flex; flex-direction:column; gap:6px;">
               ${isCancelled ? "" : `<button type="button" class="btn-secondary" style="padding:5px 10px; font-size:12px;" data-action="edit">Bearbeiten</button>
               <button type="button" class="btn-danger" data-action="cancel">Stornieren</button>`}
+              <button type="button" class="btn-danger" data-action="delete" style="opacity:0.75;">Löschen</button>
             </div>
           `;
           if (!isCancelled) {
             row.querySelector('[data-action="edit"]').addEventListener("click", () => startEdit(r));
             row.querySelector('[data-action="cancel"]').addEventListener("click", () => cancelReceipt(r));
           }
+          row.querySelector('[data-action="delete"]').addEventListener("click", () => deleteReceiptPermanently(r));
           listEl.appendChild(row);
         });
       }
@@ -458,6 +460,21 @@ a { color: inherit; text-decoration: none; }
       document.getElementById("save-receipt-btn").textContent = "Änderungen speichern";
       document.getElementById("cancel-edit-btn").style.display = "inline-block";
       window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function deleteReceiptPermanently(r) {
+      if (!confirm(`Beleg Nr. ${r.beleg_nr || "–"} über ${formatCHF(r.amount)} wirklich ENDGÜLTIG löschen? Das kann nicht rückgängig gemacht werden.`)) return;
+      const { error } = await supabaseClient.from("journal_entries").delete().eq("id", r.id);
+      if (error) {
+        if (error.message && error.message.toLowerCase().includes("row-level security")) {
+          alert(`Das Jahr ${new Date(r.receipt_date).getFullYear()} ist abgeschlossen (gesperrt). Hebe die Sperre im Journal auf.`);
+        } else {
+          alert("Fehler: " + error.message);
+        }
+        return;
+      }
+      if (editingId === r.id) resetForm();
+      await loadReceipts();
     }
 
     async function cancelReceipt(r) {
