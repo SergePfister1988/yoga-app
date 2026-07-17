@@ -113,6 +113,14 @@ a { color: inherit; text-decoration: none; }
         <span>Übriger betrieblicher Aufwand</span>
         <span class="amount" id="line-uebriger-aufwand">CHF 0.00</span>
       </div>
+      <div class="line-row" style="padding-left:16px; font-size:13px; color:var(--color-text-muted);">
+        <span>davon Autokosten (Fahrtenbuch, Kilometer)</span>
+        <span class="amount" id="line-autokosten-detail" style="font-weight:400;">CHF 0.00</span>
+      </div>
+      <div class="line-row" style="padding-left:16px; font-size:13px; color:var(--color-text-muted);">
+        <span>davon Spesen (Zug/Verpflegung/Übernachtung)</span>
+        <span class="amount" id="line-spesen-detail" style="font-weight:400;">CHF 0.00</span>
+      </div>
       <div class="line-row total">
         <span>Total Ausgaben</span>
         <span class="amount" id="line-ausgaben-total">CHF 0.00</span>
@@ -120,12 +128,20 @@ a { color: inherit; text-decoration: none; }
     </div>
 
     <div class="card">
-      <h2>Privatanteil Auto</h2>
-      <p class="sub">Korrigiert den Autokosten-Anteil, der privat genutzt wird (Aktennotiz) – wird von den Ausgaben abgezogen.</p>
+      <h2>Privatanteil Auto (nur Spezialfall)</h2>
+      <p class="sub">
+        Wichtig: Wenn du nur die effektiven <strong>Geschäftsfahrten</strong> mit deinem privaten Auto zur Kilometer-Pauschale erfasst (wie im Fahrtenbuch/Spesen-Modul), brauchst du dieses Feld <strong>nicht</strong> – lass es auf 0. Private Fahrten und der Autokauf selbst spielen dann keine Rolle.<br/>
+        Nur relevant, falls das Fahrzeug ein <strong>Geschäftsfahrzeug</strong> ist (Anlagevermögen mit Abschreibung) und alle Kosten zuerst voll verbucht wurden – dann kannst du hier den privat genutzten Anteil wieder zurückrechnen.
+      </p>
       <div class="field">
-        <label for="privatanteil-auto">Korrektur Privatanteil Auto (CHF)</label>
+        <label for="privatanteil-auto">Korrektur Privatanteil Auto (CHF, meist 0)</label>
         <input type="number" id="privatanteil-auto" step="0.01" min="0" />
       </div>
+    </div>
+
+    <div class="card">
+      <h2>Autokosten &amp; Spesen (automatisch aus dem Fahrtenbuch/Spesen-Modul)</h2>
+      <p class="sub">Wird automatisch berechnet – siehe Detailzeilen bei "Übriger betrieblicher Aufwand" oben. Kein manuelles Eintragen nötig.</p>
     </div>
 
     <div class="card">
@@ -169,7 +185,7 @@ a { color: inherit; text-decoration: none; }
     // Zuordnung unserer Journal-Kategorien zu den 3 Berner Ausgaben-Töpfen
     const DIREKTER_AUFWAND_CATS = ["warenverkauf"];
     const PERSONALAUFWAND_CATS = ["personalaufwand", "ausgleichskasse", "ahv_bvg"];
-    const UEBRIGER_AUFWAND_CATS = ["uebrige_unkosten", "autokosten", "ausbildung", "miete_wohnung", "abschreibungen", "plattformgebuehren", "sonstiges"];
+    const UEBRIGER_AUFWAND_CATS = ["uebrige_unkosten", "autokosten", "ausbildung", "miete_wohnung", "abschreibungen", "plattformgebuehren", "spesen_reise", "sonstiges"];
 
     function roleLabel(role, gender) {
       if (role === "admin") return "Admin";
@@ -248,6 +264,8 @@ a { color: inherit; text-decoration: none; }
       document.getElementById("line-direkter-aufwand").textContent = formatCHF(direkterAufwand);
       document.getElementById("line-personalaufwand").textContent = formatCHF(personalaufwand);
       document.getElementById("line-uebriger-aufwand").textContent = formatCHF(uebrigerAufwand);
+      document.getElementById("line-autokosten-detail").textContent = formatCHF(sumByCats(["autokosten"]));
+      document.getElementById("line-spesen-detail").textContent = formatCHF(sumByCats(["spesen_reise"]));
       document.getElementById("line-ausgaben-total").textContent = formatCHF(totalAusgaben);
 
       // Hinweis zu offenen Rechnungen (Vorschlag für Kundenguthaben)

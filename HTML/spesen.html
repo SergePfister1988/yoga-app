@@ -364,7 +364,7 @@ a { color: inherit; text-decoration: none; }
         user_id: currentUserId,
         entry_date: date,
         direction: "ausgabe",
-        category: currentType === "verpflegung" || currentType === "uebernachtung" ? "uebrige_unkosten" : "autokosten",
+        category: currentType === "auto" ? "autokosten" : "spesen_reise",
         amount,
         payment_method: currentType === "auto" ? "privat" : document.getElementById("spesen-payment").value,
         counterparty,
