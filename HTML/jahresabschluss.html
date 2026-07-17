@@ -91,7 +91,15 @@ a { color: inherit; text-decoration: none; }
 
     <div class="card">
       <h2>Einnahmen</h2>
-      <p class="sub">Total aller Einnahmen-Buchungen im Journal für das gewählte Jahr.</p>
+      <p class="sub">Total aller Einnahmen-Buchungen im Journal für das gewählte Jahr, plus Pandora Community (manuell).</p>
+      <div class="line-row">
+        <span>Einnahmen aus dem Journal</span>
+        <span class="amount" id="line-einnahmen-journal">CHF 0.00</span>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label for="pandora-einnahmen">Einnahmen Pandora Community (CHF, von deren Buchhaltung)</label>
+        <input type="number" id="pandora-einnahmen" step="0.01" min="0" />
+      </div>
       <div class="line-row total">
         <span>Total Einnahmen</span>
         <span class="amount" id="line-einnahmen">CHF 0.00</span>
@@ -140,6 +148,10 @@ a { color: inherit; text-decoration: none; }
       <div class="line-row" style="padding-left:16px; font-size:13px; color:var(--color-text-muted);">
         <span>davon Übrige Geschäftsunkosten &amp; Sonstiges</span>
         <span class="amount" id="line-uebrige-detail" style="font-weight:400;">CHF 0.00</span>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label for="pandora-ausgaben">Ausgaben Pandora Community (CHF, von deren Buchhaltung)</label>
+        <input type="number" id="pandora-ausgaben" step="0.01" min="0" />
       </div>
       <div class="line-row total">
         <span>Total Ausgaben</span>
@@ -239,7 +251,7 @@ a { color: inherit; text-decoration: none; }
       await loadAllEntries();
       setupYearSelect();
       document.getElementById("save-year-end-btn").addEventListener("click", saveYearEndData);
-      ["privatanteil-auto", "kundenguthaben", "warenlager", "schulden"].forEach(id => {
+      ["privatanteil-auto", "kundenguthaben", "warenlager", "schulden", "pandora-einnahmen", "pandora-ausgaben"].forEach(id => {
         document.getElementById(id).addEventListener("input", renderResult);
       });
       await refreshForYear();
@@ -280,7 +292,7 @@ a { color: inherit; text-decoration: none; }
       const uebrigerAufwand = sumByCats(UEBRIGER_AUFWAND_CATS);
       const totalAusgaben = direkterAufwand + personalaufwand + uebrigerAufwand;
 
-      document.getElementById("line-einnahmen").textContent = formatCHF(totalEinnahmen);
+      document.getElementById("line-einnahmen-journal").textContent = formatCHF(totalEinnahmen);
       document.getElementById("line-direkter-aufwand").textContent = formatCHF(direkterAufwand);
       document.getElementById("line-personalaufwand").textContent = formatCHF(personalaufwand);
       document.getElementById("line-uebriger-aufwand").textContent = formatCHF(uebrigerAufwand);
@@ -291,7 +303,6 @@ a { color: inherit; text-decoration: none; }
       document.getElementById("line-abschreibungen-detail").textContent = formatCHF(sumByCats(["abschreibungen"]));
       document.getElementById("line-plattform-detail").textContent = formatCHF(sumByCats(["plattformgebuehren"]));
       document.getElementById("line-uebrige-detail").textContent = formatCHF(sumByCats(["uebrige_unkosten", "sonstiges"]));
-      document.getElementById("line-ausgaben-total").textContent = formatCHF(totalAusgaben);
 
       // Hinweis zu offenen Rechnungen (Vorschlag für Kundenguthaben)
       const { data: openInvoices } = await supabaseClient
@@ -309,14 +320,14 @@ a { color: inherit; text-decoration: none; }
       await loadYearEndData();
       renderResult();
 
-      window._totalEinnahmen = totalEinnahmen;
-      window._totalAusgaben = totalAusgaben;
+      window._totalEinnahmenJournal = totalEinnahmen;
+      window._totalAusgabenJournal = totalAusgaben;
     }
 
     async function loadYearEndData() {
       const { data } = await supabaseClient
         .from("year_end_data")
-        .select("kundenguthaben, warenlager, schulden, privatanteil_auto")
+        .select("kundenguthaben, warenlager, schulden, privatanteil_auto, pandora_einnahmen, pandora_ausgaben")
         .eq("user_id", currentUserId)
         .eq("year", selectedYear)
         .maybeSingle();
@@ -324,6 +335,8 @@ a { color: inherit; text-decoration: none; }
       document.getElementById("warenlager").value = data ? data.warenlager : 0;
       document.getElementById("schulden").value = data ? data.schulden : 0;
       document.getElementById("privatanteil-auto").value = data ? data.privatanteil_auto : 0;
+      document.getElementById("pandora-einnahmen").value = data ? data.pandora_einnahmen : 0;
+      document.getElementById("pandora-ausgaben").value = data ? data.pandora_ausgaben : 0;
     }
 
     async function saveYearEndData() {
@@ -335,6 +348,8 @@ a { color: inherit; text-decoration: none; }
         warenlager: parseFloat(document.getElementById("warenlager").value) || 0,
         schulden: parseFloat(document.getElementById("schulden").value) || 0,
         privatanteil_auto: parseFloat(document.getElementById("privatanteil-auto").value) || 0,
+        pandora_einnahmen: parseFloat(document.getElementById("pandora-einnahmen").value) || 0,
+        pandora_ausgaben: parseFloat(document.getElementById("pandora-ausgaben").value) || 0,
         updated_at: new Date().toISOString(),
       };
       const { error } = await supabaseClient.from("year_end_data").upsert(payload, { onConflict: "user_id,year" });
@@ -350,8 +365,12 @@ a { color: inherit; text-decoration: none; }
 
     function renderResult() {
       const privatanteilAuto = parseFloat(document.getElementById("privatanteil-auto").value) || 0;
-      const totalEinnahmen = window._totalEinnahmen || 0;
-      const totalAusgaben = window._totalAusgaben || 0;
+      const pandoraEinnahmen = parseFloat(document.getElementById("pandora-einnahmen").value) || 0;
+      const pandoraAusgaben = parseFloat(document.getElementById("pandora-ausgaben").value) || 0;
+      const totalEinnahmen = (window._totalEinnahmenJournal || 0) + pandoraEinnahmen;
+      const totalAusgaben = (window._totalAusgabenJournal || 0) + pandoraAusgaben;
+      document.getElementById("line-einnahmen").textContent = formatCHF(totalEinnahmen);
+      document.getElementById("line-ausgaben-total").textContent = formatCHF(totalAusgaben);
       const reingewinn = totalEinnahmen - totalAusgaben + privatanteilAuto;
       document.getElementById("final-result").textContent = formatCHF(reingewinn);
     }
