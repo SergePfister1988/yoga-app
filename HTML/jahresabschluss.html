@@ -338,12 +338,12 @@ a { color: inherit; text-decoration: none; }
         ? `Vorschlag: ${openCount} offene Rechnung(en) mit bekanntem Betrag summieren sich auf ${formatCHF(openSum)}.`
         : "Keine offenen Rechnungen mit bekanntem Betrag gefunden.";
 
+      window._totalEinnahmenJournal = totalEinnahmen;
+      window._totalAusgabenJournal = totalAusgaben;
+
       await loadYearEndData();
       await applyYearLockState();
       renderResult();
-
-      window._totalEinnahmenJournal = totalEinnahmen;
-      window._totalAusgabenJournal = totalAusgaben;
     }
 
     async function loadYearEndData() {
