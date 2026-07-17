@@ -121,6 +121,26 @@ a { color: inherit; text-decoration: none; }
         <span>davon Spesen (Zug/Verpflegung/Übernachtung)</span>
         <span class="amount" id="line-spesen-detail" style="font-weight:400;">CHF 0.00</span>
       </div>
+      <div class="line-row" style="padding-left:16px; font-size:13px; color:var(--color-text-muted);">
+        <span>davon Ausbildungskosten</span>
+        <span class="amount" id="line-ausbildung-detail" style="font-weight:400;">CHF 0.00</span>
+      </div>
+      <div class="line-row" style="padding-left:16px; font-size:13px; color:var(--color-text-muted);">
+        <span>davon Mietkostenanteil Wohnung</span>
+        <span class="amount" id="line-miete-detail" style="font-weight:400;">CHF 0.00</span>
+      </div>
+      <div class="line-row" style="padding-left:16px; font-size:13px; color:var(--color-text-muted);">
+        <span>davon Abschreibungen</span>
+        <span class="amount" id="line-abschreibungen-detail" style="font-weight:400;">CHF 0.00</span>
+      </div>
+      <div class="line-row" style="padding-left:16px; font-size:13px; color:var(--color-text-muted);">
+        <span>davon Plattformgebühren</span>
+        <span class="amount" id="line-plattform-detail" style="font-weight:400;">CHF 0.00</span>
+      </div>
+      <div class="line-row" style="padding-left:16px; font-size:13px; color:var(--color-text-muted);">
+        <span>davon Übrige Geschäftsunkosten &amp; Sonstiges</span>
+        <span class="amount" id="line-uebrige-detail" style="font-weight:400;">CHF 0.00</span>
+      </div>
       <div class="line-row total">
         <span>Total Ausgaben</span>
         <span class="amount" id="line-ausgaben-total">CHF 0.00</span>
@@ -266,6 +286,11 @@ a { color: inherit; text-decoration: none; }
       document.getElementById("line-uebriger-aufwand").textContent = formatCHF(uebrigerAufwand);
       document.getElementById("line-autokosten-detail").textContent = formatCHF(sumByCats(["autokosten"]));
       document.getElementById("line-spesen-detail").textContent = formatCHF(sumByCats(["spesen_reise"]));
+      document.getElementById("line-ausbildung-detail").textContent = formatCHF(sumByCats(["ausbildung"]));
+      document.getElementById("line-miete-detail").textContent = formatCHF(sumByCats(["miete_wohnung"]));
+      document.getElementById("line-abschreibungen-detail").textContent = formatCHF(sumByCats(["abschreibungen"]));
+      document.getElementById("line-plattform-detail").textContent = formatCHF(sumByCats(["plattformgebuehren"]));
+      document.getElementById("line-uebrige-detail").textContent = formatCHF(sumByCats(["uebrige_unkosten", "sonstiges"]));
       document.getElementById("line-ausgaben-total").textContent = formatCHF(totalAusgaben);
 
       // Hinweis zu offenen Rechnungen (Vorschlag für Kundenguthaben)
