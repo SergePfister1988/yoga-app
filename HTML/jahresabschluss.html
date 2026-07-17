@@ -88,6 +88,9 @@ a { color: inherit; text-decoration: none; }
       <select id="year-select"></select>
     </div>
     <p class="hint" style="margin-bottom:20px;">Für den Steuerauszug (Hilfsblatt A, Kanton Bern) – bitte trotzdem im Zweifel mit deiner Treuhandstelle abklären.</p>
+    <div id="year-locked-banner" style="display:none; background:#FDF0E0; border:1px solid #E0B37A; color:#7A5310; padding:10px 14px; border-radius:4px; font-size:13px; margin-bottom:20px;">
+      🔒 Dieses Jahr ist im Journal abgeschlossen (gesperrt). Die Jahresend-Werte unten (Kundenguthaben, Warenlager, Schulden, Privatanteil Auto, Pandora Community) sind deshalb ebenfalls schreibgeschützt. Hebe die Sperre im Journal unter "Buchhaltungsjahr" auf, um sie zu ändern.
+    </div>
 
     <div class="card">
       <h2>Einnahmen</h2>
@@ -280,6 +283,24 @@ a { color: inherit; text-decoration: none; }
       });
     }
 
+    const YEAR_END_FIELD_IDS = ["kundenguthaben", "warenlager", "schulden", "privatanteil-auto", "pandora-einnahmen", "pandora-ausgaben"];
+
+    async function applyYearLockState() {
+      const { data } = await supabaseClient
+        .from("year_locks")
+        .select("year")
+        .eq("user_id", currentUserId)
+        .eq("year", selectedYear)
+        .maybeSingle();
+      const isLocked = !!data;
+
+      YEAR_END_FIELD_IDS.forEach(id => { document.getElementById(id).disabled = isLocked; });
+      document.getElementById("save-year-end-btn").disabled = isLocked;
+
+      const banner = document.getElementById("year-locked-banner");
+      banner.style.display = isLocked ? "block" : "none";
+    }
+
     async function refreshForYear() {
       const yearEntries = allEntries.filter(e => new Date(e.entry_date).getFullYear() === selectedYear);
 
@@ -318,6 +339,7 @@ a { color: inherit; text-decoration: none; }
         : "Keine offenen Rechnungen mit bekanntem Betrag gefunden.";
 
       await loadYearEndData();
+      await applyYearLockState();
       renderResult();
 
       window._totalEinnahmenJournal = totalEinnahmen;
@@ -354,7 +376,11 @@ a { color: inherit; text-decoration: none; }
       };
       const { error } = await supabaseClient.from("year_end_data").upsert(payload, { onConflict: "user_id,year" });
       if (error) {
-        msgEl.textContent = "Fehler: " + error.message;
+        if (error.message && error.message.toLowerCase().includes("row-level security")) {
+          msgEl.textContent = `Das Jahr ${selectedYear} ist abgeschlossen (gesperrt). Hebe die Sperre im Journal unter "Buchhaltungsjahr" auf, um diese Werte zu ändern.`;
+        } else {
+          msgEl.textContent = "Fehler: " + error.message;
+        }
         msgEl.className = "form-message error";
         return;
       }
