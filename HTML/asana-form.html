@@ -145,12 +145,6 @@ a { color: inherit; }
     </div>
 
     <div class="card">
-      <h2>Ausführung (Schritte)</h2>
-      <div id="steps-list"></div>
-      <button type="button" class="btn-small" id="add-step">+ Schritt hinzufügen</button>
-    </div>
-
-    <div class="card">
       <h2>Vorteile / Wirkung</h2>
       <div id="benefits-list"></div>
       <button type="button" class="btn-small" id="add-benefit">+ Vorteil hinzufügen</button>
@@ -371,7 +365,6 @@ if (profile.role === "therapeut") {
       row.querySelector("button").addEventListener("click", () => row.remove());
       container.appendChild(row);
     }
-    function addStepRow(value) { addDynamicRow("steps-list", value); }
     function addBenefitRow(value) { addDynamicRow("benefits-list", value); }
     function addContraindicationRow(value) { addDynamicRow("contraindications-list", value); }
 
@@ -381,7 +374,6 @@ if (profile.role === "therapeut") {
       return div.innerHTML;
     }
 
-    document.getElementById("add-step").addEventListener("click", () => addStepRow());
     document.getElementById("add-benefit").addEventListener("click", () => addBenefitRow());
     document.getElementById("add-contraindication").addEventListener("click", () => addContraindicationRow());
 
@@ -391,7 +383,6 @@ if (profile.role === "therapeut") {
         .select(`
           id, name_deutsch, name_sanskrit, difficulty, hold_duration, counter_pose,
           asana_category_links ( category_id ),
-          asana_steps ( step_number, content ),
           asana_benefits ( content ),
           asana_contraindications ( content ),
           asana_media ( id, media_type, storage_path, caption ),
@@ -417,10 +408,6 @@ if (profile.role === "therapeut") {
       document.getElementById("difficulty").value = a.difficulty || "";
       document.getElementById("hold-duration").value = a.hold_duration || "";
       document.getElementById("counter-pose").value = a.counter_pose || "";
-
-      const steps = (a.asana_steps || []).slice().sort((x, y) => x.step_number - y.step_number);
-      steps.forEach(s => addStepRow(s.content));
-      if (!steps.length) addStepRow();
 
       const benefits = a.asana_benefits || [];
       benefits.forEach(b => addBenefitRow(b.content));
@@ -616,16 +603,10 @@ if (profile.role === "therapeut") {
         currentId = inserted.id;
       }
 
-      const steps = getRowValues("steps-list");
       const benefits = getRowValues("benefits-list");
       const contras = getRowValues("contraindications-list");
 
       const inserts = [];
-      if (steps.length) {
-        inserts.push(supabaseClient.from("asana_steps").insert(
-          steps.map((content, i) => ({ asana_id: currentId, step_number: i + 1, content }))
-        ));
-      }
       if (benefits.length) {
         inserts.push(supabaseClient.from("asana_benefits").insert(
           benefits.map(content => ({ asana_id: currentId, content }))
