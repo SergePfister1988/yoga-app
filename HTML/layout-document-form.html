@@ -121,6 +121,7 @@ a { color: inherit; text-decoration: none; }
       const { data: existing } = await supabaseClient
         .from("layout_documents")
         .select("invoice_number")
+        .eq("created_by", currentUserId)
         .like("invoice_number", searchPrefix + "%");
 
       let maxNum = 0;
