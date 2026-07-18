@@ -213,7 +213,6 @@ isAdmin = profile.role === "admin";
           verified, verified_at, verified_by,
           verifier:profiles!asanas_verified_by_fkey ( email ),
           asana_category_links ( asana_categories ( name ) ),
-          asana_steps ( id, step_number, content ),
           asana_benefits ( id, content ),
           asana_contraindications ( id, content ),
           asana_media ( id, media_type, storage_path, caption ),
@@ -246,7 +245,6 @@ isAdmin = profile.role === "admin";
     }
 
     function render(a, related) {
-      const steps = (a.asana_steps || []).slice().sort((x, y) => x.step_number - y.step_number);
       const stretch = (a.asana_muscle_groups || []).filter(mg => mg.effect === "dehnt");
       const strengthen = (a.asana_muscle_groups || []).filter(mg => mg.effect === "kräftigt");
 
@@ -290,12 +288,6 @@ isAdmin = profile.role === "admin";
         html += `</div>
           <p style="font-size:12px; color: var(--color-text-muted); margin: 10px 0 0 0;">Hinweis: Das Bild dient nur als Anhaltspunkt und ersetzt keine Anleitung durch einen/eine Yogalehrer:in.</p>
         </div>`;
-      }
-
-      if (steps.length) {
-        html += `<div class="card"><h2>Ausführung</h2><ol>`;
-        steps.forEach(s => { html += `<li>${esc(s.content)}</li>`; });
-        html += `</ol></div>`;
       }
 
       html += `<div class="card"><h2>Muskelgruppen</h2>`;
