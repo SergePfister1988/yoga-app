@@ -173,6 +173,7 @@ a { color: inherit; text-decoration: none; }
       </div>
 
       <button class="btn-primary" id="save-spesen-btn">Spesen erfassen</button>
+      <button class="btn-secondary" id="cancel-edit-spesen-btn" type="button" style="display:none;">Abbrechen</button>
       <p class="form-message" id="spesen-message"></p>
     </div>
 
@@ -229,6 +230,7 @@ a { color: inherit; text-decoration: none; }
     let currentUserId = null;
     let currentType = "zug";
     let allSpesen = [];
+    let editingId = null;
 
     async function init() {
       const { data: sessionData } = await supabaseClient.auth.getSession();
@@ -304,9 +306,13 @@ a { color: inherit; text-decoration: none; }
       });
 
       document.getElementById("save-spesen-btn").addEventListener("click", saveSpesen);
+      document.getElementById("cancel-edit-spesen-btn").addEventListener("click", resetForm);
     }
 
     function resetForm() {
+      editingId = null;
+      document.getElementById("save-spesen-btn").textContent = "Spesen erfassen";
+      document.getElementById("cancel-edit-spesen-btn").style.display = "none";
       document.getElementById("spesen-date").valueAsDate = new Date();
       document.getElementById("spesen-von").value = "";
       document.getElementById("spesen-nach").value = "";
@@ -400,15 +406,22 @@ a { color: inherit; text-decoration: none; }
         }
       }
 
-      const { data: nextBeleg, error: belegError } = await supabaseClient.rpc("next_beleg_number", { p_direction: "ausgabe", p_year: new Date(date).getFullYear() });
-      if (belegError) {
-        msgEl.textContent = "Fehler beim Vergeben der Belegnummer: " + belegError.message;
-        msgEl.className = "form-message error";
-        return;
+      if (!editingId) {
+        const { data: nextBeleg, error: belegError } = await supabaseClient.rpc("next_beleg_number", { p_direction: "ausgabe", p_year: new Date(date).getFullYear() });
+        if (belegError) {
+          msgEl.textContent = "Fehler beim Vergeben der Belegnummer: " + belegError.message;
+          msgEl.className = "form-message error";
+          return;
+        }
+        payload.beleg_nr = nextBeleg;
       }
-      payload.beleg_nr = nextBeleg;
 
-      const { error } = await supabaseClient.from("journal_entries").insert(payload);
+      let error;
+      if (editingId) {
+        ({ error } = await supabaseClient.from("journal_entries").update(payload).eq("id", editingId));
+      } else {
+        ({ error } = await supabaseClient.from("journal_entries").insert(payload));
+      }
       if (error) {
         if (error.message && error.message.toLowerCase().includes("row-level security")) {
           msgEl.textContent = `Das Jahr ${new Date(date).getFullYear()} ist abgeschlossen (gesperrt). Hebe die Sperre im Journal auf.`;
@@ -419,7 +432,7 @@ a { color: inherit; text-decoration: none; }
         return;
       }
 
-      msgEl.textContent = "Erfasst.";
+      msgEl.textContent = editingId ? "Änderungen gespeichert." : "Erfasst.";
       msgEl.className = "form-message success";
       resetForm();
       await loadSpesen();
@@ -444,7 +457,7 @@ a { color: inherit; text-decoration: none; }
     async function loadSpesen() {
       const { data, error } = await supabaseClient
         .from("journal_entries")
-        .select("id, beleg_nr, entry_date, category, amount, payment_method, counterparty, note, photo_path, status")
+        .select("id, beleg_nr, entry_date, category, amount, payment_method, counterparty, note, photo_path, status, affects_balance")
         .eq("user_id", currentUserId)
         .eq("direction", "ausgabe")
         .like("note", "[%")
@@ -507,11 +520,13 @@ a { color: inherit; text-decoration: none; }
               ${noteDisplay ? `<div class="entry-note">${escapeHtml(noteDisplay)}</div>` : ""}
             </div>
             <div style="display:flex; flex-direction:column; gap:6px;">
-              ${isCancelled ? "" : `<button type="button" class="btn-danger" data-action="cancel">Stornieren</button>`}
+              ${isCancelled ? "" : `<button type="button" class="btn-secondary" style="padding:5px 10px; font-size:12px;" data-action="edit">Bearbeiten</button>
+              <button type="button" class="btn-danger" data-action="cancel">Stornieren</button>`}
               <button type="button" class="btn-danger" data-action="delete" style="opacity:0.75;">Löschen</button>
             </div>
           `;
           if (!isCancelled) {
+            row.querySelector('[data-action="edit"]').addEventListener("click", () => startEditSpesen(e));
             row.querySelector('[data-action="cancel"]').addEventListener("click", () => cancelSpesen(e));
           }
           row.querySelector('[data-action="delete"]').addEventListener("click", () => deleteSpesenPermanently(e));
@@ -535,6 +550,41 @@ a { color: inherit; text-decoration: none; }
         return;
       }
       await loadSpesen();
+    }
+
+    function startEditSpesen(e) {
+      editingId = e.id;
+      setType(e.spesenType);
+
+      document.getElementById("spesen-date").value = e.entry_date;
+      document.getElementById("spesen-note").value = "";
+      document.getElementById("spesen-payment").value = e.payment_method === "kasse" ? "kasse" : "bank";
+      const affectsEl = document.getElementById("spesen-affects-balance");
+      if (affectsEl) affectsEl.checked = e.affects_balance !== false;
+
+      const noteDisplay = (e.note || "").replace(/^\[[^\]]+\]\s*/, "");
+      document.getElementById("spesen-grund").value = noteDisplay;
+
+      if (e.spesenType === "zug" || e.spesenType === "auto") {
+        const parts = (e.counterparty || "").split(" → ");
+        document.getElementById("spesen-von").value = parts[0] || "";
+        document.getElementById("spesen-nach").value = parts[1] || "";
+      } else {
+        document.getElementById("spesen-wo").value = e.counterparty || "";
+      }
+
+      if (e.spesenType === "auto") {
+        const rate = 0.70;
+        document.getElementById("spesen-rate").value = rate;
+        document.getElementById("spesen-km").value = (Number(e.amount) / rate).toFixed(1);
+        document.getElementById("berechnet-anzeige").textContent = formatCHF(e.amount);
+      } else {
+        document.getElementById("spesen-betrag").value = e.amount;
+      }
+
+      document.getElementById("save-spesen-btn").textContent = "Änderungen speichern";
+      document.getElementById("cancel-edit-spesen-btn").style.display = "inline-block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     async function cancelSpesen(e) {
