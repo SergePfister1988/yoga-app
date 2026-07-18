@@ -153,6 +153,14 @@ a { color: inherit; text-decoration: none; }
         </select>
       </div>
 
+      <div class="field" id="affects-balance-row" style="display:flex; align-items:center; gap:8px;">
+        <input type="checkbox" id="spesen-affects-balance" checked style="width:auto;" />
+        <label for="spesen-affects-balance" style="margin:0;">Vom Konto abbuchen (beeinflusst den berechneten Kontostand)</label>
+      </div>
+      <p class="hint" id="affects-balance-hint" style="font-size:12px; color: var(--color-text-muted); margin:-8px 0 14px 0;">
+        Aktiv: Der Betrag wird effektiv vom gewählten Konto abgezogen. Inaktiv: nur buchhalterisch erfasst, ohne echten Geldfluss – der Kontostand bleibt unverändert. Für die Jahresrechnung/Steuern spielt das keine Rolle, es zählt so oder so als Ausgabe.
+      </p>
+
       <div class="field" id="photo-row">
         <label for="spesen-photo">Beleg/Ticket-Foto (optional)</label>
         <input type="file" id="spesen-photo" accept="image/*,.pdf,application/pdf" />
@@ -269,6 +277,8 @@ a { color: inherit; text-decoration: none; }
       document.getElementById("betrag-row").style.display = showKm ? "none" : "block";
       document.getElementById("berechnet-row").style.display = showKm ? "block" : "none";
       document.getElementById("payment-row").style.display = showKm ? "none" : "block";
+      document.getElementById("affects-balance-row").style.display = showKm ? "none" : "flex";
+      document.getElementById("affects-balance-hint").style.display = showKm ? "none" : "block";
       document.getElementById("photo-row").style.display = showKm ? "none" : "block";
     }
 
@@ -306,6 +316,7 @@ a { color: inherit; text-decoration: none; }
       document.getElementById("spesen-grund").value = "";
       document.getElementById("spesen-betrag").value = "";
       document.getElementById("spesen-payment").value = "bank";
+      document.getElementById("spesen-affects-balance").checked = true;
       document.getElementById("spesen-photo").value = "";
       document.getElementById("spesen-photo-preview").style.display = "none";
       document.getElementById("spesen-note").value = "";
@@ -367,6 +378,7 @@ a { color: inherit; text-decoration: none; }
         category: currentType === "auto" ? "autokosten" : "spesen_reise",
         amount,
         payment_method: currentType === "auto" ? "privat" : document.getElementById("spesen-payment").value,
+        affects_balance: currentType === "auto" ? false : document.getElementById("spesen-affects-balance").checked,
         counterparty,
         note: `[${TYPE_LABELS[currentType]}] ${noteParts.join(" – ")}`.trim(),
       };
