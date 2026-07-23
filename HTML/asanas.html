@@ -309,7 +309,7 @@ isAdmin = profile.role === "admin";
       const { data, error } = await supabaseClient
         .from("asanas")
         .select(`
-          id, name_deutsch, name_sanskrit, difficulty, reviewed, verified,
+          id, name_deutsch, name_sanskrit, name_english, difficulty, reviewed, verified,
           asana_category_links ( asana_categories ( id, name ) ),
           asana_muscle_groups ( effect, muscle_groups ( id, name ) ),
           asana_joint_regions ( joint_regions ( id, name ) ),
@@ -341,7 +341,7 @@ isAdmin = profile.role === "admin";
 
       const filtered = allAsanas.filter(a => {
         if (search) {
-          const haystack = (a.name_deutsch + " " + (a.name_sanskrit || "")).toLowerCase();
+          const haystack = (a.name_deutsch + " " + (a.name_sanskrit || "") + " " + (a.name_english || "")).toLowerCase();
           if (!haystack.includes(search)) return false;
         }
         if (categoryId) {
@@ -399,6 +399,7 @@ isAdmin = profile.role === "admin";
         html += `<div class="asana-card-body">`;
         if (a.name_sanskrit) html += `<div class="sanskrit">${escapeHtml(a.name_sanskrit)}</div>`;
         html += `<div class="name">${escapeHtml(a.name_deutsch)}</div>`;
+        if (a.name_english) html += `<div class="sanskrit">${escapeHtml(a.name_english)}</div>`;
         html += `<div class="tag-row">`;
         (a.asana_category_links || []).forEach(cl => {
           if (cl.asana_categories) html += `<span class="tag category">${escapeHtml(cl.asana_categories.name)}</span>`;
@@ -496,7 +497,7 @@ isAdmin = profile.role === "admin";
     // CSV-Export
     // ============================================================
     document.getElementById("export-csv-btn").addEventListener("click", () => {
-      const rows = [["Name der Asana Deutsch", "Name der Asana Sanskrit", "Kategorie", "Erfasst", "Geprüft", "Bild vorhanden"]];
+      const rows = [["Name der Asana Deutsch", "Name der Asana Sanskrit", "Name der Asana Englisch", "Kategorie", "Erfasst", "Geprüft", "Bild vorhanden"]];
       allAsanas.slice()
         .sort((a, b) => a.name_deutsch.localeCompare(b.name_deutsch, "de"))
         .forEach(a => {
@@ -507,6 +508,7 @@ isAdmin = profile.role === "admin";
           rows.push([
             a.name_deutsch,
             a.name_sanskrit || "",
+            a.name_english || "",
             categories,
             a.reviewed ? "Ja" : "Nein",
             a.verified ? "Ja" : "Nein",

@@ -125,6 +125,13 @@ a { color: inherit; }
       </div>
       <div class="two-col">
         <div class="field">
+          <label for="name-english">Name (Englisch)</label>
+          <input type="text" id="name-english" />
+        </div>
+        <div class="field"></div>
+      </div>
+      <div class="two-col">
+        <div class="field">
           <label for="difficulty">Schwierigkeit</label>
           <select id="difficulty">
             <option value="">– auswählen –</option>
@@ -381,7 +388,7 @@ if (profile.role === "therapeut") {
       const { data: a, error } = await supabaseClient
         .from("asanas")
         .select(`
-          id, name_deutsch, name_sanskrit, difficulty, hold_duration, counter_pose,
+          id, name_deutsch, name_sanskrit, name_english, difficulty, hold_duration, counter_pose,
           asana_category_links ( category_id ),
           asana_benefits ( content ),
           asana_contraindications ( content ),
@@ -401,6 +408,7 @@ if (profile.role === "therapeut") {
       // Beim Duplizieren bleiben Name und Sanskrit-Name bewusst leer
       document.getElementById("name-deutsch").value = isDuplicate ? "" : (a.name_deutsch || "");
       document.getElementById("name-sanskrit").value = isDuplicate ? "" : (a.name_sanskrit || "");
+      document.getElementById("name-english").value = isDuplicate ? "" : (a.name_english || "");
       (a.asana_category_links || []).forEach(cl => {
         const cb = document.getElementById("cat-" + cl.category_id);
         if (cb) cb.checked = true;
@@ -564,6 +572,7 @@ if (profile.role === "therapeut") {
       const asanaPayload = {
         name_deutsch: nameDeutsch,
         name_sanskrit: document.getElementById("name-sanskrit").value.trim() || null,
+        name_english: document.getElementById("name-english").value.trim() || null,
         difficulty: document.getElementById("difficulty").value || null,
         hold_duration: document.getElementById("hold-duration").value.trim() || null,
         counter_pose: document.getElementById("counter-pose").value.trim() || null,

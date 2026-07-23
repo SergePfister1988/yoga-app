@@ -207,7 +207,7 @@ isAdmin = profile.role === "admin";
       const { data: a, error } = await supabaseClient
         .from("asanas")
         .select(`
-          id, name_deutsch, name_sanskrit, difficulty, hold_duration, counter_pose,
+          id, name_deutsch, name_sanskrit, name_english, difficulty, hold_duration, counter_pose,
           reviewed, reviewed_at, reviewed_by,
           reviewer:profiles!asanas_reviewed_by_fkey ( email ),
           verified, verified_at, verified_by,
@@ -254,6 +254,7 @@ isAdmin = profile.role === "admin";
         <div>
           ${a.name_sanskrit ? `<div class="sanskrit">${esc(a.name_sanskrit)}</div>` : ""}
           <h1>${esc(a.name_deutsch)}</h1>
+          ${a.name_english ? `<div class="sanskrit">${esc(a.name_english)}</div>` : ""}
         </div>`;
       if (isAdmin) {
         html += `<div class="admin-buttons">
